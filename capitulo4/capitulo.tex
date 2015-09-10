@@ -1,0 +1,27 @@
+\chapter{Propuesta de Solución}
+El análisis de las distintas alternativas disponibles para mejorar el rendimiento de la interfaz de red efectuado en el capítulo anterior nos motiva a diseñar e implementar una solución que satisfaga ciertos requerimientos que la hagan una opción viable en su uso en entornos como el propuesto.
+
+En el presente capítulo se formalizan los requerimientos mínimos que constituyen nuestra solución ideal. Se desarrolla un modelo que esquematice el funcionamiento de la solución propuesta, se implementa la misma y se evalúa bajo los mismos entornos que las pruebas desarrolladas a lo largo de la presente investigación.
+
+\section{Formalización de Requerimientos}
+Como se ilustró en el capítulo anterior, las distintas soluciones disponibles para mejorar la performance de las estructuras sockets en el kernel de Linux se caracterizan por ser complejas en su funcionamiento e incluso, por quebrantar ciertos principios de programación definidos como los sugeridos por el modelo OSI. El objetivo en este punto es caracterizar las especificaciones ideales que debe satisfacer un desarrollo de optimización de la operación de los sockets en el marco de la preservación de caracteristicas deseadas dadas por dicho modelo.
+
+A raíz de lo anterior, a continuación se especifican las propiedades estructurales que debe contemplar una solución ideal:
+
+
+\begin{description}
+\item[Rendimiento] El requerimiento principal para la solución objetivo constituye el garantizar un buen rendimiento. La solución debe poder brindar tiempos -a lo menos- competitivos con la mejor alternativa evaluada a lo largo de la investigación en curso, que corresponde al rendimiento obtenido con el mecanismo de \emph{ReusePort}.
+\item[Ejecución de bajo nivel] A fin de lograr una solución con bajo overhead e impacto con el resto del sistema, se debe procurar considerar una alternativa que opere en los niveles más bajos del sistema operativo -A nivel de Kernel idealmente- a fin de evitar la sobrecarga efectuada por concepto de interrupciones y call-chains ???? que son propias de soluciones que operan en espacio de usuario.
+\item[Modularidad] El esquema ideal debe ser modular en el sentido de garantizar una sencilla instalación y remoción de un sistema, sin necesitar significativas dependencias de otros componentes. En otra arista de este mismo requerimiento, se necesita una solución que permita modificarciones de manera sencilla, a fin de brindar extensibilidad de la misma.
+\item[Customizable] Finalmente, una propiedad que debe contemplar la solución es ser configurable y adaptable a los distintos entornos y requerimientos que se adapten correctamente a las necesidades de rendimiento que se persigan.
+\end{description}
+
+\begin{defn}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{defn}
+
+\begin{teo}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{teo}
+
+\begin{prop}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{prop}
+
+\begin{obs}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{obs}
+
+\begin{ej}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{ej}
