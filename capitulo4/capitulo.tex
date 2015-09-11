@@ -4,7 +4,7 @@ El análisis de las distintas alternativas disponibles para mejorar el rendimien
 En el presente capítulo se formalizan los requerimientos mínimos que constituyen nuestra solución ideal. A continuación se desarrolla un modelo para esquematizar el funcionamiento de la solución propuesta y se implementa la misma, para terminar con una evaluación del producto final bajo los mismos entornos que las pruebas desarrolladas a lo largo de la presente investigación.
 
 \section{Formalización de Requerimientos}
-Como se ilustró en el capítulo anterior, las distintas soluciones disponibles para mejorar la performance de las estructuras sockets en el kernel de Linux se caracterizan por ser complejas en su funcionamiento ya sea por su implementación sobre aplicaciones actuales como por quebrantar ciertos principios de programación definidos como los sugeridos por el modelo estándar OSI. El objetivo en este punto es caracterizar las especificaciones ideales que debe satisfacer un desarrollo de optimización de la operación de los sockets en el marco de la preservación de caracteristicas deseadas, dadas por dicho modelo.
+Como se ilustró en el capítulo anterior, las distintas soluciones disponibles para mejorar la performance de las estructuras sockets en el kernel de Linux se caracterizan por ser complejas en su funcionamiento ya sea por su implementación para funcionar sobre aplicaciones ya desplegadas en un sistema, o por quebrantar ciertos principios de programación definidos como los sugeridos por el modelo estándar OSI con consecuencias como tener que modificar todo el codigo de los programas operativos. El objetivo en este punto es caracterizar las especificaciones ideales que debe satisfacer un desarrollo de optimización de la operación de los sockets en el marco de la preservación de caracteristicas deseadas, dadas por dicho modelo.
 
 A raíz de lo anterior, a continuación se especifican las propiedades estructurales que debe contemplar una solución ideal:
 
@@ -87,12 +87,26 @@ El segundo esquema de distribución denominado \emph{SequentialSched} hace una d
 \end{figure}
 
 \section{Implementación}
-Al ser un módulo del kernel, existen diversas guias técnicas para respaldar la construcción del mismo \cite{algunawea}. Para poder implementar las operaciones de interferencia de paquetes en módulo, se utilizó el framework de Linux \emph{Hook NetFilters}.
+Al ser un módulo del kernel, existen diversas guias técnicas para respaldar la construcción del mismo ?????????. Para poder implementar las operaciones de interferencia de paquetes en módulo, se utilizó el framework de Linux: \emph{Hook NetFilters}.
 
-\subsection{NetFilters Framework}
-Aka, una descripción de que son los hookNetfilters
+\subsection{NetFilter Framework}
+Netfilter es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes IP en distintos niveles del tránsito de los mismos por el kernel. Para ello, Netfilters provee una interfaz para implementar \emph{hooks} que son funciones de intercepción de paquetes donde se da la libertad de programar libremente operaciones sobre cada paquete interceptado. Los \emph{hooks} implementados deben ser registrados en el sistema y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario que se han revisado en ésta investigación como es \textbf{IPTables}.
 
-\
+Las capacidades de manipulación que provee Netfilters es bastante poderosa, abarcando un amplio espacio de acción en el sistema.
+
+\subsubsection{Arquitectura de Interrupción en Netfilter}
+El framework provee una arquitectura de seguimiento de los distintos paquetes para interceptar que se modela en un esquema como el definido en la imagen \ref{laimagendenetfilter}. Ésta arquitectura es lo suficientemente detallada como para intervenir paquetes en distintos niveles de comunicación y transito a través del kernel.
+
+IMAGEN
+
+La arquitectura
+
+
+\subsection{Código Fuente}
+La solución fue elaborada siguiendo los principios de construcción de un módulo estándar de Linux. Básicamente se implementaron los métodos \verb=init_module= y \verb=cleanup_module= para la instalación y eliminación del módulo respectivamente. Es en el primer método -\verb=init_module=- donde se gatilla la construcción y el registro del filtro definido para la interceptación de los paquetes, con las reglas definidas.
+
+Es en el proceso de registro del filtro donde se definen las caracteristicas del mismo. Para la solución propuesta se definieron carácteristicas como alta prioridad, naturaleza de paquetes interceptados y punto de intercepción.
+
 
 \section{Instalación y Utilización}
 Manteniendo la dinámica de un módulo de kernel, la solución requiere ser primero compilada y luego instalada en el sistema de acuerdo a los comandos tradicionales para dicho proposito de que dispone un sistema Linux.
