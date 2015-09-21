@@ -13,7 +13,7 @@ A raíz de lo anterior, a continuación se especifican las propiedades estructur
 \item[Rendimiento] El requerimiento principal para la solución objetivo constituye el garantizar un buen rendimiento. La solución debe poder brindar tiempos -a lo menos- competitivos con la mejor alternativa evaluada a lo largo de la investigación en curso, que corresponde al rendimiento obtenido con el mecanismo de \emph{ReusePort}.
 \item[Bajo Overhead] A fin de lograr una solución con bajo overhead e impacto con el resto del sistema, se debe procurar considerar una alternativa que opere en los niveles más bajos del sistema operativo -A nivel de Kernel idealmente- a fin de evitar la sobrecarga efectuada por concepto de interrupciones y call-chains ???? que son propias de soluciones que operan en espacio de usuario.
 \item[Modularidad] El esquema ideal debe ser modular en el sentido de garantizar una sencilla instalación y remoción de un sistema, sin necesitar significativas dependencias de otros componentes. En otra arista de este mismo requerimiento, se necesita una solución que permita modificarciones de manera sencilla, a fin de brindar extensibilidad de la misma.
-\item[Adaptable] Finalmente, una propiedad que debe contemplar la solución es ser configurable y adaptable a los distintos entornos y requerimientos que se adapten correctamente a las necesidades de rendimiento que se persigan.
+\item[Adaptabilidad] Finalmente, una propiedad que debe contemplar la solución es ser configurable y adaptable a los distintos entornos y requerimientos que se adapten correctamente a las necesidades de rendimiento que se persigan.
 \end{description}
 
 Las características antes mencionadas sirven como requerimientos estructurales en lo que se postula como nuestra propuesta de diseño de solución.
@@ -90,16 +90,63 @@ El segundo esquema de distribución denominado \emph{SequentialSched} hace una d
 Al ser un módulo del kernel, existen diversas guias técnicas para respaldar la construcción del mismo ?????????. Para poder implementar las operaciones de interferencia de paquetes en módulo, se utilizó el framework de Linux: \emph{Hook NetFilters}.
 
 \subsection{NetFilter Framework}
-Netfilter es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes IP en distintos niveles del tránsito de los mismos por el kernel. Para ello, Netfilters provee una interfaz para implementar \emph{hooks} que son funciones de intercepción de paquetes donde se da la libertad de programar libremente operaciones sobre cada paquete interceptado. Los \emph{hooks} implementados deben ser registrados en el sistema y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario que se han revisado en ésta investigación como es \textbf{IPTables}.
+Netfilter es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes IP en distintos niveles del tránsito de los mismos a través del kernel. Para ello, Netfilters provee una interfaz para implementar los denominados \emph{hooks}, que son funciones de interceptación de paquetes donde se da la libertad de programar libremente operaciones sobre cada paquete intervenido. Los \emph{hooks} implementados deben ser registrados en el sistema y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema, aplicándolos de acuerdo a reglas de prioridad bien definidas. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario como es \textbf{IPTables}.
 
-Las capacidades de manipulación que provee Netfilters es bastante poderosa, abarcando un amplio espacio de acción en el sistema.
+Las capacidades de manipulación que provee Netfilters es bastante poderosa, abarcando un amplio espacio de acción en el sistema, postulandose como una interesante herramienta para utilizar como solución al desafío planteado.
 
 \subsubsection{Arquitectura de Interrupción en Netfilter}
-El framework provee una arquitectura de seguimiento de los distintos paquetes para interceptar que se modela en un esquema como el definido en la imagen \ref{laimagendenetfilter}. Ésta arquitectura es lo suficientemente detallada como para intervenir paquetes en distintos niveles de comunicación y transito a través del kernel.
+El framework provee una arquitectura de seguimiento de los distintos paquetes para interceptar que se modela en un esquema definido en la imagen \ref{netfilterArchitecture}. Ésta arquitectura es lo suficientemente detallada como para intervenir paquetes en distintos niveles de comunicación y transito a través del kernel.
 
-IMAGEN
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.5]{imagenes/netfilterArchitecture}
+	\caption{Esquema de la arquitectura de interrupción disponible para la intervención de paquetes provisto por el Netfilters Framework}
+	\label{netfilterArchitecture}
+\end{figure}
 
-La arquitectura
+
+El esquema ilustrado en la figura \ref{netfilterArchitecture} da cuenta del flujo que recorre un paquete en el kernel en consideración de los modos de intervención que brinda el framework de Netfilters. Cada uno de los puntos ilustrados en dicho diagrama es un potencial punto de intervención, y da cuenta de alguna etapa en el arrivo o salida de un paquete. Los distintos puntos de intervención se ilustran a continuación:
+
+\begin{description}
+\item[NF\_IP\_PRE\_ROUTING] La entrada
+\item[NF\_IP\_INPUT] La entrada
+\item[NF\_IP\_FORWARD] La El reenvío
+\item[NF\_IP\_OUTPUT] La entrada
+\item[NF\_IP\_POST\_ROUTING] La salida
+\end{description}
+
+\subsubsection{Implementación de funciones de Interrupción}
+
+Para aprovechar las funcionaldiades del framework de Netfilters, una de las alternativas más sencillas es a través de la implementación de un módulo del Kernel, Para ello, basta incluir las directivas de encabezados del framework en el módulo (\verb=#include <linux/netfilter.h>=) e implementar los mecanísmos de registro del \emph{hook} en el sistema, especificando sus opciones como prioridad, familia y punto de interrupción, usando los valores de constantes provistos por el mismo framework, además de implementar la función a aplicar sobre cada paquete intervenido. Para este último aspecto es necesario seguir la convención que especifica el mismo framework.
+
+\definecolor{mygray}{rgb}{0.95,0.95,0.95}
+\lstset{language=C,
+		frame=single,
+		backgroundcolor=\color{mygray}
+		}
+\begin{lstlisting}[caption=ESO]
+static unsigned int hook_func(
+            		unsigned int hooknum,
+            		struct sk_buff *skb, 
+            		const struct net_device *in, 
+            		const struct net_device *out, 
+            		int (*okfn)(struct sk_buff *));
+\end{lstlisting}
+
+Esta interfaz de función comprende 5 valores a recibir que contienen información que se puede manipular en la implementación de la función \verb=hook_func= misma:
+\begin{description}
+\item[hooknum] La entrada
+\item[skb] La El reenvío
+\item[in] La salida
+\item[out] La El reenvío
+\item[sk\_buff] La salida
+\end{description}
+
+\begin{description}
+\item[] Valor que determina el puerto a interceptar para la redirección de paquetes.
+\end{description}
+
+
 
 
 \subsection{Código Fuente}
