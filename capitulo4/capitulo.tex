@@ -1,29 +1,29 @@
 \chapter{Propuesta de Solución}
 El análisis de las distintas alternativas disponibles para mejorar el rendimiento de la interfaz de red efectuado en el capítulo anterior nos motiva a diseñar e implementar una propuesta de solución que satisfaga ciertos requerimientos puntuales, en pos de ubicarla como una opción viable de uso en entornos como el propuesto.
 
-En el presente capítulo se formalizan los requerimientos mínimos que constituyen nuestra solución ideal. A continuación se desarrolla un modelo para esquematizar el funcionamiento de la solución propuesta y se implementa la misma, para terminar con una evaluación del producto final bajo los mismos entornos que las pruebas desarrolladas a lo largo de la presente investigación.
+En el presente capítulo se formalizan los requerimientos mínimos que constituyen nuestra solución ideal. A continuación se desarrolla un modelo para esquematizar el funcionamiento de la solución propuesta y se describe la implementación de la misma, para terminar con una evaluación final de performance bajo los mismos entornos que las pruebas desarrolladas a lo largo de la presente investigación.
 
 \section{Formalización de Requerimientos}
-Como se ilustró en el capítulo anterior, las distintas soluciones disponibles para mejorar la performance de las estructuras sockets en el kernel de Linux se caracterizan por ser complejas en su funcionamiento ya sea por su implementación para funcionar sobre aplicaciones ya desplegadas en un sistema, o por quebrantar ciertos principios de programación definidos como los sugeridos por el modelo estándar OSI con consecuencias como tener que modificar todo el codigo de los programas operativos. El objetivo en este punto es caracterizar las especificaciones ideales que debe satisfacer un desarrollo de optimización de la operación de los sockets en el marco de la preservación de caracteristicas deseadas, dadas por dicho modelo.
+Como se ilustró en el capítulo anterior, las distintas soluciones disponibles para mejorar la performance de las estructuras sockets en el kernel de Linux se caracterizan por ser complejas en su funcionamiento ya sea por su implementación para funcionar sobre aplicaciones ya desplegadas en un sistema, o por quebrantar ciertos principios de programación definidos -como los sugeridos por el modelo estándar OSI- con consecuencias como tener que modificar el codigo de programas perfectamente operativos bajo el modelo tradicional. El objetivo en este punto es caracterizar las especificaciones ideales que debe satisfacer un desarrollo de optimización de la operación de los sockets en el marco de la preservación de caracteristicas deseadas, especificadas por el ya mencionado modelo OSI.
 
-A raíz de lo anterior, a continuación se especifican las propiedades estructurales que debe contemplar una solución ideal:
+En función de lo anterior, a continuación se especifican las propiedades estructurales que debe contemplar una solución ideal:
 
 
 \begin{description}
 \item[Rendimiento] El requerimiento principal para la solución objetivo constituye el garantizar un buen rendimiento. La solución debe poder brindar tiempos -a lo menos- competitivos con la mejor alternativa evaluada a lo largo de la investigación en curso, que corresponde al rendimiento obtenido con el mecanismo de \emph{ReusePort}.
 \item[Bajo Overhead] A fin de lograr una solución con bajo overhead e impacto con el resto del sistema, se debe procurar considerar una alternativa que opere en los niveles más bajos del sistema operativo -A nivel de Kernel idealmente- a fin de evitar la sobrecarga efectuada por concepto de interrupciones y call-chains ???? que son propias de soluciones que operan en espacio de usuario.
-\item[Modularidad] El esquema ideal debe ser modular en el sentido de garantizar una sencilla instalación y remoción de un sistema, sin necesitar significativas dependencias de otros componentes. En otra arista de este mismo requerimiento, se necesita una solución que permita modificarciones de manera sencilla, a fin de brindar extensibilidad de la misma.
-\item[Adaptabilidad] Finalmente, una propiedad que debe contemplar la solución es ser configurable y adaptable a los distintos entornos y requerimientos que se adapten correctamente a las necesidades de rendimiento que se persigan.
+\item[Modularidad] El esquema ideal debe ser modular en el sentido de garantizar una sencilla instalación y remoción de la misma en un sistema, sin necesitar significativas dependencias de otros componentes. En otra arista de este mismo requerimiento, se busca desarrollar una solución que permita modificarciones en sí misma de manera sencilla a fin de garantizar \textbf{extensibilidad}.
+\item[Adaptabilidad] Finalmente, una propiedad que debe contemplar la solución es ser facilmente configurable y adaptable a los distintos entornos y requerimientos que se presenten en línea con las necesidades de rendimiento que se persigan.
 \end{description}
 
 Las características antes mencionadas sirven como requerimientos estructurales en lo que se postula como nuestra propuesta de diseño de solución.
 
 \section{Modelo de Funcionamiento de la Solución}
-Tomando en consideración los requerimientos descritos en la sección anterior, se optó por una solución cuyo modelo de funcionamiento fuese como el descrito en la imagen \ref{modeloUDPRedistribuyeModule} denominado como \textbf{UDPRedistributeModule}. Consiste en un \emph{módulo del Kernel} que permite interceptar y redistribuir paquetes (de las características relacionadas al caso de estudio) empleando distintos esquemas de distribución para la redirección de los mismos. Para la versión implementada se desarrollaron 2 esquemas de distribución que se describen en apartados posteriores.
+Tomando en consideración los requerimientos descritos en la sección anterior, se optó por una solución cuyo modelo de funcionamiento fuese como el descrito en la imagen \ref{modeloUDPRedistribuyeModule} denominado como \textbf{UDPRedistributeModule}. Ésta consiste en un \emph{módulo del Kernel} operativo sobre el framework de \emph{Netfilters}, que permite intervenir paquetes de las características relacionadas al caso de estudio y redistriburlos entre distintos puertos empleando distintos esquemas de distribución para la redirección de los mismos. Para una primera versión de ésta solución se postularon 2 esquemas de distribución que se describen en apartados posteriores.
 
 IMAGEN
 
-La justificación de esta desición de diseño se fundamenta en que, con éste enfoque se satisfacen casi todos los requerimientos definidos en la sección anterior: En primer lugar, es un enfoque que añade \textbf{bajo overhead} al sistema, al ser un módulo que se ejecuta en el espacio del Kernel, por lo que cuenta con privilegios que evitan la sobrecarga experimentada por soluciones en espacio usuario. Segundo, siendo un módulo, al momento de instalarlo en el sistema se pueden realizar todas las \textbf{configuraciones} pertinentes, permitiendo un grado de adaptabilidad de acuerdo al entorno y resultado deseado. En tercer lugar, al ser un módulo, es facilmente \textbf{modificable} permitiendo añadir, modificar o eliminar del mismo, reglas definidas o esquemas de distribución. Basta modificarlo, recompilarlo y está listo para operar. Por lo mismo, es facilmente removible del sistema y no guarda ningúna dependencia estricta de terceros.
+Ésta desición de diseño se fundamenta en que, con éste enfoque se satisfacen casi todos los requerimientos definidos en la sección anterior: En primer lugar, es un enfoque que añade \textbf{bajo overhead} al sistema, al ser un módulo que se ejecuta en el espacio del Kernel, por lo que cuenta con privilegios que evitan la sobrecarga experimentada por soluciones en espacio usuario. Segundo, siendo un módulo, al momento de instalarlo en el sistema se pueden realizar todas las \textbf{configuraciones} pertinentes, permitiendo un grado de adaptabilidad de acuerdo al entorno y resultado deseado. En tercer lugar, al ser un módulo, es facilmente \textbf{modificable} permitiendo añadir, modificar o eliminar del mismo, reglas definidas o esquemas de distribución. Basta modificarlo, recompilarlo y está listo para operar. Por lo mismo, es facilmente removible del sistema y no guarda ningúna dependencia estricta de terceros.
 
 Las componentes que rigen el modelo en su operación ilustrados en la imagen \ref{modeloUDPRedistribuyeModule} se describen como:
 
@@ -33,23 +33,22 @@ Las componentes que rigen el modelo en su operación ilustrados en la imagen \re
 \item[verbose] Índice del grado de detalle con que se guardarán registros de acción del módulo en los mensajes del Kernel.
 \end{description}
 
-
-En la práctica, la operación de la solución propuesta se inspira en el mecanismo de un \emph{proxy} de redistribución de paquetes, modificando valores de las cabeceras de los paquetes intervenidos. El modelo implementa la siguiente lógica de instrucciones:
+En la práctica, la operación de la solución propuesta se inspira en el mecanismo de un \emph{proxy}, modificando sólamente los valores en las cabeceras de los paquetes intervenidos. El modelo implementa la siguiente lógica de instrucciones:
 
 \begin{enumerate}
-\item Interceptar paquetes de tipo UDP y que estén dirigidos a un determinado puerto.
+\item Interceptar paquetes de tipo UDP y que estén dirigidos a un determinado puerto (\textbf{hook\_port}).
 \item Modificar el paquete, actualizando valores como el \emph{checksum} del mismo.
-\item Redireccionar el paquete, modificando el puerto de destino de acuerdo al esquema (o algoritmo) de distribución seleccionado.
-\item Reincorporación del paquete en el tránsito de distribución del kernel, por la vía ordinaria.
+\item Redireccionar el paquete, modificando el puerto de destino del paquete (\textbf{redirect\_port}) de acuerdo al esquema de distribución operativo.
+\item Reincorporación del paquete modificado en el tránsito de distribución del kernel por la vía ordinaria.
 \end{enumerate}
 
-Por su naturaleza de acción, la solución opera estrictamente entre las capas de Red y de Transporte en el modelo OSI, interviniendo esos niveles de abstracción, a través de la modificación de los headers correspondientes al empaquetamiento IP y UDP respectivamente.
+Por su naturaleza de acción, la solución opera estrictamente entre las capas de Red y de Transporte en el modelo OSI, interviniendo esos niveles de abstracción, a través de la modificación de los encabezados correspondientes al empaquetamiento por los protocolos IP y UDP respectivamente.
 
 \subsection{Esquemas de Distribución}
-Como ya se mencionó, la solución desarrollada comprende una etapa de distribución de paquetes de acuerdo a distintos esquemas de distribución, que son reglas para reasignar los paquetes interceptados entre un pool de puertos previamente definidos. En la versión desarrollada del \textbf{UDPRedistributeModule} se implementaron 2 esquemas de distribución: \emph{RandomSched} y \emph{SequentialSched}.
+Como ya se mencionó, la solución desarrollada comprende una etapa de distribución de paquetes de acuerdo a distintos esquemas de distribución. En este contexto, un esquema de distribución lo definiremos como un conjunto de reglas para reasignar los paquetes interceptados entre un pool de puertos previamente definidos. En la versión desarrollada del \textbf{UDPRedistributeModule} se implementaron 2 esquemas de distribución: \emph{RandomSched} y \emph{SequentialSched}.
 
 \subsubsection{RandomSched}
-El esquema de distribución \emph{RandomSched} realiza una distribución entre puertos de manera aleatoria. La aleatoriedad de éste esquema se consigue por medio de la llamada de sistema \verb=get_random_bytes()= que sugiere una distribución aleatorizada de resultados y redistribuyendo los paquetes de acuerdo a la aplicación de un módulo entre el total de puertos blanco de redistribución del módulo. La utilización de dicha función se justifica también en ser uno de los mecanismos más sencillos de obtener aleatoriedad en demanda en el espacio del Kernel.
+El esquema de distribución \emph{RandomSched} realiza una distribución entre puertos de manera aleatoria. La aleatoriedad de éste esquema se consigue por medio de la llamada de sistema \verb=get_random_bytes()= que sugiere una distribución aleatorizada de resultados y redistribuyendo los paquetes de acuerdo a la aplicación de una operación de módulo sobre el valor aleatorio, por el total de puertos blanco de redistribución. La utilización de dicha función se justifica en ser uno de los mecanismos más sencillos de obtener aleatoriedad en demanda en el espacio del Kernel y que, según su documentación, sus valores generados siguen una distribución uniforme.
 
 \begin{figure}[th!]
 \centering
@@ -66,10 +65,10 @@ El esquema de distribución \emph{RandomSched} realiza una distribución entre p
 \label{fig:RandomSched}
 \end{figure}
 
-A pesar de que el esquema en promedio promete una distribución uniforme entre los puertos, en la práctica es posible que la carga no sea en efecto perfectamente distribuida, por lo que éste esquema es práctico en escenarios donde se desee cierta entropía en la reasaignación de carga entre puertos de destino.
+A pesar de que en teória éste esquema en promedio promete una distribución uniforme, en la práctica es posible que la carga no sea en efecto perfectamente distribuida, por lo que éste esquema es práctico en escenarios donde se desee cierta entropía en la reasaignación de carga entre puertos de destino.
 
 \subsubsection{SequentialSched}
-El segundo esquema de distribución denominado \emph{SequentialSched} hace una distribución secuencial entre los distintos puertos de destino de distribución asignados en el módulo. De ésta manera, éste esquema consigue una perfecta distribución entre puertos de redirección logrando una carga equitativa entre todos ellos.
+El segundo esquema de distribución diseñado es denominado \emph{SequentialSched}. En éste caso, se hace una distribución secuencial entre los distintos puertos de destino de distribución asignados en el módulo. De ésta manera, éste esquema consigue una perfecta distribución entre puertos de redirección logrando una carga equitativa entre todos ellos.
 
 \begin{figure}[th!]
 \centering
@@ -87,15 +86,15 @@ El segundo esquema de distribución denominado \emph{SequentialSched} hace una d
 \end{figure}
 
 \section{Implementación}
-Al ser un módulo del kernel, existen diversas guias técnicas para respaldar la construcción del mismo ?????????. Para poder implementar las operaciones de interferencia de paquetes en módulo, se utilizó el framework de Linux: \emph{Hook NetFilters}.
+Al ser un módulo del kernel, existen diversas guias técnicas que profundizan los aspectos de diseño a considerar en construcción del mismo ?????????. Para poder implementar las operaciones de interferencia de paquetes en el módulo, se utilizó el framework de Linux: \emph{Hook NetFilters} ??????.
 
 \subsection{NetFilter Framework}
-Netfilter es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes IP en distintos niveles del tránsito de los mismos a través del kernel. Para ello, Netfilters provee una interfaz para implementar los denominados \emph{hooks}, que son funciones de interceptación de paquetes donde se da la libertad de programar libremente operaciones sobre cada paquete intervenido. Los \emph{hooks} implementados deben ser registrados en el sistema y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema, aplicándolos de acuerdo a reglas de prioridad bien definidas. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario como es \textbf{IPTables}.
+Netfilter es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes en distintos niveles del tránsito de los mismos a través del stack de protocolos de red del kernel. Para ello, Netfilters provee una interfaz para implementar los denominados \emph{hooks}, que son funciones de intervención de paquetes donde se da la libertad de programar libremente operaciones sobre cada estructura de paquete intervenido. Los \emph{hooks} implementados deben ser registrados en el sistema en un \emph{punto de intercepción} y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema, aplicándolos de acuerdo a reglas de prioridad y puntos de intervención bien definidos. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario como es \textbf{IPTables} y MASASSSSSSSSSS.
 
-Las capacidades de manipulación que provee Netfilters es bastante poderosa, abarcando un amplio espacio de acción en el sistema, postulandose como una interesante herramienta para utilizar como solución al desafío planteado.
+Las capacidades de manipulación que provee Netfilters son bastante poderosas, abarcando un amplio espacio de acción en el sistema, postulandose como una interesante herramienta que contemplar en el desarrollo de la solución al desafío planteado.
 
-\subsubsection{Arquitectura de Interrupción en Netfilter}
-El framework provee una arquitectura de seguimiento de los distintos paquetes para interceptar que se modela en un esquema definido en la imagen \ref{netfilterArchitecture}. Ésta arquitectura es lo suficientemente detallada como para intervenir paquetes en distintos niveles de comunicación y transito a través del kernel.
+\subsubsection{Arquitectura de Interrupción en Netfilters}
+El framework provee una arquitectura de seguimiento de los distintos paquetes para interceptar que se modela en un esquema definido en la imagen \ref{netfilterArchitecture}. Ésta arquitectura es lo suficientemente amplia como para intervenir paquetes en distintos niveles de comunicación y transito a través del kernel.
 
 \begin{figure}[!h]
 	\centering
@@ -104,8 +103,7 @@ El framework provee una arquitectura de seguimiento de los distintos paquetes pa
 	\label{netfilterArchitecture}
 \end{figure}
 
-
-El esquema ilustrado en la figura \ref{netfilterArchitecture} da cuenta del flujo que recorre un paquete en el kernel en consideración de los modos de intervención que brinda el framework de Netfilters. Cada uno de los puntos ilustrados en dicho diagrama es un potencial punto de intervención, y da cuenta de alguna etapa en el arrivo o salida de un paquete. Los distintos puntos de intervención se ilustran a continuación:
+El esquema ilustrado en la figura \ref{netfilterArchitecture} da cuenta del flujo que recorre un paquete en el kernel en consideración de los modos de intervención que brinda el framework de Netfilters. Cada uno de los puntos ilustrados en dicho diagrama es un potencial \emph{punto de intervención}, y da cuenta de alguna etapa en el arrivo o salida de un paquete. Los distintos puntos de intervención se detallan a continuación:
 
 \begin{description}
 \item[NF\_IP\_PRE\_ROUTING] La entrada
@@ -115,9 +113,9 @@ El esquema ilustrado en la figura \ref{netfilterArchitecture} da cuenta del fluj
 \item[NF\_IP\_POST\_ROUTING] La salida
 \end{description}
 
-\subsubsection{Implementación de funciones de Interrupción}
+\subsubsection{Implementación de funciones de Interrupción usando Netfilters}
 
-Para aprovechar las funcionaldiades del framework de Netfilters, una de las alternativas más sencillas es a través de la implementación de un módulo del Kernel, Para ello, basta incluir las directivas de encabezados del framework en el módulo (\verb=#include <linux/netfilter.h>=) e implementar los mecanísmos de registro del \emph{hook} en el sistema, especificando sus opciones como prioridad, familia y punto de interrupción, usando los valores de constantes provistos por el mismo framework, además de implementar la función a aplicar sobre cada paquete intervenido. Para este último aspecto es necesario seguir la convención que especifica el mismo framework.
+El framework en cuestión está diseñado para poder aprovechar sus funcionalidades facilmente a partir de un módulo del kernel, para ello, basta incluir las directivas de encabezados del framework en el módulo (\verb=#include <linux/netfilter.h>=) e implementar los mecanísmos de registro del \emph{hook} en el sistema, especificando sus opciones como prioridad, familia y punto de interrupción, para ello, se usan valores de constantes provistos por el mismo framework. Además de lo anterior, se debe implementar la función a aplicar sobre cada paquete intervenido, para lo cual es necesario seguir la convención que especifica el mismo framework, esto es un prototipo de función que propone el framework que se ilustra en el segmento de código ?????????????.
 
 \definecolor{mygray}{rgb}{0.95,0.95,0.95}
 \lstset{language=C,
@@ -142,39 +140,64 @@ Esta interfaz de función comprende 5 valores a recibir que contienen informaci�
 \item[sk\_buff] La salida
 \end{description}
 
+Finalmente, las funciones de \emph{hook} deben especificar un valor de retorno que determina el camino a seguir por el paquete intervenido. En éste sentido, el framework especifica 5 posibles valores de retorno para las funciones de interrupción especificadas a continuación:
 \begin{description}
-\item[] Valor que determina el puerto a interceptar para la redirección de paquetes.
+\item[NF\_ACCEPT:] Para que el paquete prosiga su entrega, es decir, promueve el paquete a la siguiente etapa de distribución según módulo de Red del kernel.
+\item[NF\_DROP:] Para descartar el paquete, cancelando su entrega.
+\item[NF\_STOLEN:] Para adueñarse del paquete. Es decir, sacar el paquete del entorno de Netfilters y brindarle su propiedad a la misma función de \emph{hook}.
+\item[NF\_QUEUE:] Para encolar el paquete y poder manipularlo en espacio usuario.
+\item[NF\_REPEAT:] Para llamar a la función de \emph{hook} en cuestión, otra vez.
 \end{description}
 
+\subsection{Implementación de la solución usando Netfilters}
+Para el proceso de registro del \emph{hook} se tomaron ciertas consideraciones que permitieran garantizar la plena operatividad de la solución en el entorno de trabajo.
 
-
+En primer lugar, se seleccionó como punto de interrupción del \emph{hook} a \verb=NF_INET_PRE_ROUTING=, ello pues corresponde al nivel más temprano de interrupción desde el arribo del paquete por la interfaz del sistema que admite el framework y básicamente captura todo transito de paquetes. Por cuestiones de naturaleza de paquetes a trabajar se configuró la familia del \emph{hook} como \verb=PF_INET= que abarca a la familia de los protocolos de internet\footnote{REFERENCIAAAAAAAAAAAA} que contiene tipos útiles para la manipulación de los paquetes que son del tipo que nos interesa interceptar. Para el apartado de prioridad del \emph{hook}, que especifica el órden de ejecución los diferentes hooks programados en el sistema, se seleccionó como el valor constante \verb=NF_IP_PRI_FIRST= que provee el framework mismo y que garantiza la más pronta aplicación posible de nuestro hook a los paquetes interceptados. Ésta desición se apoya en que se desea el menor impacto para con otras componentes del sistema, por ello la intervención debe ser temprana y poco invasiva. Finalmente, se implementó el cuerpo de la función para tratar cada paquete interceptado (\verb=hook_func=) cuya especificación puede ser encontrada en el anexo XXXXXXXXXXX.
 
 \subsection{Código Fuente}
-La solución fue elaborada siguiendo los principios de construcción de un módulo estándar de Linux. Básicamente se implementaron los métodos \verb=init_module= y \verb=cleanup_module= para la instalación y eliminación del módulo respectivamente. Es en el primer método -\verb=init_module=- donde se gatilla la construcción y el registro del filtro definido para la interceptación de los paquetes, con las reglas definidas.
-
-Es en el proceso de registro del filtro donde se definen las caracteristicas del mismo. Para la solución propuesta se definieron carácteristicas como alta prioridad, naturaleza de paquetes interceptados y punto de intercepción.
+La solución fue elaborada siguiendo los principios de construcción de un módulo estándar de Linux ????????????. Básicamente se implementaron los métodos \verb=init_module= y \verb=cleanup_module= para la instalación y eliminación del módulo respectivamente. Es en el primer método -\verb=init_module=- donde se gatilla la construcción y el registro del \emph{hook} definido para la interrupción de los paquetes. Para los procesos de registro y eliminación del \emph{hook} del sistema se usan respectivamente las llamadas \verb=nf_register_hook= y \verb=nf_unregister_hook= provistas por el framework de Netfilters. Más detalles del código fuente de la solución pueden ser encontrados en el anexo XXSADASDASDASD.
 
 
 \section{Instalación y Utilización}
-Manteniendo la dinámica de un módulo de kernel, la solución requiere ser primero compilada y luego instalada en el sistema de acuerdo a los comandos tradicionales para dicho proposito de que dispone un sistema Linux.
+Preservando la dinámica de un módulo de kernel, la solución requiere ser primero compilada y luego instalada en el sistema de acuerdo a los comandos tradicionales para dicho proposito de que dispone un sistema Linux.
 
 \subsection{Compilación}
-Como con todo módulo, se requiere disponer tanto de los encabezados o cabeceras del Kernel, además de su código fuente. Las distribuciones actuales incorporan mecanismos muy simples para poder obtener esos recursos sin mayores problemas.
+Para el proceso de compilación se requiere disponer tanto de los encabezados del Kernel activo en la máquina a instalar, además de su código fuente. La gran mayoría de las distribuciones modernas de Linux incorporan mecanismos muy simples para poder obtener esos recursos sin mayores problemas.
 
-La solución desarrollada incorpora un archivo \verb=Makefile= que resume las instrucciones para la compilación, utilizable en la mayoría de los casos sin necesidad de ningún cambio.
-
-\begin{listing}
-\caption{main}
-\begin{minted}[frame=lines,bgcolor=LightGray]{bash}
- >>> a = 1 
- >>> b = 2
- >>> a b +
-\end{minted}
-\end{listing}
-
+La solución desarrollada incorpora un archivo \verb=Makefile= que resume las instrucciones para la compilación y correcta limpieza del mismo, utilizable en la mayoría de los escenarios sin necesidad de ningún cambio.
 
 \subsection{Instalación y Configuración}
+Ya compilado, para la instalación en el sistema se deben emplear los comandos tradicionales de Linux para agregar módulos al kernel, usando \verb=insmod= para instalar. Es importante recordar que ésta es una operación que requiere privilegios en el sistema, por lo que debe ser ejecutada en modo administrador.
+
+Al momento de realizar la instalación se debe proveer la configuración que regirá la operación de la solución. La configuración consta de la incorporación de las siguientes opciones:
+
+\begin{description}
+\item[verbose] Para seleccionar un nivel de detalle en los mensajes que se dejarán en el registro del kernel sobre la actividad del módulo.
+\begin{description}
+\item[0] Sólo registra la configuración de instalación y de operación del módulo.
+\item[1] Registra lo mismo que el nivel de verbosidad 0, además de registrar para cada paquete correctamente interceptado detalles de la nueva dirección de puerto de destino que se ha asignado.
+\item[2] Registra lo mismo que los niveles 0 y 1, además de informar para cada paquete capturado detalles de sus construcción como direcciones \verb=IP= y puertos de origen y destino, largo de encabezados y todos los pasos de modificación del paquete.
+\end{description}
+\item[hook\_port] Para configurar el puerto desde el cual se interceptarán los paquetes. Es decir, todo paquete que venga dirigido a éste puerto, pasará por el proceso de redistribución del módulo.
+\item[start\_redirect\_port] Para configurar el puerto inicial que servirá para redirigir los paquetes interceptados.
+\item[number\_redirect\_ports] Para determinar cuantos serán los puertos de redirección que se emplearán en el esquema de distribución del módulo.
+\item[port\_sched] 
+\end{description}
+
+En la práctica, los puertos de redirección quedan determinados a partir del valor de \verb=start_redirect_port= y hasta \verb=start_redirect_port + number_redirect_ports=.
+
+\lstset{language=Bash,
+		breaklines=true,
+		frame=single,
+		backgroundcolor=\color{mygray}
+		}
+\begin{lstlisting}[caption=ESO3]
+sudo insmod UDPRedistributeModule.ko verbose=2 hook_port=13131 start_redirect_port=1820 number_redirect_ports=4 port_sched={1,2}
+\end{lstlisting}
+
 \subsection{Utilización}
+
+\subsection{Eliminación}
 
 \section{Rendimiento en la Práctica}
 
