@@ -99,18 +99,18 @@ El framework provee una arquitectura de seguimiento de los distintos paquetes pa
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.5]{imagenes/netfilterArchitecture}
-	\caption{Esquema de la arquitectura de interrupción disponible para la intervención de paquetes provisto por el Netfilters Framework}
+	\caption{Esquema de la arquitectura de interrupción disponible para la intervención de paquetes provisto por el Netfilters Framework. REVISAR EN \url{http://amsekharkernel.blogspot.cl/2012/01/what-is-netfilter-in-linux.html}}
 	\label{netfilterArchitecture}
 \end{figure}
 
-El esquema ilustrado en la figura \ref{netfilterArchitecture} da cuenta del flujo que recorre un paquete en el kernel en consideración de los modos de intervención que brinda el framework de Netfilters. Cada uno de los puntos ilustrados en dicho diagrama es un potencial \emph{punto de intervención}, y da cuenta de alguna etapa en el arrivo o salida de un paquete. Los distintos puntos de intervención se detallan a continuación:
+El esquema ilustrado en la figura \ref{netfilterArchitecture} da cuenta del flujo que recorre un paquete en el kernel en consideración de los modos de intervención que brinda el framework de Netfilters. Cada uno de los puntos ilustrados en dicho diagrama es un potencial \emph{punto de intervención}, y da cuenta de alguna etapa en el arrivo o salida de un paquete. Los distintos puntos de intervención disponibles en \emph{IPv4} se detallan a continuación:
 
 \begin{description}
-\item[NF\_IP\_PRE\_ROUTING] La entrada
-\item[NF\_IP\_INPUT] La entrada
-\item[NF\_IP\_FORWARD] La El reenvío
-\item[NF\_IP\_OUTPUT] La entrada
-\item[NF\_IP\_POST\_ROUTING] La salida
+\item[NF\_IP\_PRE\_ROUTING] Incoming packets pass this hook in \verb=ip_rcv()= before routing
+\item[NF\_IP\_INPUT] All incoming packets addressed to the local host pass this hook in \verb=ip\_local\_deliver()=.
+\item[NF\_IP\_FORWARD] All incoming packets not addressed to the local host pass this hook in \verb=ip_forward()=
+\item[NF\_IP\_OUTPUT] All outgoing packets created by this local computer pass this hook in \verb=ip_build_and_send_pkt()=
+\item[NF\_IP\_POST\_ROUTING] All outgoing packets (forwarded or locally created) will pass this hook in \verb=ip_finish_output()=
 \end{description}
 
 \subsubsection{Implementación de funciones de Interrupción usando Netfilters}
@@ -131,14 +131,7 @@ static unsigned int hook_func(
             		int (*okfn)(struct sk_buff *));
 \end{lstlisting}
 
-Esta interfaz de función comprende 5 valores a recibir que contienen información que se puede manipular en la implementación de la función \verb=hook_func= misma:
-\begin{description}
-\item[hooknum] La entrada
-\item[skb] La El reenvío
-\item[in] La salida
-\item[out] La El reenvío
-\item[sk\_buff] La salida
-\end{description}
+Este prototipo de función comprende 5 valores a recibir que contienen información relacionada al paquete que se ha de intervenir por la función \verb=hook_func= misma. \textbf{hooknum} Que corresponde al valor del mismo nombre que se asigna al momento de registrar la función de \emph{hook} y que hace referencia al punto de interrupción en que inspeccionará paquetes nuestro \emph{hook}. \textbf{skb} que es una estructura tipo \verb=sk_buff= que almacena el paquete interceptado propiamente tal, y del cual se pueden extraer y modificar los encabezados de las capas de transporte y red para modificar el tránsito del paquete. Los punteros \textbf{in} y \textbf{out} de estruturas \verb=net_device= que se refieren a las interfaces de procedencia y destino del paquete que registra al momento de interceptarlo, Y finalmente \textbf{sk\_buff}, que se refiere a AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
 
 Finalmente, las funciones de \emph{hook} deben especificar un valor de retorno que determina el camino a seguir por el paquete intervenido. En éste sentido, el framework especifica 5 posibles valores de retorno para las funciones de interrupción especificadas a continuación:
 \begin{description}
@@ -181,7 +174,7 @@ Al momento de realizar la instalación se debe proveer la configuración que reg
 \item[hook\_port] Para configurar el puerto desde el cual se interceptarán los paquetes. Es decir, todo paquete que venga dirigido a éste puerto, pasará por el proceso de redistribución del módulo.
 \item[start\_redirect\_port] Para configurar el puerto inicial que servirá para redirigir los paquetes interceptados.
 \item[number\_redirect\_ports] Para determinar cuantos serán los puertos de redirección que se emplearán en el esquema de distribución del módulo.
-\item[port\_sched] 
+\item[port\_sched] Para seleccionar el esquema de distribución a utilizar en la reasignación de puertos por paquete. Las opciones en éste caso son: 1 para \textbf{RandomSched} y 2 para \textbf{SequentialSched}.
 \end{description}
 
 En la práctica, los puertos de redirección quedan determinados a partir del valor de \verb=start_redirect_port= y hasta \verb=start_redirect_port + number_redirect_ports=.
@@ -195,11 +188,23 @@ En la práctica, los puertos de redirección quedan determinados a partir del va
 sudo insmod UDPRedistributeModule.ko verbose=2 hook_port=13131 start_redirect_port=1820 number_redirect_ports=4 port_sched={1,2}
 \end{lstlisting}
 
+
 \subsection{Utilización}
+Una vez instalada, la solución queda plenamente operativa en el sistema, llevando un registro de sus operaciones dependiendo del nivel de verbosidad definido al instante de la instalación. Es importante resaltar que es responsabilidad del usuario tomar posesión del conjunto de puertos de redirección definido en la solución, usándolos para los fines que él mismo desee. Un ejemplo de lo anterior puede verse en la figura ???????.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.5]{imagenes/netfilterArchitecture}
+	\caption{Esquema de la arquitectura de interrupción disponible para la intervención de paquetes provisto por el Netfilters Framework. REVISAR EN \url{http://amsekharkernel.blogspot.cl/2012/01/what-is-netfilter-in-linux.html}}
+	\label{netfilterArchitecture}
+\end{figure}
 
 \subsection{Eliminación}
+La remoción de la solución desde el sistema es muy simple y se basa en que la misma es sólo un módulo del kernel, por lo tanto basta aplicar el comando \verb=rmmod= del sistema acompañado del nombre del módulo. Para una completa limpieza del módulo, es recomendable tambien limpiar los registros generados al momento de la compilación del módulo, para lo cual se puede ejecutar la directiva \verb=make clean= del archivo \verb=Makefile= provisto en la solución.
 
-\section{Rendimiento en la Práctica}
+\section{Rendimiento de la solución en la práctica}
+
+\section{Comparación de la solución con ReusePort}
 
 \begin{defn}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{defn}
 
