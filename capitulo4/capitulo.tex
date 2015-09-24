@@ -19,7 +19,7 @@ En función de lo anterior, a continuación se especifican las propiedades estru
 Las características antes mencionadas sirven como requerimientos estructurales en lo que se postula como nuestra propuesta de diseño de solución.
 
 \section{Modelo de Funcionamiento de la Solución}
-Tomando en consideración los requerimientos descritos en la sección anterior, se optó por una solución cuyo modelo de funcionamiento fuese como el descrito en la imagen \ref{modeloUDPRedistribuyeModule} denominado como \textbf{UDPRedistributeModule}. Ésta consiste en un \emph{módulo del Kernel} operativo sobre el framework de \emph{Netfilters}, que permite intervenir paquetes de las características relacionadas al caso de estudio y redistriburlos entre distintos puertos empleando distintos esquemas de distribución para la redirección de los mismos. Para una primera versión de ésta solución se postularon 2 esquemas de distribución que se describen en apartados posteriores.
+Tomando en consideración los requerimientos descritos en la sección anterior, se optó por una solución cuyo modelo de funcionamiento fuese como el descrito en la imagen \ref{modeloUDPRedistribuyeModule}, construido como un módulo del kernel que sea capaz de intervenir paquetes de Internet de las características que atañen éste estudio, y los redistribuyan entre un pool de nuevos puertos. Para una primera versión de ésta solución se postularon 2 esquemas de distribución que se describen en apartados posteriores.
 
 IMAGEN
 
@@ -86,10 +86,17 @@ El segundo esquema de distribución diseñado es denominado \emph{SequentialSche
 \end{figure}
 
 \section{Implementación}
-Al ser un módulo del kernel, existen diversas guias técnicas que profundizan los aspectos de diseño a considerar en construcción del mismo ?????????. Para poder implementar las operaciones de interferencia de paquetes en el módulo, se utilizó el framework de Linux: \emph{Hook NetFilters} ??????.
+El mecanismo de funcionamiento planetado en la sección anterior postula modificar el destino final de los paquetes, modificando el puerto de destino de los mismos. Dicha operación implica dos caracteristicas a considerar:
+
+\begin{enumerate}
+\item Interceptar paquetes en el momento apropiado. A priori dicho momento sería idealmente apenas el sistema reconozca el arribo de un paquete.
+\item Modificar paquetes para su redirección. Cómo se explicó en la sección XXXXXXX, la información de puerto de destino es una especifiación propia de la \textbf{capa de transporte} según el modelo OSI, y por lo tanto, dicha información es inherente a los encabezados de dicha capa.
+\end{enumerate}
+
+Dados los requerimientos anteriores, para la implementación de la solución se optó por el diseño de un módulo del kernel operacional sobre el framework de \emph{Netfilters} ????????????, el cual permite intervenir paquetes de las características relacionadas al caso de estudio y brinda la flexibilidad para modificar los encabezados de los mismos, logrando el efecto de redistribución entre distintos puertos, y siendo lo suficientemente flexible como para emplear distintos esquemas de distribución para la redirección de los mismos. Además, al ser un módulo del kernel, existen diversas guias técnicas que profundizan los aspectos de diseño a considerar en construcción del mismo ?????????.
 
 \subsection{NetFilter Framework}
-Netfilter es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes en distintos niveles del tránsito de los mismos a través del stack de protocolos de red del kernel. Para ello, Netfilters provee una interfaz para implementar los denominados \emph{hooks}, que son funciones de intervención de paquetes donde se da la libertad de programar libremente operaciones sobre cada estructura de paquete intervenido. Los \emph{hooks} implementados deben ser registrados en el sistema en un \emph{punto de intercepción} y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema, aplicándolos de acuerdo a reglas de prioridad y puntos de intervención bien definidos. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario como es \textbf{IPTables} y MASASSSSSSSSSS.
+Netfilter ???????? es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes en distintos niveles del tránsito de los mismos a través del stack de protocolos de red del kernel. Para ello, Netfilters provee una interfaz para implementar los denominados \emph{hooks}, que son funciones de intervención de paquetes donde se da la libertad de programar libremente operaciones sobre cada estructura de paquete intervenido. Los \emph{hooks} implementados deben ser registrados en el sistema en un \emph{punto de intercepción} y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema, aplicándolos de acuerdo a reglas de prioridad y puntos de intervención bien definidos. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario como es \textbf{IPTables} y MASASSSSSSSSSS.
 
 Las capacidades de manipulación que provee Netfilters son bastante poderosas, abarcando un amplio espacio de acción en el sistema, postulandose como una interesante herramienta que contemplar en el desarrollo de la solución al desafío planteado.
 
@@ -148,7 +155,7 @@ Para el proceso de registro del \emph{hook} se tomaron ciertas consideraciones q
 En primer lugar, se seleccionó como punto de interrupción del \emph{hook} a \verb=NF_INET_PRE_ROUTING=, ello pues corresponde al nivel más temprano de interrupción desde el arribo del paquete por la interfaz del sistema que admite el framework y básicamente captura todo transito de paquetes. Por cuestiones de naturaleza de paquetes a trabajar se configuró la familia del \emph{hook} como \verb=PF_INET= que abarca a la familia de los protocolos de internet\footnote{REFERENCIAAAAAAAAAAAA} que contiene tipos útiles para la manipulación de los paquetes que son del tipo que nos interesa interceptar. Para el apartado de prioridad del \emph{hook}, que especifica el órden de ejecución los diferentes hooks programados en el sistema, se seleccionó como el valor constante \verb=NF_IP_PRI_FIRST= que provee el framework mismo y que garantiza la más pronta aplicación posible de nuestro hook a los paquetes interceptados. Ésta desición se apoya en que se desea el menor impacto para con otras componentes del sistema, por ello la intervención debe ser temprana y poco invasiva. Finalmente, se implementó el cuerpo de la función para tratar cada paquete interceptado (\verb=hook_func=) cuya especificación puede ser encontrada en el anexo XXXXXXXXXXX.
 
 \subsection{Código Fuente}
-La solución fue elaborada siguiendo los principios de construcción de un módulo estándar de Linux ????????????. Básicamente se implementaron los métodos \verb=init_module= y \verb=cleanup_module= para la instalación y eliminación del módulo respectivamente. Es en el primer método -\verb=init_module=- donde se gatilla la construcción y el registro del \emph{hook} definido para la interrupción de los paquetes. Para los procesos de registro y eliminación del \emph{hook} del sistema se usan respectivamente las llamadas \verb=nf_register_hook= y \verb=nf_unregister_hook= provistas por el framework de Netfilters. Más detalles del código fuente de la solución pueden ser encontrados en el anexo XXSADASDASDASD.
+La solución fue elaborada siguiendo los principios de construcción de un módulo estándar de Linux ????????????. Básicamente se implementaron los métodos \verb=init_module= y \verb=cleanup_module= para la instalación y eliminación del módulo respectivamente. Es en el primer método donde se gatilla la construcción y el registro del \emph{hook} definido para la interrupción de los paquetes. Para los procesos de registro y eliminación del \emph{hook} del sistema se usan respectivamente las llamadas \verb=nf_register_hook= y \verb=nf_unregister_hook= provistas por el framework de Netfilters. Más detalles del código fuente de la solución pueden ser encontrados en el anexo XXSADASDASDASD.
 
 
 \section{Instalación y Utilización}
@@ -165,11 +172,11 @@ Ya compilado, para la instalación en el sistema se deben emplear los comandos t
 Al momento de realizar la instalación se debe proveer la configuración que regirá la operación de la solución. La configuración consta de la incorporación de las siguientes opciones:
 
 \begin{description}
-\item[verbose] Para seleccionar un nivel de detalle en los mensajes que se dejarán en el registro del kernel sobre la actividad del módulo.
+\item[verbose] Para seleccionar un nivel de detalle en los mensajes que se dejarán en el registro del kernel sobre la actividad del módulo. Los niveles disponibles de verbosidad son:
 \begin{description}
-\item[0] Sólo registra la configuración de instalación y de operación del módulo.
-\item[1] Registra lo mismo que el nivel de verbosidad 0, además de registrar para cada paquete correctamente interceptado detalles de la nueva dirección de puerto de destino que se ha asignado.
-\item[2] Registra lo mismo que los niveles 0 y 1, además de informar para cada paquete capturado detalles de sus construcción como direcciones \verb=IP= y puertos de origen y destino, largo de encabezados y todos los pasos de modificación del paquete.
+\item[verbose=0] Sólo registra la configuración de instalación y de operación del módulo.
+\item[verbose=1] Registra lo mismo que el nivel de verbosidad 0, además de registrar para cada paquete correctamente interceptado detalles de la nueva dirección de puerto de destino que se ha asignado.
+\item[verbose=2] Registra lo mismo que los niveles 0 y 1, además de informar para cada paquete capturado detalles de sus construcción como direcciones \verb=IP= y puertos de origen y destino, largo de encabezados y todos los pasos de modificación del paquete.
 \end{description}
 \item[hook\_port] Para configurar el puerto desde el cual se interceptarán los paquetes. Es decir, todo paquete que venga dirigido a éste puerto, pasará por el proceso de redistribución del módulo.
 \item[start\_redirect\_port] Para configurar el puerto inicial que servirá para redirigir los paquetes interceptados.
@@ -205,6 +212,8 @@ La remoción de la solución desde el sistema es muy simple y se basa en que la 
 \section{Rendimiento de la solución en la práctica}
 
 \section{Comparación de la solución con ReusePort}
+
+\section{Aciertos de la solución}
 
 \begin{defn}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{defn}
 
