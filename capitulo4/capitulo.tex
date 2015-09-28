@@ -209,11 +209,23 @@ Una vez instalada, la solución queda plenamente operativa en el sistema, llevan
 \subsection{Eliminación}
 La remoción de la solución desde el sistema es muy simple y se basa en que la misma es sólo un módulo del kernel, por lo tanto basta aplicar el comando \verb=rmmod= del sistema acompañado del nombre del módulo. Para una completa limpieza del módulo, es recomendable tambien limpiar los registros generados al momento de la compilación del módulo, para lo cual se puede ejecutar la directiva \verb=make clean= del archivo \verb=Makefile= provisto en la solución.
 
+\section{Testing}
+
 \section{Rendimiento de la solución en la práctica}
 
 \section{Comparación de la solución con ReusePort}
 
 \section{Aciertos de la solución}
+
+A raíz de los análisis anteriores, se desprenden varios aspectos rescatables de la solución implementada, obtenidos como consecuencia de satisfacer los requerimientos de operación planteados al comienzo del presente capítulo, y que diferencian neustra solución de las opciones disponibles.
+
+Un primer elemento a destacar es el \textbf{rendimiento}. En las pruebas desarrolladas en secciones anteriores se corroboró la efectividad de la solución propuesta, comparándola con la mejor alternativa disponible: \emph{Reuseport}, de donde se concluyó que nuestra propuesta logra un comportamiento similar al de \emph{Reuseport} en terminos nominales, conservando un margen de diferencias que mantiene a \emph{Reuseport} como la opción más rápida, pero postulando nuestro desarrollo como competitivo en esa linea.
+
+Un segundo Punto a descatar de la solución es su \textbf{equitatividad de tiempos}, una característica que lo diferencia de \emph{Reuseport} pues, nuestro diseño provee un rendimiento más homogéneo entre múltiples procesos. Ésta característica es muy interesante de resaltar pues hay aplicaciones donde es necesario garantizar un escenario altamente \emph{Fairness} y experimentalmente nuestra solución luce prometedora en ese sentido.
+
+Otro aspecto a destacar de nuestra solución es que logra buenos rendimientos preservando los \textbf{principios de diseño del modelo OSI}. Ésta característica era fundamental de proveer pues da garantías de facil adopción de la solución en entornos con aplicaciones ya operativas sin mayores modificaciones de los mismos.
+
+El último y más importante acierto a reconocer de neustra solución consiste en su \textbf{configurabilidad} y \textbf{extensibilidad}. El primero pues, cómo se explicó en secciones anteriores, la solución admite distintos parámetros de configuración que permiten, sin cambios del código fuente, proveer distintos modos de funcionamiento según el requerimiento de consumo y distribución que se busque. El segundo dado por la implementación misma de la solución, ello pues al ser un módulo del kernel, es facilmente modificable para añadir nuevo código fuente que permita modificar los esquemas de distribución, etapas de interceptación de paquetes, funcionamiento del framework de \emph{Netfilters}, etc.
 
 \begin{defn}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{defn}
 
