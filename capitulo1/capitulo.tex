@@ -43,13 +43,56 @@ El modelo OSI reconoce 7 capas de abstracción en el proceso de comunicación en
 A pesar de que el modelo OSI plantea responsabilidades delimitadas a cada capa de abstracción, la correspondencia de dicho estándar en la práctica es una labor que queda supeditada a los programadores de sistemas operativos. Finalmente son ellos los que, en mayor o menor medida, hacen corresponder para con el modelo, las implementaciones finales de los módulos de red de un sistema.
 
 
+\section{Familia de Protocolos de Internet}
+
+\subsection{UDP}
+
 \section{Sistemas Operativos Modernos}
+capacidad multiprocesador!
+
+\subsection{Mecanismos de Sincronización}
+Una responsabilidad fundamental de los sistemas operativos modernos es garantiar un entorno seguro para las aplicaciones en el sentido del acceso a datos o recursos del sistema. En ésta linea, garantizar \textbf{consistencia en los datos} es una labor crucial en esquemas modernos, capaces de generar escenarios de multiples aplicaciones con acceso simultáneo a datos compartidos entre ellas. Para proveer operaciones sobre los datos en escenarios concurrentes, los sistemas operativos implementan mecanismos de sincronización que permiten garantizar consistencia en sus estructuras y datos, permitiendo así operaciones "simultaneas" sobre una determinada estructura, permitiendo incluso compartir una estructura entre distintos procesos que la modifiquen coincidentemente.
+
+Hablar de los distintos tipos de mecanismos de sincronizacion de datos.
 
 \subsection{Interfaces de Comunicación}
 
-\subsection{Sockets en Linux}
+Aka no he puesto nada aún...
 
-\subsection{Mecanismos de Sincronización}
+\subsection{Sockets en Linux}
+El modelo OSI ha estipulado a la familia de los protocolos TCP/IP como un estándar a la hora de establecer mecanismos de conexión entre computadoras. Sin embargo, las interfaces de programación no siguen la misma naturaleza estándar. Los distintos sistemas operativos implementan distintas interfaces públicas de aplicación (API) para el uso práctico de TCP/IP. \textbf{Socket} es la denominación tradicional para las interfaces de programación que proveen los mecanísmos para realizar tales conexiones. En la práctica un \textbf{Socket} representa una interfaz o punto de comunicación que maneja un protocolo de comunicación especifico.
+
+Los sockets son estructuras que se construyen por medio de la llamada de sistema \verb=socket()=. Son estructuras provistas por el kernel del sistema\footnote{Típicamente implementada e importada desde el prototipo \verb=<sys/socket.h>=, disponible en los encabezados del kernel.} que al utilizarlos se manejan simplemente como descriptores de archivo, a pesar de que en su implementación a bajo nivel son bastante más complejos que una interfaz de sólo entrada y salida de datos. La gran diferencia de los sockets es que están concebidos para una operación basada en un principio \emph{Cliente-Servidor}, lo que impacta finalmente en que su descriptor no apunta directamente a un archivo y su utilidad queda determinada sólo desde el momento en que se complete la dinámica de llamadas a sistema que hagan se establezca una conexión efectiva, dependiendo del protocolo a usar (ver imagen \ref{fig:socketHandshake}). Linux cuenta con una API que provee métodos de comunicación sencillos para la maniulación de los sockets de acuerdo al protocolo para el que se configure el mismo.
+
+\begin{figure}[h!]
+	\centering
+	\subfigure[Llamadas de sistema en conexión TCP]{
+		\includegraphics[width=.4\textwidth]{imagenes/fcfm}
+	}
+	\subfigure[Llamadas de sistema en conexión UDP]{
+		\includegraphics[width=.4\textwidth]{imagenes/fcfm}
+	}
+	\caption{Un esquemático de las llamadas a sistema que se deben suceder para establecer una conexión.}
+	\label{fig:socketHandshake}
+\end{figure}
+
+El sistema operativo reconoce a los diferentes sockets en operación a través de sus detalles de conexión de red, ello por medio de tuplas que contienen información de la conexión que provee el mismo. Una tupla congrega datos como: El protocolo de comunicación, las direcciones local y remota (con datos de las capas de red y de transporte para la identificación del punto de acceso: IP:PUERTO) y los identificadores de procesos local y remoto propietarios del punto de comunicación.
+
+\begin{verbatim}
+{Protocolo, dirección_local, proceso_local, dirección_remota, proceso_remoto}
+\end{verbatim}
+
+Los sockets son elementos muy versátiles en cuanto a su manipulación y uso. Se pueden usar en dos variantes principales que determinan el \emph{dominio del socket}:
+\begin{description}
+\item[Unix Sockets] Una descripcion de los unix socket
+\item[Internet Sockets] Una descripcion de los internet socket socket.
+\end{description}
+
+Para las variedades recien mencionadas hay que sumar la capacidad de configuración de un socket. La primera y más importante es la configuración del modo de conexión que regirá la dinámica de comunicación del socket: El \emph{protocolo de comunicación}. En éste apartado existen dos variantes comúnmente usadas: \textbf{SOCK\_STREAM} y \textbf{SOCK\_DGRAM} para usar TCP o UDP respectivamente. Sumado a lo anterior, los sistemas Linux proveen de la llamada de sistema \verb=setsockopt= que permite modificar características de una instancia socket, activando ciertas funcionalidades especificas o habilitando variedades de la implementación original con modificaciones especiales con respecto al funcionamiento estándar.
+
+Más allá de la configuración puntual de la que se dote a un socket, la estructura interna de éste elemento es estándar y tiene especificaciones importantes de comentar para comprender su funcionamiento y posibles limitaciones.
+
+\subsubsection{Estructura Interna}
 
 \section{Presentación del Problema}
 
