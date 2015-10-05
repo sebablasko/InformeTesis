@@ -4,9 +4,9 @@ El gran crecimiento en la cantidad de sistemas teconológicos interconectados vi
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.3]{imagenes/netfilterArchitecture}
-	\caption{Grafico de akamai.}
-	\label{netfilterArchitecture}
+	\includegraphics[scale=0.5]{imagenes/conexiones_moviles}
+	\caption{Registros de la compañía \emph{Ericsson} ilustrando el crecimiento exponencial en el uso de datos de los dispositivos móviles. Parte del informe de \emph{Akamai} \cite{report:akamai}}
+	\label{fig:akamai_stats}
 \end{figure}
 
 Más allá del número de dispositivos o la cantidad --o calidad-- del acceso a Internet, las distintas aplicaciones que ha desarrollado la industria han evolucionado sobre la base de protocolos y sistemas diseñados hace varias décadas, exigiendo siempre la mejor performance posible en pos de garantizar buenos tiempos de respuesta. Los protocolos más celebres de la llamada \emph{familia de protocolos de Internet} son TCP e IP. Sin embargo, son decenas los protocolos y mecanísmos involucrados en las diferentes fases de comunicación entre computadoras y aplicaciones, que permiten en conjunto la operación de la red de redes como hoy la conocemos.
@@ -44,8 +44,69 @@ A pesar de que el modelo OSI plantea responsabilidades delimitadas a cada capa d
 
 
 \section{Familia de Protocolos de Internet}
+El conjunto de múltiples protocolos que facultan a los sistemas de mecanismos de interconexión comprende a varios cientos que se distribuyen entre las distintas capas del modelo OSI. A Este conjunto se le denomina \emph{Familia de Protocolos de Internet}. Sin embargo, historicamente se le ha prestado especial atención a un subconjunto de ellos que son estructurales en la infraestructura en Internet y que rigen la misma, hablamos del conjunto de protocolos \textbf{TCP/IP}.
+
+La arquitectura del protocolo TCP/IP sigue la inspiración del modelo OSI en las responsabilidades a soportar, a pesar de romper la estructura de capas del mismo, combinando algunas responsabilidades de dicho modelo en funciones únicas y obviando otras. PAra un ejemplo de esto, se puede ver la tabla \ref{tabla:tcpiposi} que ilustra la correspondencia de los protocolos TCP/IP con su atribución según el modelo OSI.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|p{4cm}|l|p{5cm}|}
+\hline
+\multicolumn{1}{|c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Ref. OSI\\ Nº de capa\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Equivalente \\ de capa OSI\end{tabular}}} & \multicolumn{1}{c|}{\textbf{Capa TCP/IP}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Ejemplos de\\ protocolos TCP/IP\end{tabular}}} \\ \hline
+5,6,7                                                                                        & Aplicación, Sesión, Presentación                                                                 & Aplicación                                & NFS, NIS, DNS, LDAP, telnet, ftp, rlogin, rsh, rcp, RIP, RDISC, SNMP y otros.                         \\ \hline
+4                                                                                            & Transporte                                                                                       & Transporte                                & TCP, UDP, SCTP                                                                                        \\ \hline
+3                                                                                            & Red                                                                                              & Internet                                  & IPv4, IPv6, ARP, ICMP                                                                                 \\ \hline
+2                                                                                            & Vínculo de datos                                                                                 & Vínculo de datos                          & PPP, IEEE 802.2                                                                                       \\ \hline
+1                                                                                            & Física                                                                                           & Red física                                & Ethernet (IEEE 802.3), Token Ring, RS-232, FDDI y otros.                                              \\ \hline
+\end{tabular}
+\caption{acá la tabla de comparaciones. La robé desde \url{https://docs.oracle.com/cd/E19957-01/820-2981/6nei0r0r9/index.html}}
+\label{tabla:tcpiposi}
+\end{table}
+
 
 \subsection{UDP}
+UDP \cite{rfc:udp} es un protocolo de la familia de protocolos de Internet con funciones a nivel de la capa de transporte según el modelo OSI que se caracteriza por ser un protocolo orientado a mensajes, vale decir, por permitir enviar mensajes a través de la red sin necesidad de establecer previamente una conexión con el equipo receptor (situación que si ocurre y es característica de los protocolos orientados a la conexión como es el caso de TCP).
+%[OSI reference model—The ISO model of architecture for open systems interconnection]%
+
+Ésta naturaleza de UDP tiene varias implicancias:
+\begin{itemize}
+\item En primer lugar, ser un protocolo orientado a mensajes supone una premura en el envío de información, ello significa que éste protocolo no verifica la correctitud en la recepción de los datos enviados. En ese sentido, UDP es lo que se denomina un protocolo \textbf{no fiable}.
+\item Por otro lado, UDP trabaja en estados denominados \textbf{sin conexión}, lo que significa que no hay una verdadera sincronización entre origen y destino. Esto supone el uso de operaciones del tipo asíncronas las que hacen más flexible la comunicación entre los extremos.
+\end{itemize}
+
+Por su funcionamiento, la anatomía o estructura de un paquete UDP es bastante simple (Ver fig. \ref{fig:datagramaudp}). Al ser un protocolo orientado al envío de mensajes, los paquetes disponen de pocos campos de e información, de manera de evitar sobrecargar los mismos en su transferencia, por ello, a éste nivel, los paquetes se denominan \emph{datagramas}. Los encabezados de un paquete UDP comprenden: \textbf{Puerto de Origen/Destino}, que hace referencia a los puntos de conexión de la capa Transporte del modelo OSI y \textbf{Longitud del Mensaje} y \textbf{\emph{Checksum}}\footnote{Corresponde a un valor generado a partir de una función matemática que se aplica sobre datos para corroborar la integridad de los mismos y su correcta recepción tras un envío.}, que sirven como componentes de verificación del paquete mismo.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.3]{imagenes/netfilterArchitecture}
+	\caption{Estructura de un paquete UDP.}
+	\label{fig:datagramaudp}
+\end{figure}
+
+El protocolo UDP se estandarizó el año 1980 \cite{rfc:udp}, siendo uno de los componentes estructurales en la Internet de hoy, estando presente en diversas aplicaciones como: Transmisiones en uso intensivo de datos para redes de alta velocidad \cite{udp:highbandwidth}, Mecanismos de transmisión de video \cite{udp:video}, entre otros. Sin embargo, una de las aplicaciones más importantes que utiliza éste protocolo hoy por hoy en la infraestructura de Internet es en el servicio DNS.
+
+\subsection{DNS}
+Todo dispositivo conectado a una red de computadoras se identifica a si mismo por la denominada \emph{dirección IP}, un identificador único que permite referenciarlo y diferenciarlo de otros dispositivos conectados a la misma red, definido por el nivel 4 de red del modelo OSI. No obstante, para poder conectarse con un recurso disponible en Internet, los dispositivos consultan por lo que llamamos \emph{nombres de dominio} que son identificadores con carácter semántico para los usuarios que, en estricto rigor, definen una red de identificación asociada a un grupo de dispositivos o equipos conectados a la red \cite{wiki:nombre_dominio}. Éste mecanismo de traducciones se conoce como \textbf{servicio DNS} y es vital para el funcionamiento de Internet como lo conocemos.
+
+El servicio DNS opera como una base de datos distribuida que permite resolver consultas de manera jerarquizada. Frente a una consulta de un cliente por un nombre de dominio, un servidor DNS puede tener la respuesta, en cuyo caso éste servidor responde sin mayores inconvenientes. En caso contrario, dicho servidor DNS promueve la consulta a un servidor DNS de mayor rango en la jerarquía DNS hasta alguno que conozca la IP asociada al nombre de dominio consultado. Eventualmente, si ninguno de los servidores intermediarios conoce la respuesta, la consulta llega a los servidores raíz, de los cuales se responde la consulta ya sea con la respuesta efectiva o con la información de que el registro no existe (ver figura \ref{fig:dns}).
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.7]{imagenes/dns-system}
+	\caption{Diagrama de operación del servicio DNS ilustrando comunicación entre servidores de dicho tipo.}
+	\label{fig:dns}
+\end{figure}
+
+En la práctica, el servicio DNS emplea el protocolo UDP para la comunicación desde y hacia los servidores de dicho tipo, esto pues las características de una consulta DNS contemplan:
+
+\begin{itemize}
+\item \textbf{Consultas Auto-Contenidas} La información de una consulta DNS calza fácilmente en un paquete de UDP.
+\item \textbf{Orden Irrelevante} Los requerimientos DNS no necesitan ser procesados en un orden establecido. Sin embargo, si requieren ser eventualmente procesados y ello en el menor tiempo posible. Un factor que justifica el uso de UDP al ser precisamente un protocolo orientado a mensajes.
+\end{itemize}
+
+De esta manera, las características anteriores justifican el uso de UDP como protocolo para la comunicación entre los servidores DNS.
+
+El escenario antes descrito explica porque UDP tiene una participación de gran importancia en las redes actuales (en especial sobre Internet) y además, dado el sostenido aumento en el número de conexiones explicado en las secciones previas, da cuenta de como el tráfico de éste tipo de comunicación representa una porción muy significativa en la operación de las redes modernas.
 
 \section{Sistemas Operativos Modernos}
 capacidad multiprocesador!
