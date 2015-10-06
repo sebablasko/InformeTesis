@@ -112,7 +112,9 @@ El escenario antes descrito explica porque UDP tiene una participación de gran 
 capacidad multiprocesador!
 
 \subsection{Mecanismos de Sincronización}
-Una responsabilidad fundamental de los sistemas operativos modernos es garantiar un entorno seguro para las aplicaciones en el sentido del acceso a datos o recursos del sistema. En ésta linea, garantizar \textbf{consistencia en los datos} es una labor crucial en esquemas modernos, capaces de generar escenarios de multiples aplicaciones con acceso simultáneo a datos compartidos entre ellas. Para proveer operaciones sobre los datos en escenarios concurrentes, los sistemas operativos implementan mecanismos de sincronización que permiten garantizar consistencia en sus estructuras y datos, permitiendo así operaciones "simultaneas" sobre una determinada estructura, permitiendo incluso compartir una estructura entre distintos procesos que la modifiquen coincidentemente.
+Una responsabilidad fundamental de los sistemas operativos modernos es asignar el uso de recursos a las aplicaciones y garantiar un entorno seguro para la ejecución de dichas aplicaciones, en el sentido del acceso a datos o recursos del sistema. En ésta linea, garantizar \textbf{consistencia en los datos} es una labor crucial en esquemas modernos, capaces de generar escenarios de multiples aplicaciones con acceso simultáneo a datos compartidos entre ellas. La característica de operaciones paralelas es una introducción al kernel de Linux desde su versión 2.6\footnote{En versiones previas del kernel, la operación por defecto del scheduller del kernel era serializar las tareas con accesos simultaneos al sistema.} [AKA REF], lo cual introdujo un nuevo nivel de complejidad al ser responsables de éste nuevo escenario.
+
+Para proveer operaciones sobre los datos en escenarios concurrentes, los sistemas operativos implementan mecanismos de sincronización que permiten garantizar consistencia en sus estructuras y datos, permitiendo así operaciones "simultaneas" sobre una determinada estructura, permitiendo incluso compartir una estructura entre distintos procesos que la modifiquen coincidentemente.
 
 Hablar de los distintos tipos de mecanismos de sincronizacion de datos.
 
@@ -121,7 +123,7 @@ Hablar de los distintos tipos de mecanismos de sincronizacion de datos.
 Aka no he puesto nada aún...
 
 \subsection{Sockets en Linux}
-El modelo OSI ha estipulado a la familia de los protocolos TCP/IP como un estándar a la hora de establecer mecanismos de conexión entre computadoras. Sin embargo, las interfaces de programación no siguen la misma naturaleza estándar. Los distintos sistemas operativos implementan distintas interfaces públicas de aplicación (API) para el uso práctico de TCP/IP. \textbf{Socket} es la denominación tradicional para las interfaces de programación que proveen los mecanísmos para realizar tales conexiones. En la práctica un \textbf{Socket} representa una interfaz o punto de comunicación que maneja un protocolo de comunicación especifico.
+El modelo OSI ha estipulado a la familia de los protocolos TCP/IP como un estándar a la hora de establecer mecanismos de conexión entre computadoras. Sin embargo, las interfaces de programación no siguen la misma naturaleza estándar. Los distintos sistemas operativos implementan distintas interfaces públicas de aplicación (API) para el uso práctico de TCP/IP. \textbf{Socket} es la denominación tradicional para las interfaces de programación que proveen los mecanísmos para realizar tales conexiones. En la práctica un \textbf{Socket} representa una interfaz o punto de comunicación que maneja un protocolo de comunicación especifico. En la práctica, los sockets operan bajo una dinámica denominada \emph{Cliente/Servidor}, que especifíca que la comunicación debe ser promovida inicialmente por un cliente y atendida por un servidor.
 
 Los sockets son estructuras que se construyen por medio de la llamada de sistema \verb=socket()=. Son estructuras provistas por el kernel del sistema\footnote{Típicamente implementada e importada desde el prototipo \verb=<sys/socket.h>=, disponible en los encabezados del kernel.} que al utilizarlos se manejan simplemente como descriptores de archivo, a pesar de que en su implementación a bajo nivel son bastante más complejos que una interfaz de sólo entrada y salida de datos. La gran diferencia de los sockets es que están concebidos para una operación basada en un principio \emph{Cliente-Servidor}, lo que impacta finalmente en que su descriptor no apunta directamente a un archivo y su utilidad queda determinada sólo desde el momento en que se complete la dinámica de llamadas a sistema que hagan se establezca una conexión efectiva, dependiendo del protocolo a usar (ver imagen \ref{fig:socketHandshake}). Linux cuenta con una API que provee métodos de comunicación sencillos para la maniulación de los sockets de acuerdo al protocolo para el que se configure el mismo.
 
@@ -156,9 +158,35 @@ Más allá de la configuración puntual de la que se dote a un socket, la estruc
 \subsubsection{Estructura Interna}
 
 \section{Presentación del Problema}
+Como ya se mencionó, el escenario advertido para los próximos años prevé un inmenso tráfico a Internet que podría llevar la cantidad de procesamiento del servicio DNS a varios órdenes de magnitud por encima de la carga actual. Es más, el panorama futuro propone que los dispositivos más avanzados serían muchísimo más versátiles en su operación pudiendo hacer un uso más agresivo y demandante de la red. 
+
+En este contexto, el servicio DNS --como pieza estructural de Internet-- debe estar preparado para enfrentar de la mejor manera posible la gran carga de procesamiento antes señalada, sobre todo dado que --por su naturaleza jerárquica-- éste servicio escala rápidamente el tráfico entre servidores. En estricto rigor, el sistema de DNS debe garantizarse eficiente en cualquier escenario.
+
+A modo de preparativo para el escenario anterior distintas instituciones han trabajado en alternativas para mejorar el procesamiento de las peticiones DNS a fin de optimizar su operación y tiempos de respuesta. Una apuesta para otorgar dicha mejora en performance, y en línea con la tendencia actual de multiplicar el poder de procesamiento añadiendo más núcleos, consiste en incorporar paralelismo en el procesamiento de las consultas. Para ello, se propone un esquema como el detallado en el diagrama de la ilustración \ref{fig:multi_thread} donde la idea consiste en que una misma maquina DNS pueda atender múltiples solicitudes de manera simultánea a través de una misma interfaz de red (en nuestro caso, un socket UDP). Este enfoque supone como principal mejora el escalamiento del procesamiento de peticiones DNS en un factor proporcional a la cantidad de hilos de ejecución atendiendo la interfaz compartida, ello siempre y cuando existan núcleos reales de procesamiento disponibles para los distintos hilos. 
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.45]{imagenes/conf_multi_thread}
+	\caption{Esquema de procesamiento multi-thread en un servidor con 4 procesadores reales, empleando un thread por procesador. Escenario que en teoría, supone un mejor desempeño general, más no lo consigue en la práctica.}
+	\label{fig:multi_thread}
+\end{figure}
+
+Inspirados en la consistencia del argumento teórico detrás de la propuesta anterior, varias instituciones han evaluado este enfoque de procesamiento \cite{url:facebook, paper:toshiba}, pero con resultados poco alentadores. La experiencia de NIC Chile es un buen ejemplo del problema detectado. Aprovechando su infraestructura en pos de mejorar sus propios servicios, NIC Chile (Administrador del Top Level Domain \emph{.CL}) evaluó un diseño multi-hilos en el procesamiento de consultas DNS a sus servidores, a fin de lograr una mejora de performance en su procesamiento DNS tal y como el diseño teórico anterior plantea sin sospechar el resultado real. Al incorporar paralelismo, el rendimiento final en la práctica no estuvo ni cerca de las proyecciones esperadas, y lejos de reducirse, los tiempos de procesamiento aumentaron con respecto al esquema sin multi-hilos, ello aun cuando no existían indicios de sobrecarga en las máquinas.
 
 \subsection{Validación del Problema}
 
-\subsection{Sospechas Iniciales}
+Para ilustrar el interés del problema antes descrito es necesario validar la persistencia del mismo en escenarios actuales, que corroboren la persistencia del problema en escenarios de interés, como viene siendo el caso de servidores DNS. Para ello, se realizará un estudio de la situación actual del escenario multithreading separando los dos contextos antes mendionados: \textbf{Hardware}, probando el rendimiento en sistemas de arquitecturas de hardware diferente, y \textbf{Software}, probando el rendimiento en escenarios de ejecución basados en distitnas versiones del kernel de Linux.
 
-\begin{defn}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{defn}
+\subsubsection{Validación en Distintas Arquitecturas}
+
+\subsubsection{Validación en Distintas Versiones de Kernel de Linux}
+
+AKA una linea del tiempo de los releases del kernel
+
+
+\subsection{Hipótesis del Problema}
+Las sospechas iniciales acerca de éste problema apuntan a que probablemente el defecto se esconda en el núcleo del sistema operativo. Desde su versión 2.6, el kernel de Linux incorporó capacidad de procesamiento simétrico multiprocesador (\emph{Symmetric Multi-Processing - SMP}), con esto el scheduler de tareas transfirió los hilos de ejecución paralelos al mismo núcleo del sistema, con el costo de tener que implementar protección para áreas completas de código y estructuras a fin de evitar modificaciones concurrentes. Para ello, Linux provee diversas primitivas de sincronización mencionadas en secciones anteriores a disposición de los programadores. Sin embargo, el módulo de redes del kernel de Linux data de versiones previas a la 2.6 que suponían entre sus recursos a monoprocesadores y que, por lo tanto, no consideraban operaciones simultáneas con múltiples procesadores como se consiguió con \emph{SMP}.
+
+La sospecha inicial apunta a que probablemente, el efecto encontrado al evaluar diseños como el de la ilustración \ref{fig:multi_thread} es precisamente reflejo de un problema a nivel del kernel, donde alguna estructura de sincronización de bajo nivel está presentando un problema de contención, que se traduce en una serialziación de acceso, o similar, y que repercute en tiempos muertos en casos de concurrencia.
+
+Hablar de las sospechas dadas por google en sus enfoques de contencion y que justifican reuseport.

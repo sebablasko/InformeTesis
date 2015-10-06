@@ -210,6 +210,7 @@ Una vez instalada, la solución queda plenamente operativa en el sistema, llevan
 La remoción de la solución desde el sistema es muy simple y se basa en que la misma es sólo un módulo del kernel, por lo tanto basta aplicar el comando \verb=rmmod= del sistema acompañado del nombre del módulo. Para una completa limpieza del módulo, es recomendable tambien limpiar los registros generados al momento de la compilación del módulo, para lo cual se puede ejecutar la directiva \verb=make clean= del archivo \verb=Makefile= provisto en la solución.
 
 \section{Testing}
+Todo.... probar en un script la cantidad de paquetes perdidos en una conexión punto a punto vs una por lo
 
 \section{Rendimiento de la solución en la práctica}
 
@@ -228,7 +229,27 @@ Otro aspecto a destacar de nuestra solución es que logra buenos rendimientos pr
 El último y más importante acierto a reconocer de neustra solución consiste en su \textbf{configurabilidad} y \textbf{extensibilidad}. El primero pues, cómo se explicó en secciones anteriores, la solución admite distintos parámetros de configuración que permiten, sin cambios del código fuente, proveer distintos modos de funcionamiento según el requerimiento de consumo y distribución que se busque. El segundo dado por la implementación misma de la solución, ello pues al ser un módulo del kernel, es facilmente modificable para añadir nuevo código fuente que permita modificar los esquemas de distribución, etapas de interceptación de paquetes, funcionamiento del framework de \emph{Netfilters}, etc.
 
 \section{Proyecciones}
-Hablar del uso de fn de hash para la distribucion selectiva de paquetes, y como ello puede amplair el uso de la solución a otros protocolos que pueden ser orientados a la conexión como TCP al resolver el problema del handshake inicial syn, ack, syn-ack
+La solución planteada en la presente investigación cumple correctamente para los fines con que se postuló originalmente, basada en su satisfacción de los requerimientos especificados en la seccion previa. Sin embargo, el mismo modelo de operación que se ilustró en la solución puede ser aprovechado y extendido para ser usado en otros escenarios o contextos.
+
+Un caso interesante consiste en extender la solución para funcionar con otros protocolos orientados a la conexión, como por ejemplo TCP. El gran problema de la solución desarrollada para con el caso de TCP es salvar correctamente la etapa de negociación inicial para establecer la conexión -El denominado \emph{Handshake} de TCP-. En este contexto, nuestra solución debe poder contemplar un mecanismo para poder hacer una correcta redistribución de paquetes para respetar la asignación apropiada entre los paquetes recibidos y las conexiones que se están llevando a cabo.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.2]{imagenes/netfilterArchitecture}
+	\caption{Hablar del problema del handshake inicial}
+	\label{netfilterArchitecture}
+\end{figure}
+
+Gracias a su buen diseño, suplir el requerimiento anterior es sencillo con nuestra solución. Basta implementar un nuevo esquema de distribución que sea conciente de la distribución de paquetes para, usando las tuplas de datos de origen/destino de cada paquete, hacer una distribución correcta entre los sockets de redirección, para que las ocnexiones sean correctas. Para ello, una solución interesante puede ser, en lugar de aplicar un criterio aleatorio o secuencial de distribución como se usó en los esquemas provistos en éste trabajo, se puede emplear una \emph{función de Hash} que use las tuplas de origen/destino de cada paquete y así, lleve un registro lógico correcto de las conexiones que están operativas sobre un mismo socket.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.2]{imagenes/netfilterArchitecture}
+	\caption{Acá hablar de multiplexar un socket, un canal que permite mucha comunicacion usando multiples colores.}
+	\label{netfilterArchitecture}
+\end{figure}
+
+El enfoque antes planteado es sumamente poderoso pues en la práctica, postula la capacidad de multiplexar una misma interfaz de socket del sistema, proveyéndole recepción de paquetes a un pool de otros sockets atendidos por aplicaciones independientes. Permitiendo también incrementar el número -teoricamente limitado- de sockets a usar en un sistema\footnote{Dado por la limitación de 65K puertos a usar}.
 
 \begin{defn}[ver \cite{KAR00}] Definición definitiva $$\frac{d}{dx}\int_a^xf(y)dy=f(x).$$\end{defn}
 
