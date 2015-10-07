@@ -112,11 +112,41 @@ El escenario antes descrito explica porque UDP tiene una participación de gran 
 capacidad multiprocesador!
 
 \subsection{Mecanismos de Sincronización}
-Una responsabilidad fundamental de los sistemas operativos modernos es asignar el uso de recursos a las aplicaciones y garantiar un entorno seguro para la ejecución de dichas aplicaciones, en el sentido del acceso a datos o recursos del sistema. En ésta linea, garantizar \textbf{consistencia en los datos} es una labor crucial en esquemas modernos, capaces de generar escenarios de multiples aplicaciones con acceso simultáneo a datos compartidos entre ellas. La característica de operaciones paralelas es una introducción al kernel de Linux desde su versión 2.6\footnote{En versiones previas del kernel, la operación por defecto del scheduller del kernel era serializar las tareas con accesos simultaneos al sistema.} [AKA REF], lo cual introdujo un nuevo nivel de complejidad al ser responsables de éste nuevo escenario.
+Una responsabilidad fundamental de los sistemas operativos modernos es asignar el uso de recursos a las aplicaciones y garantiar un entorno seguro para la ejecución de dichas aplicaciones, en el sentido del acceso a datos o recursos del sistema. En ésta linea, garantizar \textbf{consistencia en los datos} es una labor crucial en esquemas modernos, capaces de generar escenarios de multiples aplicaciones con acceso simultáneo a datos compartidos entre ellas. La característica de operaciones paralelas es una introducción al kernel de Linux desde su versión 2.6\footnote{En versiones previas del kernel, la operación por defecto del scheduller del kernel era serializar las tareas con accesos simultaneos al sistema.} [AKA REF] que apareció a la vez que se popularizaron los equipos con capacidad multi-procesador, lo cual introdujo un nuevo nivel de complejidad en la labor de los sistemas operativos, teniendo que hacerce cargo el mismo de mantener la correcta consistencia de la infromación en memoria, en un escenario de ejecuciones paralelas. Problema conocido típicamente como de \emph{Secciones Críticas} [AKA una referencia a algo que estudie solo el tema de seciones criticas].
 
-Para proveer operaciones sobre los datos en escenarios concurrentes, los sistemas operativos implementan mecanismos de sincronización que permiten garantizar consistencia en sus estructuras y datos, permitiendo así operaciones "simultaneas" sobre una determinada estructura, permitiendo incluso compartir una estructura entre distintos procesos que la modifiquen coincidentemente.
+Para proveer operaciones sobre los datos en escenarios concurrentes, los sistemas operativos modernos implementan mecanismos de sincronización que permiten garantizar consistencia en sus estructuras de datos, permitiendo así operaciones "simultaneas" sobre una determinada estructura, logrando así compartir una estructura entre distintos procesos que la modifiquen coincidentemente. Procesos que en la práctica pueden estár ejecutaándose en nucleos de procesamiento distintos.
 
-Hablar de los distintos tipos de mecanismos de sincronizacion de datos.
+Para ello, el hardware de las computadoras provee las denominadas \emph{Operaciones Atómicas de Bajo nivel}, que son una suerte de conjunto de herramientas básicas que permiten manejar escenarios sencillos de concurrencia. Estas mismas operaciones ya provistas son la base para las denominadas \emph{Primitivas de Sincronización de Bajo Nivel}, las cuales son cruciales para la correcta implementación de programas multi-hilo o multi-proceso correctos. A continuación se repasan las diferencias conceptuales entre cada tipo de primitiva de sincronización y se mencionan las implementaciones más importantes de cada una que atañen a la presente investigación \cite{book:SOConcepts}.
+
+\begin{table}[]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\textbf{\begin{tabular}[c]{@{}c@{}}Primitivas de sincronización\\ de Bajo Nivel\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Primitivas de sincronización\\ de Alto Nivel\end{tabular}} \\ \hline
+Memory barrier & Completion                                                                                    \\ \hline
+Atomic operations & Semaphore                                                                                     \\ \hline
+Synchronize with interrupts & Futex                                                                                         \\ \hline
+Spin locks & Mutex                                                                                         \\ \hline
+\end{tabular}
+\caption{Algunos ejemplos de herramientas de sincronización de distinto nivel disponibles en sistemas Linux.}
+\label{tab:syncTools}
+\end{table}
+
+\subsubsection{Operaciones Atómicas}
+Corresponden a un conjunto de instrucciones provistas por hardware, disponibles en ambientes multi-procesador, que brindan la flexibilidad de, aún al ser ejecutadas simultaneamente en distintas CPU's, en la práctica son ejecutadas secuencialmente, en un orden arbitrario. La exclusión mutua es provista en éste caso usando variables de naturaleza \verb=Boolean= que se denominan \emph{lock}. Existen diversas implementaciones de operaciones de éste tipo, siendo las más conocidas: \emph{Test-and-Set}, que valida una condición y si se cumple realiza una asignación, \emph{Swap}, que intercabia el valor contenido entre dos variables, etc. Todas atómicas.
+
+\subsubsection{Semáforo}
+La solución a la protección de secciones críticas provista por mecanísmos de operaciones atómicas es dificil de generalizar para aplicaciones más complejas, como cuando se tienen múltiples hilos de ejecución. En este punto, se emplea una nueva herramienta de sincronización: Los \emph{Semáforos}. Un semáforo es una estructura de sistema que lleva una cuenta de un entero, y que puede ser modificada por medio de las operaciones atómicas \emph{Wait} y \emph{Signal}, que permiten verificar una condición para luego hacer un decremento del contador interno del semáforo, y gatillar un incremento de dicho contador, respectivamente.
+
+En su uso, la idea es que los diferentes hilos o procesos paralelos que soliciten acceso a un recurso, compartan de una estructura semáforo que sirva como barrera de acceso al recurso mismo.
+
+\subsubsection{SpinLock}
+Son las primitivas de sincronización de más bajo nivel disponible en los sistemas Linux para garantizar exclusión mutua. Su operación se basa en ciclos de espera denominados \emph{busy-waiting}, que son ciclos de procesador muertos, donde no se hace más que verificar el cambio de una condición, que en la práctica consiste en "obtener" el \emph{lock}. Ésta lógica de operación hace de los spinlocks una herramienta de sincronización de cuidado pues su operación está pensada solo para secciones críticas ligeras (de pocas instrucciones). Es sabido que el mal uso de éste tipo de herramientas de sincronización produce degradaciones importantes en los tiempos de operación generales de todo el sistema, pues significa el consumo de recursos en ciclos de procesamiento muerto, lo que significa en la practica un bloqueo de un hilo de ejecución [AKA UNA CITA QUE ILUSTRA EL CASO DE QUE EL SPINLOCK DEGRADA EL FUNCIONAMIENTO DE LA WEA]. Aún cuando las impelementaciones modernas de sistemas operativos incluyen optimizaciones en el rendimiento de éstas estructuras (ya sea con optimizaciones energéticas o mejoras de schedulling [AKA REFERENCIA]) lo cierto es que la naturaleza inhenerete para brindar sincronización de los spinlocks es por medio del mecanismo de \emph{busy-waiting}.
+
+Los spinlocks son una de las estructuras de sincronización preferidas a la hora de solucionar escenarios de concurrencia en otras estructuras desplegadas en el kernel de Linux. Están presentes en ESTRUCTURA1, ESTRUCTURA2, ESTRUCTURA3, etc. Con el cuidado de resguardar sólo regiones de código acotadas que no arriesguen el desempeño general del sistema en contextos de concurrencia.
+
+\subsubsection{Mutex}
+Los \textbf{Mutex} -o Monitores en español- Son otra estructura de sincronización de alto nivel...
 
 \subsection{Interfaces de Comunicación}
 
