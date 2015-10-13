@@ -211,32 +211,48 @@ Inspirados en la consistencia del argumento teórico detrás de la propuesta ant
 
 \subsection{Validación del Problema}
 
-Para ilustrar el interés del problema antes descrito es necesario validar la persistencia del mismo en escenarios actuales que corroboren la persistencia del problema en escenarios de interés, como viene siendo el caso de servidores DNS. Para ello, se realizará un estudio de la situación actual del escenario multithreading en el consumo de datos desde una interfaz de red separando los dos contextos antes mendionados: \textbf{Hardware}, verificando el rendimiento en sistemas de arquitecturas de hardware diferente, y \textbf{Software}, estudiando el rendimiento en escenarios de ejecución basados en distintas versiones del kernel de Linux.
+El caso de estudio señalado ya ha sido previamente estudiado en trabajos recientes \cite{tesis:diegoDCC} rescatando importantes conclusiones como:
+\begin{itemize}
+\item Mostrar que al incorporar paralelísmo por medio de threads y lecturas concurrentes a un socket UDP no se logra mejora real en los tiempos de consumo de datos.
+\item Descartar la implementación de \emph{libc} como punto de problema, eliminando así posible responsabilidad de las llamadas de sistema como \emph{read} usadas en la lectura de sockets.
+\item Mostrar la capacidad de mejoramiento del rendimiento de los sockets UDP por medio de modificaciones de bajo nivel en la estructura socket.
+\end{itemize}
 
-Para ello, se diseñó una prueba para evaluar el tiempo de consumo promedio de datos desde una interfaz de red\footnote{URL al repo github con la prueba}, representada por un socket UDP en estado de saturación. El modelo de la prueba incluye la evaluación del tiempo de consumo de una cantidad de datos de entrada correspondiente a 1 millon de paquetes de 512 bytes cada uno, emulando de ésta manera un escenario clásico de congestión de un servidor de consultas DNS. Se evalúan distintas configuraciones de threads consumiendo concurrentemente al mismo socket rescatando el tiempo total de consumo. Para respetar la validez estadística de los resultados, la prueba anterior se repite un total de 60 veces por configuración de threads.
+Entre otros. Sin embargo éste estudio planteó dudas importantes acerca de los elementos responsables del degradamiento de performance en escenarios multithreading, además de dejar latente la incertidumbre sobre cómo conseguir mejoras de performance de los socket mismos, sin caer en modificaciones de la estructura. Elementos que son precisamente puntos de estudio de ésta investigación.
+
+Para ilustrar el interés y vigencia del problema antes descrito es necesario validar la persistencia del mismo en escenarios actuales que corroboren la persistencia del problema en escenarios de interés, como viene siendo el caso de servidores DNS. Para ello, se realizará un estudio de la situación actual del escenario multithreading en el consumo de datos desde una interfaz de red separando los dos contextos antes mendionados: \textbf{Hardware}, verificando el rendimiento en sistemas de arquitecturas de hardware diferente, y \textbf{Software}, estudiando el rendimiento en escenarios de ejecución basados en distintas versiones del kernel de Linux.
+
+Para ello, se diseñó una prueba para evaluar el tiempo de consumo promedio de datos desde una interfaz de red\footnote{URL al repo github con la prueba}, representada por un socket UDP en estado de saturación. El modelo de la prueba incluye la evaluación del tiempo de consumo de una cantidad de datos de entrada correspondiente a 1 millon de paquetes de 512 bytes cada uno, emulando de ésta manera un escenario clásico de congestión de un servidor de consultas DNS. Se evalúan distintas configuraciones de threads consumiendo concurrentemente al mismo socket rescatando el tiempo total de consumo. Para respetar la validez estadística de los resultados, la prueba anterior se repite un total de 60 veces por configuración de threads (Ver figura \ref{fig:testUDP}).
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.5]{imagenes/conf_multi_thread}
+	\caption{Diagrama que ilustra el diseño de la prueba de consumo de datos a través de un socket UDP usando multithreading.}
+	\label{fig:testUDP}
+\end{figure}
 
 \subsubsection{Validación en Distintas Arquitecturas}
 
 El comportamiento no escalable al usar threads es una característica que podría ser propia sólo de un tipo de arquitectura de recursos de hardware. Para comprobar el real alcance del problema antes descrito se evaluará la prueba de desempeño UDP en 3 escenarios de hardware diferente. Los tres escenarios de hardware se describen a conitnuación:
 
 \begin{description}
-\item[] 2, hace referencia a la imagen \ref{fig:pc2}
-\item[PC3] 3, hace referencia a la imagen \ref{fig:pc3}
-\item[PC1] 1, hace referencia a la imagen \ref{fig:pc1}
+\item[Laptop Quad Core] Laptop doméstico. Equipado con una CPU Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz y 6 GB de memoria. Un esquemático del sistema disponible en la figura \ref{fig:pc2}.
+\item[PC Dual Socket] Computador de escritorio \ref{fig:pc3}
+\item[Servidor 24 Core] Equipo servidor multiprocesador. Equipado con dos CPU Intel(R) Xeon(R) CPU X5660 @ 2.80GHz y 24 GB de memoria, distribuidos en dos nodos NUMA de procesamiento, organizado en base a la \emph{Intel QuickPath Architecture}. Diagrama del sistema en imagen \ref{fig:pc1}.
 \end{description}
 
-\begin{figure}[th!]
+\begin{figure}[]
 \centering
 \subfigure[Pc2]{
-	\includegraphics[width=.35\textwidth]{imagenes/pc2_1.pdf}
+	\includegraphics[height=.4\textwidth]{imagenes/pc2.pdf}
 	\label{fig:pc2}
 }
 \subfigure[Pc3]{
-	\includegraphics[width=.45\textwidth]{imagenes/fcfm}
+	\includegraphics[height=.4\textwidth]{imagenes/fcfm}
 	\label{fig:pc3}
 }
 \subfigure[Pc1]{
-	\includegraphics[width=.75\textwidth]{imagenes/pc1_1.pdf}
+	\includegraphics[width=.85\textwidth]{imagenes/pc1.pdf}
 	\label{fig:pc1}
 }
 \caption{Esquemas de hardware de los 3 equipos evaluados generados con la herramienta \texttt{lstopo}.}
@@ -244,23 +260,45 @@ El comportamiento no escalable al usar threads es una característica que podrí
 
 \subsubsection{Validación en Distintas Versiones de Kernel de Linux}
 
-Al igual que con la arista de hardware, el fenómeno de mal rendimiento de threads detectado podría ser propio de una determinada versión del kernel de Linux, una sospecha que se acentúa al recordar que parte importante del código fuente del núcleo es heredado entre versiones, y que las versiones más populares del kernel abarcan una importante razón de tiempo entre sus publicaciones. A modo de ilustración de esto último, a continuación se muestra una linea de tiempo con algunos de los releases más importantes del kernel de linux:
+Al igual que con la arista de hardware, el fenómeno de mal rendimiento de threads detectado podría ser propio de la componente de software del sistema, entendido  una determinada versión del kernel de Linux, una sospecha que se acentúa al recordar que parte importante del código fuente del núcleo es heredado entre versiones, y que las versiones más populares del kernel abarcan una importante razón de tiempo entre sus publicaciones. A continuación se muestra una linea de tiempo con algunos de los releases más importantes del kernel de linux:
 
-$$\scalebox{1.2}{
+\begin{center}
+\scalebox{1.2}{
 \begin{tabular}{r |@{\timeline} l}
-4 Enero 2012 & 3.2\\
-30 Junio 2013 & 3.10\\
-2 Noviembre 2013 & 3.12\\
-30 Marzo 2014 & 3.14\\
-12 Abril 2015 & 4.0.4\\
+4 Enero 2012 & \colorbox{yellow}{3.2}\\
+30 Junio 2013 & \colorbox{yellow}{3.10}\\
+2 Noviembre 2013 & \colorbox{yellow}{3.12}\\
+30 Marzo 2014 & \colorbox{yellow}{3.14}\\
+12 Abril 2015 & \colorbox{yellow}{4.0.4}\\
 \end{tabular}
-}$$
+}
+\end{center}
 
+Las versiones destacadas son aquellas que se consideraron como entornos de estudio interesantes para la validación del problema. La justificación de la elección se basa en dos criterios: Primero, que el conjunto de versiones elegidas abarca aproximadamente el XXXXXXXX\% de los sistemas funcionales activos (AKA necesito una fuente que me valide ese dato). Segundo, pues existen trabajos previos que ya se encargan de analizar el comportamiento estudiado en ediciones más antiguas del Kernel \cite{tesis:diegoDCC}.
 
+Para la evaluación, se instalaron las versiones destacadas de la linea de tiempo previamente mostrada en un equipo de prueba XXXXXXXXXXX[AKA: mi pc de escritorio] . Un resultado comparativo de los distintos rendimientos entre versiones del kernel está ilustrado en la figura \ref{fig:tests_kernel}.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.3]{imagenes/fcfm}
+	\caption{Grafico comparativo del rendimiento de prueba UDP entre distintas versiones del Kernel. Los valores mostrados son representativos de 60 repeticiones de la prueba de transferencia UDP.}
+	\label{fig:tests_kernel}
+\end{figure}
+
+Como se puede apreciar de los resultados de la figura \ref{fig:tests_kernel}, a pesar de que las distintas versiones del kernel varían sutilmente los resultados de rendimiento para la prueba, los regímenes de tendencia se mantienen identicos entre todas las versiones, lo que da a entender que el problema escapa de una versión en particular y es transversal a todas, incluso para las versiones más modernas.
 
 \subsection{Hipótesis del Problema}
-Las sospechas iniciales acerca de éste problema apuntan a que probablemente el defecto se esconda en el núcleo del sistema operativo. Desde su versión 2.6, el kernel de Linux incorporó capacidad de procesamiento simétrico multiprocesador (\emph{Symmetric Multi-Processing - SMP}), con esto el scheduler de tareas transfirió los hilos de ejecución paralelos al mismo núcleo del sistema, con el costo de tener que implementar protección para áreas completas de código y estructuras a fin de evitar modificaciones concurrentes. Para ello, Linux provee diversas primitivas de sincronización mencionadas en secciones anteriores a disposición de los programadores. Sin embargo, el módulo de redes del kernel de Linux data de versiones previas a la 2.6 que suponían entre sus recursos a monoprocesadores y que, por lo tanto, no consideraban operaciones simultáneas con múltiples procesadores como se consiguió con \emph{SMP}.
+Las sospechas iniciales acerca del responsable de éste problema apuntan a que probablemente a un defecto que se esconda a nivel del núcleo del sistema operativo \cite{paper:toshiba,post:facebook}. Desde su versión 2.6, el kernel de Linux incorporó capacidad de procesamiento simétrico multiprocesador (\emph{Symmetric Multi-Processing - SMP}), con esto el scheduler de tareas transfirió los hilos de ejecución paralelos al mismo núcleo del sistema, con el costo de tener que implementar protección para áreas completas de código y estructuras a fin de evitar modificaciones concurrentes. Para ello, Linux provee diversas primitivas de sincronización mencionadas en secciones anteriores a disposición de los programadores. Sin embargo, el módulo de redes del kernel de Linux data de versiones previas a la 2.6 que suponían entre sus recursos a monoprocesadores y que, por lo tanto, no consideraban operaciones simultáneas con múltiples procesadores como se consiguió con \emph{SMP}.
 
-La sospecha inicial apunta a que probablemente, el efecto encontrado al evaluar diseños como el de la ilustración \ref{fig:multi_thread} es precisamente reflejo de un problema a nivel del kernel, donde alguna estructura de sincronización de bajo nivel está presentando un problema de contención, que se traduce en una serialziación de acceso, o similar, y que repercute en tiempos muertos en casos de concurrencia.
+La sospecha inicial apunta a que probablemente, el efecto encontrado al evaluar diseños como el de la ilustración \ref{fig:multi_thread} es precisamente reflejo de un problema a nivel del kernel, donde alguna estructura de sincronización de bajo nivel está presentando un problema de contención, que se traduce en una serialziación de acceso, o similar, y que repercute en tiempos muertos en casos de concurrencia. Una sospecha que es avalada por los resultados obtenidos hasta éste punto de la investigación, donde no encontrando defectos propios a una componente ni de hardware, ni de software del núcleo del sistema.
 
-Hablar de las sospechas dadas por google en sus enfoques de contencion y que justifican reuseport.
+Tras importantes trabajos de líderes en la industria como Google [CITAR A REUSEPORT DE GOOGLE] relacionados a nuestro caso de estudio, se ha llegado a establecer una hipótesis consensuada en que son varios los factores que contribuyen a la degradación generalizada que se presenta. En Primer lugar, se postula un punto de contención generado a raíz de la compartición de la estructura socket entre varios hilos de ejecución, la cual no estaría apropiadamente diseñada para sobrellevar un escenario de concurrencia como al que se le ha expuesto. Otra teoría para explicar ésta situación se basa en el fenómeno de los rebotes de caché, propios de un esquema \emph{SMP} pero que se vería acrecentado en situaciones como las descritas por la necesidad de mantener información estructural de los sockets entre varios hilos que se distribuirían entre los múltiples núcleos de procesamiento disponible. Una tercera linea apunta en el sentido de brindar el beneficio de la duda a la estructura socket, y atribuir las responsabilidades del mal desempeño a los mecanísmos de distribución de tareas (El denominado schedulling para escenarios de distribución de carga) del sistema operativo, el cual, en entornos \emph{SMP} jugaría en contra, degradando el rendimiento al modificar la localidad de los datos para con los procesos constantemente, por medio de migraciones de los procesos entre las CPU disponibles. Otra hipótesis hace referencia a la posibilidad de que sean los propios canales de comunicación los que presentan un bajo rendimiento en situaciones de concurrencia como la descrita y cuyo overhead terminaría impactando en los tiempos netos.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.5]{imagenes/fcfm}
+	\caption{Esquema de las líneas hipotéticas de responsabilidad del problema de rendimiento del caso expuesto.}
+	\label{fig:hipotesis}
+\end{figure}
+
+El problema real es que ninguna de las distintas hipótesis ha sido experimentalmente estudiada, con lo que no se ha podido validar ni refutar la veracidad de las mismas. No tener claridad sobre cual sería la componente responsable incurre en otros problemas como el no poder postular una solución que consiga solucionar correctamente el problema, al no tener claro cual arista trabajar.
