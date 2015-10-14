@@ -211,7 +211,7 @@ Inspirados en la consistencia del argumento teórico detrás de la propuesta ant
 
 \subsection{Validación del Problema}
 
-El caso de estudio señalado ya ha sido previamente estudiado en trabajos recientes \cite{tesis:diegoDCC} rescatando importantes conclusiones como:
+El caso de estudio objeto de ésta investigación ya ha sido previamente analizado en trabajos recientes \cite{tesis:diegoDCC} rescatando importantes conclusiones como:
 \begin{itemize}
 \item Mostrar que al incorporar paralelísmo por medio de threads y lecturas concurrentes a un socket UDP no se logra mejora real en los tiempos de consumo de datos.
 \item Descartar la implementación de \emph{libc} como punto de problema, eliminando así posible responsabilidad de las llamadas de sistema como \emph{read} usadas en la lectura de sockets.
@@ -222,7 +222,7 @@ Entre otros. Sin embargo éste estudio planteó dudas importantes acerca de los 
 
 Para ilustrar el interés y vigencia del problema antes descrito es necesario validar la persistencia del mismo en escenarios actuales que corroboren la persistencia del problema en escenarios de interés, como viene siendo el caso de servidores DNS. Para ello, se realizará un estudio de la situación actual del escenario multithreading en el consumo de datos desde una interfaz de red separando los dos contextos antes mendionados: \textbf{Hardware}, verificando el rendimiento en sistemas de arquitecturas de hardware diferente, y \textbf{Software}, estudiando el rendimiento en escenarios de ejecución basados en distintas versiones del kernel de Linux.
 
-Para ello, se diseñó una prueba para evaluar el tiempo de consumo promedio de datos desde una interfaz de red\footnote{URL al repo github con la prueba}, representada por un socket UDP en estado de saturación. El modelo de la prueba incluye la evaluación del tiempo de consumo de una cantidad de datos de entrada correspondiente a 1 millon de paquetes de 512 bytes cada uno, emulando de ésta manera un escenario clásico de congestión de un servidor de consultas DNS. Se evalúan distintas configuraciones de threads consumiendo concurrentemente al mismo socket rescatando el tiempo total de consumo. Para respetar la validez estadística de los resultados, la prueba anterior se repite un total de 60 veces por configuración de threads (Ver figura \ref{fig:testUDP}).
+En linea con lo anterior, se diseñó una prueba para evaluar el desempeño promedio de una interfaz de red\footnote{URL al repo github con la prueba} representada por un socket UDP, en el consumo de datos en un escenario de saturación. El modelo de la prueba incluye la evaluación del tiempo de consumo de una cantidad de datos de entrada correspondiente a 1 millon de paquetes de 512 bytes cada uno, emulando de ésta manera un escenario clásico de congestión de un servidor de consultas DNS. Se evalúan distintas configuraciones de threads consumiendo concurrentemente al mismo socket rescatando el tiempo total de consumo. Para respetar la validez estadística de los resultados, la prueba anterior se repite un total de 60 veces por configuración de threads (Ver figura \ref{fig:testUDP}).
 
 \begin{figure}[!h]
 	\centering

@@ -2,7 +2,8 @@
 
 dadas las sospechas, se definen 3 aristas a estudiar del problema, basadas en el defecto de contención.
 
-\section{Estudio de Profilling}
+\section{Estudio de Operación de Llamadas a Sistema}
+En esta parte hablar del tema de las llamadas a sistema, recordar que en el estudio apsado la libc fue descartada como originadora del problema, y que nos quedamos con la idea de que lo spinlocks son responsables. ¿Lo son?, se revisan las llamadas a sistema usando varias herrramietnas y nos topamos con que las tendencias de tiempos son similares a las de los tiempos de esas llamadas, luego, hay una correlacion de esta estructura inhenrente al socket es la que causa el cuello de botella: indicio, el socket entero está siendo contenido por el spinlock de su estructura.
 \subsection{Estudio de Llamadas de sistema}
 \subsubsection{Perf}
 \subsubsection{FTrace}
@@ -13,7 +14,8 @@ dadas las sospechas, se definen 3 aristas a estudiar del problema, basadas en el
 \subsubsection{Visualizador mio}
 \subsection{Análisis}
 
-\section{Estudio de Performance Counters}
+\section{Estudio de Canales de Comunicación de Hardware}
+
 Explicar a grosso modo la idea del cuello de botella en el bus de datos, y cómo ese enfoque se hereda entre distintos cambios de arquitectura de computadores.
 
 \subsection{Desarrollo de Arquitecturas Modernas de Hardware}
@@ -29,6 +31,10 @@ acá la idea es ilustrar tendencias más importantes
 \subsection{Análisis}
 
 \section{Estudio de Distribución de Carga}
+La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado, es normal que el sistema operativo realice como procedimiento de rutina la migración de procesos y la re-alocación de recursos y datos del sistema. Un caso práctico de ello es cuando un núcleo de procesamiento está sobreexigido y el sistema operativo redistribuye los hilos en dicho núcleo entre los procesadores disponibles del sistema, como una estratégia de balanceo de carga [AKA UNA REFERENCIA DE ESO].
+
+Ésta tercera hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia basandose en que, mientras un proceso está en plena ejecución al incorporar más y más tareas en el mismo nucleo de procesamiento agregando hilos de ejecución, sería el sistema operativo quien comienzaría la reasignación automática de dichos hilos entre los distintos procesadores, cayendo en problemas como perdida de referencias de memoria en niveles de chacé primario de procesos en cuestión. En su peor escenario, ésta teoría lleva al conocido problema de \emph{caché bouncing} [AKA CITA A ESOS PROBLEMAS] que corresponde al fenómeno de sobre corrección de los datos a nivel de caché, producido por constantes cambios de contexto del \emph{scheduller}. Un problema que ya se mencionó en el estudio de la sección previa.
+
 \subsection{Processor Affinity}
 \subsection{Esquemas de Distribución}
 \subsection{Resultados Experimentales}
