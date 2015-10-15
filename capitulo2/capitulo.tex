@@ -1,17 +1,60 @@
 \chapter{Estudio del Problema}
 
-Como se mencionó al final del capítulo anterior, la investigación vigente del fenómeno estudiado en el presente trabajo ha concluido en generar distintas hipótesis para explicar el mal rendimiento presentado por los sockets de internet en escenarios de concurrencia. Para ser exactos, y reiterando lo anterior, las sospechas se pueden agrupar en tres aristas distintas. En el presente capítulo se estudian las tres líneas hipotéticas responsables del problema, inspeccionando en distintos niveles la operación y funcionamiento del sistema, indagando en las operaciones teóricas de funcionamiento y contrastando dicho planteamiento a resultados experimentales obtenidos en cada caso. Finalmente, es fruto de cada una de las siguientes subsecciones un análisis profundo del aspecto problemático estudiado, junto con una conclusión sobre el mismo. Así también, es fruto del presente capítulo un veredicto sobre cuales -Y en qué medida- de los problemas estudiados tienen verdadera responsabilidad en el fenómeno estudiado.
+Como se mencionó al final del capítulo anterior, la investigación vigente del fenómeno estudiado en el presente trabajo ha concluido en generar distintas hipótesis para explicar el mal rendimiento presentado por los sockets de internet en escenarios de concurrencia, más sin corroborar la validez de ninguna experimentalmente. Para ser exactos, y reiterando lo anterior, las sospechas se pueden agrupar en tres aristas distintas: Problemas de operación en primitivas del sistema, problemas de operación a nivel de canales de comunicación de hardware y problemas de operación en los mecanísmos de administración de recursos y balanceo de carga.
 
-\section{Estudio de Operación de Llamadas a Sistema}
-En esta parte hablar del tema de las llamadas a sistema, recordar que en el estudio apsado la libc fue descartada como originadora del problema, y que nos quedamos con la idea de que lo spinlocks son responsables. ¿Lo son?, se revisan las llamadas a sistema usando varias herrramietnas y nos topamos con que las tendencias de tiempos son similares a las de los tiempos de esas llamadas, luego, hay una correlacion de esta estructura inhenrente al socket es la que causa el cuello de botella: indicio, el socket entero está siendo contenido por el spinlock de su estructura.
+En el presente capítulo se estudian las tres líneas hipotéticas responsables del problema, inspeccionando en distintos niveles el funcionamiento del sistema, indagando en las operaciones teóricas de cada funcionamiento y contrastando dicho planteamiento a resultados experimentales obtenidos en cada caso. Es fruto de cada una de las siguientes subsecciones un análisis profundo del aspecto problemático estudiado, junto con una conclusión sobre el mismo. Así también, es fruto del presente capítulo un veredicto sobre cuales -Y en qué medida- de los problemas estudiados tienen verdadera responsabilidad en el fenómeno estudiado, de modo de confeccionar un marco de trabajo que nos permita empezar a postular enfoques de trabajo que paleen la problemática en cuestión.
+
+\section{Estudio de Operación Primitivas de sincronización del Sistema}
+
+La primera hipótesis a estudiar plantea que el bajo rendimiento de la operación de la interfaz de red -Ilustrada en nuestro caso de estudio por medio de sockets UDP- en escenarios de concurrencia, es causado por un mal desempeño de las estructuras que proveen los mecanismos de sincronización para dichos escenarios. Cómo se mencionó en el capítulo anterior, la capacidad multiprocesador de las computadoras modernas provee de un mayor poder de cómputo que se postula a ser aprovechado por medio del uso de técnicas de programación paralela, con el cuidado de que, en esos contextos de trabajo, los sistemas operativos deben estar preparados para atender situaciones de conflicto en el acceso a los recursos compartidos. Para éste propósito, se disponen de los mecanísmos de sincronización ya repasados en secciones anteriores que para estructuras de bajo nivel, cómo son los sockets de internet provistos por el propio sistema operativo- emplean el uso de mecanísmos de sincronización de bajo nivel como lo son los spinlocks, que protegen ciertas secciones de la estructura, tal y como se repasó en la sección XXXXX.
+
+En éste caso, la priemra hipótesis describe que el causante del mal rendimiento al incorporar concurrencia en las lecturas a un socket es generado derechamente por dichas estructuras de protección en el acceso, situación causaría un fenómeno denominado \emph{Contención de Recurso}, que corresponde a un estado de conflicto en el acceso a un recurso compartido, producido por una situación de competencia en el acceso al mismo.
+
+Para ratificar el planteamiento anterior, se hizo un estudio de llamadas a sistema siguiendo otros modelos de recopilación de datos ya evaluados \cite{slides:hpPerf} que permitiese vislumbrar la operación de las primitivas de sincronización operativas en el caso de estudio, a medida que se van agregando hilos de procesamiento, generando así un escenario de concurrencia, cómo se propuso desde un comienzo.
+
 \subsection{Estudio de Llamadas de sistema}
+
+La operación de las primitivas de sincronización que actúan en los procesos de bajo nivel del sistema operativo tienen la característica de estar determinadas por el uso de llamadas a funciones del sistema, ello pues es el mismo sistema operativo (o mejor dicho su núcleo) el que provee una interfaz simple para invocar dicha operación. Cómo son llamadas a sistema, es posible cuantificar cuando y cómo se realiazan las mismas, pudiendo modelar el proceso completo por medio de éste mecanismo.
+
+Cómo en nuestro caso, interesa estudiar el comportamiento de primitivas de sincronización de bajo nivel, como son los spinlocks, se debe contemplar la API\footnote{Abreviatura de \emph{Application Programming Interface}, ó Interfaz de Programación de Aplicaciones en español.} con que trabaja el sistema, ello pues, a pesar de que la estructura spinlock está bien definida, eisten distintas funciones que proveen variantes en el funcionamiento de los spinlocks, y dichos escenarios son presentables a lo largo de la ejecución del caso de prueba del estudio. En la práctica, existen diversas funciones de atención que aplican distintos tipos de bloqueo:
+
+\begin{description}
+\item[void spin\_lock(spinlock\_t *lock);] Es el bloqueo básico del sistema, consistente en hacer "girar" el lock hasta que se brinde acceso. Es un bloqueo interrumpible por el sistema operativo, tanto por interrupciones de software como de hardware, dando paso a situaciones como que la CPU determine enviar el proceso responsable de la llamada a dormir por falta de recursos, memoria, etc.
+\item[void spin\_lock\_irq(spinlock\_t *lock);] Bloqueo que deshabilita interrupciones del procesador local antes de adquirir el spinlock. Se debe cuidar de reactivar las interrupciones luego de liberado el lock.
+\item[void spin\_lock\_irqsave(spinlock\_t *lock, unsigned long flags);] Similar a la operación de \verb=spin_lock_irq=, pero con la diferencia de que almacena el estado de interrupción previo en el valor \verb=flags=, de manera de que puede restablecerlo facilmente luego de liberar el lock.
+\item[void spin\_lock\_bh(spinlock\_t *lock)] Similar a \verb=spin_lock_irq= con la diferencia de que sólo deshabilita las interrupciones de software, manteniendo habilitadas las interrupciones por hardware del sistema.
+\item[int spin\_trylock(spinlock\_t *lock);] Para operaciones no bloqueantes para el uso de spinlocks. Retorna cero en caso de fallo al obtener el lock. No deshabilita interrupciones.
+\item[bool mutex\_spin\_on\_owner(struct mutex *lock, struct task\_struct *owner)] Bloqueo que opera sobre una estructura de exclusión mutua (mutex) que utiliza el enfoque de \emph{Read-Copy-Update} (RCU), en donde los lectores son no bloqueantes. Ésta estructura tiene una sobrecarga menor que las anteriores; Sin embargo, las actualizaciones son más costosas ya que las versiones anteriores de la estructura de datos se deben guardar con el fin de dar cabida a los lectores ya existentes que se sincronizan a través de las barreras del mutex. Utilizando el enfoque de la RCU el bloqueo con esta estructura mutex asegura que la operación \emph{Test-and-Set} se ejecute en la misma CPU del propietario del lock, lo que reduce la cantidad de comunicación de memoria caché (y por consiguiente, el efecto de contención).
+\end{description}
+
+Asociadas a las anteriores llamadas de sistema están las variantes \verb=*_unlock*= que permiten liberar el elemento de bloqueo y recuperar así su disponibilidad para otros procesos.
+
+Para poder rescatar las llamadas a sistema existen herramientas de software de bajo nivel, creados por los mismos desarrolladores del núcleo de Linux, que permiten realizar la tarea que nos proponemos en éste caso.
+
 \subsubsection{Perf}
+Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Documentación oficial disponible en \url{https://perf.wiki.kernel.org/}}} es una herramienta de análisis de performance para entornos Linux. Corresponde a un subsistema del kernel de Linux que provee todo un framework para estudio de performance del sistema y de programas por medio de la captura de una amplia variedad de fuentes de datos. Perf es capaz de colectar datos por operatividad de software (contadores de software, \emph{tracepoints}, ejecución de funciones, paso a assembler, etc.) y también colectar a nivel de hardware (manejo de PMU, lectura de \emph{Performance Counters}, etc.), características que lo postulan como uno de los sistemas más completos para las tareas de profilling de aplicaciones y sistemas.
+
+Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso. Su uso en general se basa en la supervisión de un determinado proceso o tarea, de la cual construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}.
+
+
 \subsubsection{FTrace}
 \subsection{Resultados}
+Nos topamos con que las tendencias de tiempos son similares a las de los tiempos de esas llamadas, luego, hay una correlacion de esta estructura inhenrente al socket es la que causa el cuello de botella: indicio, el socket entero está siendo contenido por el spinlock de su estructura.
 \subsubsection{Perf}
 \subsubsection{Call-Graph}
 \subsubsection{FTrace}
-\subsubsection{Visualizador mio}
+\subsubsection{TraceDisplay}
+Para poder obtener una interpretación adicional del fenómeno reconocido, se implementó una herramienta de visualziación de las llamadas a sistema para funciones de sincronización que permitiese reconocer las porciones de tiempo que tomaban en cada procesador dichas funciones. Para ello, la herramienta recibe un log de \emph{FTrace} con las llamadas de sistema yá filtradas y construye un mapa de tiempo coloreado, donde se pueden apreciar las porciones de tiempo que consumen las llamadas y desde que CPU se originan. El resultado se puede apreciar en la imagen \ref{fig:traceDisplay}. Éste subproducto de la investigación principal junto con su documentación de uso está publicado\footnote{Disponible en \url{https://github.com/sebablasko/TraceDisplay}} y disponible para su uso.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.35]{imagenes/traceVisualization.png}
+	\caption{visualización de aplicación de llamadas de sistema de sincronización realizadas entre procesadores, generada con la herramienta TraceDisplay desarrollada en el marco de éste trabajo. AKA FALTA EXPLICAR EL CASO EVALUADO}
+	\label{fig:traceDisplay}
+\end{figure}
+
+AKA ME FALTA DECIR PARA QUE ME SIRVIO ESTA HERRAMIENTA
+
 \subsection{Análisis}
 
 \section{Estudio de Canales de Comunicación de Hardware}
@@ -24,6 +67,8 @@ Explicar a grosso modo la idea del cuello de botella en el bus de datos, y cómo
 \subsubsection{Arquitectura Intel QuickPath}
 
 \subsection{Especificación de Eventos}
+Performance counters are CPU hardware registers that count hardware events such as instructions executed, cache-misses suffered, or branches mispredicted. They form a basis for profiling applications to trace dynamic control flow and identify hotspots. perf provides rich generalized abstractions over hardware specific capabilities. Among others, it provides per task, per CPU and per-workload counters, sampling on top of these and source code event annotation.
+
 \subsection{Captura de Eventos}
 \subsubsection{Resultados}
 \subsubsection{Correlación de Eventos}
