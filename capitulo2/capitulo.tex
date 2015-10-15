@@ -34,10 +34,26 @@ Para poder rescatar las llamadas a sistema existen herramientas de software de b
 \subsubsection{Perf}
 Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Documentación oficial disponible en \url{https://perf.wiki.kernel.org/}}} es una herramienta de análisis de performance para entornos Linux. Corresponde a un subsistema del kernel de Linux que provee todo un framework para estudio de performance del sistema y de programas por medio de la captura de una amplia variedad de fuentes de datos. Perf es capaz de colectar datos por operatividad de software (contadores de software, \emph{tracepoints}, ejecución de funciones, paso a assembler, etc.) y también colectar a nivel de hardware (manejo de PMU, lectura de \emph{Performance Counters}, etc.), características que lo postulan como uno de los sistemas más completos para las tareas de profilling de aplicaciones y sistemas.
 
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.3]{imagenes/fcfm}
+	\caption{Arquitectura de operación del framework provisto por \emph{Perf}.}
+	\label{fig:perfFramework}
+\end{figure}
+
 Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso. Su uso en general se basa en la supervisión de un determinado proceso o tarea, de la cual construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}.
 
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.3]{imagenes/fcfm}
+	\caption{Esquema de captura de datos de un programa usando el comando \emph{perf-record}.}
+	\label{fig:perfRecord}
+\end{figure}
 
 \subsubsection{FTrace}
+Sony \cite{paper:FTraceSony}
+
+
 \subsection{Resultados}
 Nos topamos con que las tendencias de tiempos son similares a las de los tiempos de esas llamadas, luego, hay una correlacion de esta estructura inhenrente al socket es la que causa el cuello de botella: indicio, el socket entero está siendo contenido por el spinlock de su estructura.
 \subsubsection{Perf}
@@ -72,7 +88,8 @@ Performance counters are CPU hardware registers that count hardware events such 
 \subsection{Captura de Eventos}
 \subsubsection{Resultados}
 \subsubsection{Correlación de Eventos}
-acá la idea es ilustrar tendencias más importantes
+Para poder comprender mejor la tendencia de comportamiento en el experimento entre los distintos eventos capturados se repasaron posibles mecanismos de visualziación que permitieran una simple comparación entre dichas mediciones. Finalmente se optó por emplear una visualziación mediante el uso de una matriz de correlación, de manera de poder detectar facilmente conjuntos de eventos relacionados, ello combinando algúna estratégia de clusterización en el proceso de visualizar los datos. Ésta técnica es muy práctica y se ha empleado en otros escenarios sobre el mismo kernel en otras investigaciones con buenos resultados \cite{paper:clusteringKernel}.
+
 \subsection{Análisis}
 
 \section{Estudio de Distribución de Carga}
