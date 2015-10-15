@@ -18,8 +18,8 @@ El modelo OSI reconoce 7 capas de abstracción en el proceso de comunicación en
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.3]{imagenes/netfilterArchitecture}
-	\caption{Diagrama esquemático de las 7 capas del modelo OSI.}
+	\includegraphics[scale=.45]{imagenes/OSI7Capas.png}
+	\caption{Diagrama esquemático de las 7 capas del modelo OSI, ilustrando el proceso de encapsulamiento y desencapsulamiento de datos al ir agregando/removiendo encabezados de capa.}
 	\label{netfilterArchitecture}
 \end{figure}
 
@@ -78,8 +78,8 @@ Por su funcionamiento, la anatomía o estructura de un paquete UDP es bastante s
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.3]{imagenes/netfilterArchitecture}
-	\caption{Estructura de un paquete UDP.}
+	\includegraphics[scale=.55]{imagenes/estructuraUDP.png}
+	\caption{Estructura de un paquete UDP con detalle del tamaño de sus encabezados de capa de transporte.}
 	\label{fig:datagramaudp}
 \end{figure}
 
@@ -164,14 +164,16 @@ Los sockets son estructuras que se construyen por medio de la llamada de sistema
 
 \begin{figure}[h!]
 	\centering
-	\subfigure[Llamadas de sistema en conexión TCP]{
-		\includegraphics[width=.4\textwidth]{imagenes/fcfm}
-	}
-	\subfigure[Llamadas de sistema en conexión UDP]{
-		\includegraphics[width=.4\textwidth]{imagenes/fcfm}
+	\hspace*{\fill}
+	\subfigure[Llamadas de sistema en esquemas de comunicación orientados a la conexión, como el caso de TCP.]{
+		\includegraphics[width=.4\textwidth]{imagenes/llamadasTCP.png}
+	}\hfill
+	\subfigure[Llamadas de sistema en esquemas de comunicación orientados a la mensajería, como el caso de UDP.]{
+		\includegraphics[width=.4\textwidth]{imagenes/llamadasUDP.png}
 	}
 	\caption{Un esquemático de las llamadas a sistema que se deben suceder para establecer una conexión.}
 	\label{fig:socketHandshake}
+	\hspace*{\fill}
 \end{figure}
 
 El sistema operativo reconoce a los diferentes sockets en operación a través de sus detalles de conexión de red, ello por medio de tuplas que contienen información de la conexión que provee el mismo. Una tupla congrega datos como: El protocolo de comunicación, las direcciones local y remota (con datos de las capas de red y de transporte para la identificación del punto de acceso: IP:PUERTO) y los identificadores de procesos local y remoto propietarios del punto de comunicación.
