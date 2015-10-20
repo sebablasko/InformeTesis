@@ -16,10 +16,13 @@ Para ratificar el planteamiento anterior, se hizo un estudio de llamadas a siste
 
 La operación de las primitivas de sincronización que actúan en los procesos de bajo nivel del sistema operativo tienen la característica de estar determinadas por el uso de llamadas a funciones del sistema, ello pues es el mismo sistema operativo (o mejor dicho su núcleo) el que provee una interfaz simple para invocar dicha operación. Cómo son llamadas a sistema, es posible cuantificar cuando y cómo se realiazan las mismas, pudiendo modelar el proceso completo por medio de éste mecanismo.
 
-Cómo en nuestro caso, interesa estudiar el comportamiento de primitivas de sincronización de bajo nivel, como son los spinlocks, se debe contemplar la API\footnote{Abreviatura de \emph{Application Programming Interface}, ó Interfaz de Programación de Aplicaciones en español.} con que trabaja el sistema, ello pues, a pesar de que la estructura spinlock está bien definida, eisten distintas funciones que proveen variantes en el funcionamiento de los spinlocks, y dichos escenarios son presentables a lo largo de la ejecución del caso de prueba del estudio. En la práctica, existen diversas funciones de atención que aplican distintos tipos de bloqueo:
+Cómo en nuestro caso interesa estudiar el comportamiento de primitivas de sincronización de bajo nivel como son los spinlocks, se debe contemplar la API\footnote{Abreviatura de \emph{Application Programming Interface}, ó Interfaz de Programación de Aplicaciones en español.} con que trabaja el sistema para controlar éstas estructuras, ello pues, a pesar de que la estructura spinlock está bien definida, eisten distintas funciones que proveen variantes en el funcionamiento de los spinlocks, y dichos escenarios son presentables a lo largo de la ejecución del caso de prueba del estudio. El objetivo de éste estudio concierne un análisis cuantitativo de la cantidad de llamadas a sistema que sean bloqueantes sobre estructuras bloqueantes de tipo spinlock, y del tiempo que el sistema gasta en dichas condiciones.
+
+En Linux los spinlocks se representan con estructuras \verb=spinlock_t= (incluidas en el archivo \verb= <linux/spinlock.h>=) que básicamente consisten en un campo de lock con un valor 1 (si está libre) o 0 (si está ocupado). Existen diversas funciones de atención que aplican distintos tipos de bloqueo \cite{book:spinlocks}:
 
 \begin{description}
-\item[void spin\_lock(spinlock\_t *lock);] Es el bloqueo básico del sistema, consistente en hacer "girar" el lock hasta que se brinde acceso. Es un bloqueo interrumpible por el sistema operativo, tanto por interrupciones de software como de hardware, dando paso a situaciones como que la CPU determine enviar el proceso responsable de la llamada a dormir por falta de recursos, memoria, etc.
+\item[void spin\_lock\_init(spinlock\_t *lock);] Inicializa una estructura spinlock y setea su valor inicial en 1.
+\item[void spin\_lock(spinlock\_t *lock);] Es el bloqueo básico del sistema para tomar el lock. Consistente en la espera del lock hasta su valor 1 para luego setearlo en 0. Dicha espera se realiza con ciclos de \emph{busy-waiting} hasta que se brinde acceso. Es un bloqueo interrumpible por el sistema operativo, tanto por interrupciones de software como de hardware, dando paso a situaciones como que la CPU determine enviar el proceso responsable de la llamada a dormir por falta de recursos, memoria, etc.
 \item[void spin\_lock\_irq(spinlock\_t *lock);] Bloqueo que deshabilita interrupciones del procesador local antes de adquirir el spinlock. Se debe cuidar de reactivar las interrupciones luego de liberado el lock.
 \item[void spin\_lock\_irqsave(spinlock\_t *lock, unsigned long flags);] Similar a la operación de \verb=spin_lock_irq=, pero con la diferencia de que almacena el estado de interrupción previo en el valor \verb=flags=, de manera de que puede restablecerlo facilmente luego de liberar el lock.
 \item[void spin\_lock\_bh(spinlock\_t *lock)] Similar a \verb=spin_lock_irq= con la diferencia de que sólo deshabilita las interrupciones de software, manteniendo habilitadas las interrupciones por hardware del sistema.
@@ -27,12 +30,12 @@ Cómo en nuestro caso, interesa estudiar el comportamiento de primitivas de sinc
 \item[bool mutex\_spin\_on\_owner(struct mutex *lock, struct task\_struct *owner)] Bloqueo que opera sobre una estructura de exclusión mutua (mutex) que utiliza el enfoque de \emph{Read-Copy-Update} (RCU), en donde los lectores son no bloqueantes. Ésta estructura tiene una sobrecarga menor que las anteriores; Sin embargo, las actualizaciones son más costosas ya que las versiones anteriores de la estructura de datos se deben guardar con el fin de dar cabida a los lectores ya existentes que se sincronizan a través de las barreras del mutex. Utilizando el enfoque de la RCU el bloqueo con esta estructura mutex asegura que la operación \emph{Test-and-Set} se ejecute en la misma CPU del propietario del lock, lo que reduce la cantidad de comunicación de memoria caché (y por consiguiente, el efecto de contención).
 \end{description}
 
-Asociadas a las anteriores llamadas de sistema están las variantes \verb=*_unlock*= que permiten liberar el elemento de bloqueo y recuperar así su disponibilidad para otros procesos.
+Asociadas a las anteriores llamadas de sistema están las variantes \verb=*_unlock*= que permiten liberar el elemento de bloqueo (seteando el valor del lock a 1) para recuperar así su disponibilidad para otros procesos.
 
 Para poder rescatar las llamadas a sistema existen herramientas de software de bajo nivel, creados por los mismos desarrolladores del núcleo de Linux, que permiten realizar la tarea que nos proponemos en éste caso.
 
 \subsubsection{Perf}
-Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Documentación oficial disponible en \url{https://perf.wiki.kernel.org/}}} es una herramienta de análisis de performance para entornos Linux. Corresponde a un subsistema del kernel de Linux que provee todo un framework para estudio de performance del sistema y de programas por medio de la captura de una amplia variedad de fuentes de datos. Perf es capaz de colectar datos por operatividad de software (contadores de software, \emph{tracepoints}, ejecución de funciones, paso a assembler, etc.) y también colectar información a nivel de hardware (manejo de PMU, lectura de \emph{Performance Counters}, etc.), características que lo postulan como uno de los sistemas más completos para las tareas de profilling de aplicaciones y sistemas.
+Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Mayor documentación disponible en \url{https://perf.wiki.kernel.org/}}} es una herramienta de análisis de performance para entornos Linux. Corresponde a un subsistema del mismo kernel de Linux que provee todo un framework para el estudio de performance del sistema y de programas por medio de la captura de una amplia variedad de fuentes de datos. Perf es capaz de colectar datos por operatividad de software (contadores de software, \emph{tracepoints}, ejecución de funciones, paso a assembler, etc.) y también colectar información a nivel de hardware (manejo de PMU, lectura de \emph{Performance Counters}, etc.), características que lo postulan como uno de los sistemas más completos y flexibles para las tareas de profilling de aplicaciones y sistemas, y que lo hacen una buena herramienta para el actual estudio.
 
 \begin{figure}[!h]
 	\centering
@@ -41,7 +44,9 @@ Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Docu
 	\label{fig:perfFramework}
 \end{figure}
 
-Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso, basado en la supervisión de un determinado proceso o tarea, de la cual construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}.
+Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso, pues su funcionamiento se basa en la supervisión de un determinado proceso o tarea de la cual construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}. Posteriormente, se pueden realizar operaciones de análisis más exhaustivo sobre dichos archivos de resultados.
+
+El potencial de ésta herramienta la perfila como una utilidad indispensable para el estudio en cuestión. En primer lugar por su capacidad de análisis de ejecución de código que permite obtener información cuantificada de las llamadas a sistema y de la dinámica del árbol de llamados\footnote{Acá explicar brevemente que es un árbol de llamados} que permite reconocer la naturaleza de las funciones involucradas en el caso de estudio. En segunda instancia Perf es una estupenda herramienta para la recolección de datos de hardware al aprovechar el uso de la \emph{Performance Monitoring Unit} del hardware del sistema, una característica que será revisada en detalle en secciones posteriores.
 
 \begin{figure}[!h]
 	\centering
@@ -51,7 +56,11 @@ Además de su gran capacidad para colectar datos, Perf es una herramienta de sen
 \end{figure}
 
 \subsubsection{FTrace}
-Sony \cite{paper:FTraceSony}
+Ftrace\footnote{Mayor documentación disponible en \url{http://elinux.org/Ftrace}} es otra poderosa herramienta para estudios de profiling disponible para sistemas Linux \cite{paper:FTraceSony}. Su funcionamiento opera de naturaleza muy intima con respceto al kernel mismo del sistema pues su recolección de datos se basa en el rastreo de la ejecución de funciones de forma dinámica en el espacio de kernel, lo que lo hace una estupénda utilidad para el estudio de llamadas al sistema, pudiendo recuperar datos como el tiempo de ejecución y cantidad de ocurrencia de las mismas.
+
+Para su uso, FTrace opera como un verdadero framework del sistema sobre el kernel, del cual se pueden usar distintos métodos de rastreo de llamadas basados en distintos algoritmos. Una de las funciones más poderosas de FTrace es el resultado que se puede obtener por medio de la instrumentación de código, que se refiere a la práctica de incorporar a los programas a analizar \emph{tracepoints}, que son declaraciones explicitas de secciones de código a analizar y registrar. A pesar de que ésta característica es muy cómoda para programas propios, en el caso del análisis de funciones y llamadas de sistema la instrumentación de código es una característica obviable, siendo sólo necesaria la precisión de qué llamadas considerar en el análisis. El uso de ésta herramienta es muy flexible, siendo activable a disposición del usuario y conservando un registro de resultados. Además, FTrace es altamente configurable pudiendo explicitar filtros que usar como registros para las llamadas de sistema a analizar.
+
+El provecho que se puede sacar de ésta herramienta es usar su capacidad para cuantificar tiempo de funciones del kernel para estudiar la atomicidad de las llamadas bloqueantes del sistema. Así por ejemplo, se pretende determinar el tiempo que se pasa en estados bloqueantes de spinlocks (de \emph{busy-waiting}) en los cuales sólo se pierde tiempo por caso de contención.
 
 
 \subsection{Resultados}
@@ -87,15 +96,12 @@ Es precisamente en ésta línea que se establece la segunda hipótesis. En éste
 
 En ésta línea, el fenómeno de \emph{Cache Bouncing} se podría acrecentar dada la arquitectura del sistema, la que al contemplar bancos de memoria distribuidos, algunos compartidos y otros exclusivos para los núcleos de procesamiento, podría estar manifestandose como resultado de las modificaciones concurrentes de los distintos procesadores sobre el socket, combinado a la operación de los protocolos de consistencia y correctitud para las lineas de caché del sistema.
 
-\subsection{Desarrollo de Arquitecturas Modernas de Hardware}
-\subsubsection{FSB}
-\subsubsection{alguna otra...}
+\subsection{Características de Arquitecturas de Hardware Modernas}
 \subsubsection{Arquitectura Intel QuickPath}
 
-\subsection{Especificación de Eventos}
+\subsection{Especificación y Captura de Eventos}
 Performance counters are CPU hardware registers that count hardware events such as instructions executed, cache-misses suffered, or branches mispredicted. They form a basis for profiling applications to trace dynamic control flow and identify hotspots. perf provides rich generalized abstractions over hardware specific capabilities. Among others, it provides per task, per CPU and per-workload counters, sampling on top of these and source code event annotation.
 
-\subsection{Captura de Eventos}
 \subsubsection{Resultados}
 \subsubsection{Correlación de Eventos}
 Para poder comprender mejor la tendencia de comportamiento en el experimento entre los distintos eventos capturados se repasaron posibles mecanismos de visualziación que permitieran una simple comparación entre dichas mediciones. Finalmente se optó por emplear una visualziación mediante el uso de una matriz de correlación, de manera de poder detectar facilmente conjuntos de eventos relacionados, ello combinando algúna estratégia de clusterización en el proceso de visualizar los datos. Ésta técnica es muy práctica y se ha empleado en otros escenarios sobre el mismo kernel en otras investigaciones con buenos resultados \cite{paper:clusteringKernel}.
@@ -103,9 +109,11 @@ Para poder comprender mejor la tendencia de comportamiento en el experimento ent
 \subsection{Análisis y Discusión de Resultados}
 
 \section{Estudio de Distribución de Carga}
-La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado, es normal que el sistema operativo realice como procedimiento de rutina la migración de procesos y la re-alocación de recursos y datos del sistema. Un caso práctico de ello es cuando un núcleo de procesamiento está sobreexigido y el sistema operativo redistribuye los hilos en dicho núcleo entre los procesadores disponibles del sistema, como una estratégia de balanceo de carga [AKA UNA REFERENCIA DE ESO].
+La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado, es normal que el sistema operativo realice como procedimiento de rutina la migración de procesos y la re-alocación de recursos y datos del sistema. Un caso práctico de ello es cuando un núcleo de procesamiento está sobreexigido y el sistema operativo redistribuye los hilos en dicho núcleo entre los procesadores disponibles del sistema, como una estratégia de balanceo de carga \cite{paper:NUMA}.
 
-Ésta tercera hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia basandose en que, mientras un proceso está en plena ejecución al incorporar más y más tareas en el mismo nucleo de procesamiento agregando hilos de ejecución, sería el sistema operativo quien comienzaría la reasignación automática de dichos hilos entre los distintos procesadores, cayendo en problemas como perdida de referencias de memoria en niveles de chacé primario de procesos en cuestión. En su peor escenario, ésta teoría lleva al conocido problema de \emph{caché bouncing} [AKA CITA A ESOS PROBLEMAS] que corresponde al fenómeno de sobre corrección de los datos a nivel de caché, producido por constantes cambios de contexto del \emph{scheduller}. Un problema que ya se mencionó en el estudio de la sección previa.
+Ésta tercera hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia basandose en que, mientras un proceso está en plena ejecución al incorporar más y más tareas en el mismo nucleo de procesamiento agregando hilos de ejecución, sería el sistema operativo quien comienzaría la reasignación automática de dichos hilos entre los distintos procesadores, cayendo en problemas como perdida de referencias de memoria en niveles de chacé primario de procesos en cuestión. En su peor escenario, ésta teoría lleva al conocido problema de \emph{caché bouncing} \cite{paper:cachebouncing} que corresponde al fenómeno de sobre corrección de los datos a nivel de lineas de cache de un procesador, producido por constantes cambios de contexto del \emph{scheduller} que genera migración de procesos. Un problema que ya se mencionó en el estudio de la sección previa.
+
+Una alternativa que se ha estudiado para solventar éste problema es la técnica de \emph{Processor Affinity} que consiste en la asociación de tareas o procesos en procesadores especificos, de manera de controlar la ubicación de memoria y zona de ejecución del código. En otras palabras, se remueve la utilidad del mismo scheduler del sistema oeprativo para coordinar la mejor operación en la asignación de las mismas a las distintas CPU disponible, reemplazándolo por un criterio propio y estricto. Es una técnica muy interesante en el sentido de que, bien empleada puede proveer muy buenos resultados \cite{paper:cacheaffinity}, sin embargo también es facil degradar fuertemente el sistema al hacer mal uso de la misma.
 
 \subsection{Processor Affinity}
 \subsection{Esquemas de Distribución}
