@@ -4,11 +4,18 @@ Como ya se estudió, los problemas del escenario multithreading reconocidos en e
 
 \emph{Reuseport} es una de las soluciones más usadas para el problema descrito por su gran efectividad en la practica. Corresponde a un desarrollo de Tom Herbert ??????, ingeniero de Google, desarrollado precisamente para atender los bajos desempeños generados a emplear un esquema de consumo de sockets como el planteado hasta el momento. El trabajo de Herbert plantea que las distintas estratégias que se puedan adoptar sobre un único socket para mejorar la performance en su acceso concurrente terminan no resultando efectivas por mantener el punto de contención al compartir la misma estructura.
 
-\begin{figure}[!h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[scale=.5]{imagenes/netfilterArchitecture}
-	\caption{Esquema de funcionamiento de \emph{Reuseport}.}
-	\label{netfilterArchitecture}
+	\hspace*{\fill}
+	\subfigure[Socket Tradicional]{
+		\includegraphics[width=.4\textwidth]{imagenes/socketNormal.png}
+	}\hfill
+	\subfigure[Socket con opción Reuseport activada]{
+		\includegraphics[width=.4\textwidth]{imagenes/socketReuseport.png}
+	}
+	\caption{Comparativo del funcionamiento de sockets tradicionales con respecto a Reuseport. En éste último, basta con que el primer socket que enlace al puerto en cuestión tenga la opción habilitada para que cualquier socket posterior se pueda sobre acomplar sobre el mismo puerto, compartiendo así el consumo de datos del mismo.}
+	\label{fig:socketHandshake}
+	\hspace*{\fill}
 \end{figure}
 
 \emph{Reuseport} se plantea como una opción para los sockets estándar de Linux que promete una mejora en los tiempos de consumo en la atención a un determinado puerto. Dicha opción permite compartir un mismo puerto local del sistema entre múltiples sockets distintos. De ésta manera, conservando el esquema multithread, cada thread puede tener exclusividad en el consumo de un socket, eliminando el punto de contención único que se ocaciona al compartir un sólo socket. Al usar la opción \emph{Reuseport}, la tarea de distribución de paquetes entre los distintos sockets que compartan un puerto local es delegada directamente al kernel, el cual asigna aleatoreamente los paquetes recibidos entre los sockets que escuchan el mismo puerto.

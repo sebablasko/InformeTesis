@@ -118,15 +118,15 @@ El primer enfoque arquitectural masivo para el paralelísmo se denominó como la
 \begin{figure}[th!]
 \centering
 \subfigure[Arquitectura \emph{FSB}]{
-	\includegraphics[width=.3\textwidth]{imagenes/fcfm}
+	\includegraphics[width=.3\textwidth]{imagenes/FSB.png}
 	\label{fig:FSB}
 }
 \subfigure[Arquitectura \emph{DIB}]{
-	\includegraphics[width=.3\textwidth]{imagenes/fcfm}
+	\includegraphics[width=.3\textwidth]{imagenes/DIB.png}
 	\label{fig:DIB}
 }
 \subfigure[Arquitectura \emph{DHSI}]{
-	\includegraphics[width=.3\textwidth]{imagenes/fcfm}
+	\includegraphics[width=.3\textwidth]{imagenes/DHSI.png}
 	\label{fig:DHSI}
 }
 \caption{Diagrama de las distintas arquitecturas de hardware para la comunicación de múltiples procesadores.}
@@ -137,7 +137,7 @@ Con objeto de explotar mejor el potencial de un esquema multiprocesador, se desa
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=0.3]{imagenes/fcfm}
+	\includegraphics[scale=0.3]{imagenes/MESI.png}
 	\caption{Diagrama de transiciones del protocolo MESI.}
 	\label{fig:MESI}
 \end{figure}
@@ -205,7 +205,7 @@ Los sockets \cite{rfc:147, book:sockets} son estructuras que se construyen por m
 	\subfigure[Llamadas de sistema en esquemas de comunicación orientados a la mensajería, como el caso de UDP.]{
 		\includegraphics[width=.4\textwidth]{imagenes/llamadasUDP.png}
 	}
-	\caption{Un esquemático de las llamadas a sistema que se deben suceder para establecer una conexión \cite{book:sockets}.}
+	\caption{Un esquemático de las llamadas a sistema que se deben suceder para establecer una conexión \cite{book:sockets}. En éste caso, los componentes amarillos representan el lado cliente y aquellos azules representan el lado servidor de la dinámica de conexión.}
 	\label{fig:socketHandshake}
 	\hspace*{\fill}
 \end{figure}
@@ -258,8 +258,8 @@ En linea con lo anterior, se diseñó una prueba para evaluar el desempeño prom
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=0.5]{imagenes/conf_multi_thread}
-	\caption{Diagrama que ilustra el diseño de la prueba de consumo de datos a través de un socket UDP usando multithreading.}
+	\includegraphics[scale=0.5]{imagenes/casoDeEstudio.png}
+	\caption{Diagrama que ilustra el diseño de la prueba de consumo de datos a través de un socket UDP usando múltiples hilos de ejecución.}
 	\label{fig:testUDP}
 \end{figure}
 
