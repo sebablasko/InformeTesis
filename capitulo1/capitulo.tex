@@ -11,7 +11,7 @@ El gran crecimiento en la cantidad de sistemas teconológicos interconectados vi
 
 Más allá del número de dispositivos o la cantidad --o calidad-- del acceso a Internet, las distintas aplicaciones que ha desarrollado la industria han evolucionado sobre la base de protocolos y sistemas diseñados hace varias décadas, exigiendo siempre la mejor performance posible en pos de garantizar buenos tiempos de respuesta. Los protocolos más celebres de la llamada \emph{familia de protocolos de Internet} son TCP e IP. Sin embargo, son decenas los protocolos y mecanísmos involucrados en las diferentes fases de comunicación entre computadoras y aplicaciones, que permiten en conjunto la operación de la red de redes como hoy la conocemos.
 
-\section{El modelo OSI de conexion en Internet}
+\section{El modelo OSI}
 La capacidad de conectividad entre 2 distintos dispositivos es resultado del efecto combinado de varias capas de abstracción con responsabilidades divididas. Un diseño de operación que se ilustra en un modelo estándar vigente desde los años 80 es el impulsado por la \emph{Organización Internacional de Normalización} (\textbf{ISO}), mejor conocido como el modelo \textbf{OSI} por sus siglas en inglés \emph{Open System Interconnection}. En la práctica, la importancia de éste modelo radica en servir como una referencia técnica que ilustra los límites en las responsabilidades entre componentes que conforman una arquitectura de interconexión de sistemas.
 
 El modelo OSI reconoce 7 capas de abstracción en el proceso de comunicación entre dispositivos, cada una con obligaciones especificas y que juntas, soportan constructivamente un mecanismo de comunicación estándar para sistemas que por él se rijan. El acierto de éste enfoque está en permitir el desarrollo de soluciones modulares y especificas a cada una de las capas, sin interferir entre capas diferentes y manteniendo así la compatibilidad con aplicaciones que ya operen en capas distintas. Las 7 capas en cuestión se describen a continuación:
@@ -65,7 +65,7 @@ La arquitectura del protocolo TCP/IP sigue la inspiración del modelo OSI en las
 
 
 \subsection{UDP}
-UDP \cite{rfc:udp} es un protocolo de la familia de protocolos de Internet con funciones a nivel de la capa de transporte según el modelo OSI que se caracteriza por ser un protocolo orientado a mensajes, vale decir, por permitir enviar mensajes a través de la red sin necesidad de establecer previamente una conexión con el equipo receptor (situación que si ocurre y es característica de los protocolos orientados a la conexión como es el caso de TCP).
+UDP \cite{rfc:768} es un protocolo de la familia de protocolos de Internet con funciones a nivel de la capa de transporte según el modelo OSI que se caracteriza por ser un protocolo orientado a mensajes, vale decir, por permitir enviar mensajes a través de la red sin necesidad de establecer previamente una conexión con el equipo receptor (situación que si ocurre y es característica de los protocolos orientados a la conexión como es el caso de TCP).
 %[OSI reference model—The ISO model of architecture for open systems interconnection]%
 
 Ésta naturaleza de UDP tiene varias implicancias:
@@ -83,12 +83,12 @@ Por su funcionamiento, la anatomía o estructura de un paquete UDP es bastante s
 	\label{fig:datagramaudp}
 \end{figure}
 
-El protocolo UDP se estandarizó el año 1980 \cite{rfc:udp}, siendo uno de los componentes estructurales en la Internet de hoy, estando presente en diversas aplicaciones como: Transmisiones en uso intensivo de datos para redes de alta velocidad \cite{udp:highbandwidth}, Mecanismos de transmisión de video \cite{udp:video}, entre otros. Sin embargo, una de las aplicaciones más importantes que utiliza éste protocolo hoy por hoy en la infraestructura de Internet es en el servicio DNS.
+El protocolo UDP se estandarizó el año 1980 \cite{rfc:768}, siendo uno de los componentes estructurales en la Internet de hoy, estando presente en diversas aplicaciones como: Transmisiones en uso intensivo de datos para redes de alta velocidad \cite{udp:highbandwidth}, Mecanismos de transmisión de video \cite{udp:video}, entre otros. Sin embargo, una de las aplicaciones más importantes que utiliza éste protocolo hoy por hoy en la infraestructura de Internet es en el servicio DNS.
 
 \subsection{DNS}
 Todo dispositivo conectado a una red de computadoras se identifica a si mismo por la denominada \emph{dirección IP}, un identificador único que permite referenciarlo y diferenciarlo de otros dispositivos conectados a la misma red, definido por el nivel 4 de red del modelo OSI. No obstante, para poder conectarse con un recurso disponible en Internet, los dispositivos consultan por lo que llamamos \emph{nombres de dominio} que son identificadores con carácter semántico para los usuarios que, en estricto rigor, definen una red de identificación asociada a un grupo de dispositivos o equipos conectados a la red \cite{wiki:nombre_dominio}. Éste mecanismo de traducciones se conoce como \textbf{servicio DNS} y es vital para el funcionamiento de Internet como lo conocemos.
 
-El servicio DNS opera como una base de datos distribuida que permite resolver consultas de manera jerarquizada. Frente a una consulta de un cliente por un nombre de dominio, un servidor DNS puede tener la respuesta, en cuyo caso éste servidor responde sin mayores inconvenientes. En caso contrario, dicho servidor DNS promueve la consulta a un servidor DNS de mayor rango en la jerarquía DNS hasta alguno que conozca la IP asociada al nombre de dominio consultado. Eventualmente, si ninguno de los servidores intermediarios conoce la respuesta, la consulta llega a los servidores raíz, de los cuales se responde la consulta ya sea con la respuesta efectiva o con la información de que el registro no existe (ver figura \ref{fig:dns}).
+El servicio DNS \cite{rfc:1034, rfc:1035} opera como una base de datos distribuida que permite resolver consultas de manera jerarquizada. Frente a una consulta de un cliente por un nombre de dominio, un servidor DNS puede tener la respuesta, en cuyo caso éste servidor responde sin mayores inconvenientes. En caso contrario, dicho servidor DNS promueve la consulta a un servidor DNS de mayor rango en la jerarquía DNS hasta alguno que conozca la IP asociada al nombre de dominio consultado. Eventualmente, si ninguno de los servidores intermediarios conoce la respuesta, la consulta llega a los servidores raíz, de los cuales se responde la consulta ya sea con la respuesta efectiva o con la información de que el registro no existe (ver figura \ref{fig:dns}).
 
 \begin{figure}[!h]
 	\centering
@@ -109,12 +109,50 @@ De esta manera, las características anteriores justifican el uso de UDP como pr
 El escenario antes descrito explica porque UDP tiene una participación de gran importancia en las redes actuales (en especial sobre Internet) y además, dado el sostenido aumento en el número de conexiones explicado en las secciones previas, da cuenta de como el tráfico de éste tipo de comunicación representa una porción muy significativa en la operación de las redes modernas.
 
 \section{Sistemas Operativos Modernos}
-capacidad multiprocesador!
+El paso del tiempo ha permitido a los fabricantes de hardware desarrollar componentes cada vez de mayor capacidad. Procesadores, memorias, tarjetas de videos, sistemas de almacenamiento, y prácticamente todos los componentes de un computador han evolucionado en capacidad, un escenario que ha impulsado a los desarrolladores de sistemas operativos a generar plataformas más robustas y eficientes a la hora de aprovechar toda la nueva amalgama de recursos disponibles en cada nueva generación de componentes. Una de las características más notables que han significado para ésta industria sin duda ha sido la capacidad multiprocesador o bien denominada \emph{SMTP} (por sus siglas en inglés: Symmetric MultiProcessor system).
+
+A finales de la década de los 80, {empresa} hizo uno de los saltos más significativos en la industria al promover una nueva arquitectura de hardware que propuso un nuevo enfoque de aprovechamiento del procesador, incorporando varios de los mismos en un esquema que planteaba cómo siguiente paso la idea de disponer múltiples procesadores en una máquina, de manera de delegar tareas para su ejecución simultanea. Éste enfoque permitió llevar a la práctica por primera vez la técnica del paralelísmo en el software.
+
+El primer enfoque arquitectural masivo para el paralelísmo se denominó como la arquitectura \textbf{Front Side Bus} (FSB, ver figura \ref{fig:FSB}), muy popular entre procesadores de la linea Intel Core 2 Duo y Atom. Éste enfoque planteó la disposición de varios procesadores físicos, cada uno con recursos propios de memoria cache local, los cuales se interconectaban por un canal de comunicación común, el cual daba acceso a la memoria completa del sistema, y al resto de los recursos del sistema. El problema de ésta arquitectura era que para que un procesador pudiese emplear el Bus de datos, necesariamente el mismo debía estar libre de comunicaciones de cualquier otro procesador, problema que al poco tiempo que las memorias aumentaron su capacidad, evidenció el punto de contención inherente a éste diseño.
+
+\begin{figure}[th!]
+\centering
+\subfigure[Arquitectura \emph{FSB}]{
+	\includegraphics[width=.3\textwidth]{imagenes/fcfm}
+	\label{fig:FSB}
+}
+\subfigure[Arquitectura \emph{DIB}]{
+	\includegraphics[width=.3\textwidth]{imagenes/fcfm}
+	\label{fig:DIB}
+}
+\subfigure[Arquitectura \emph{DHSI}]{
+	\includegraphics[width=.3\textwidth]{imagenes/fcfm}
+	\label{fig:DHSI}
+}
+\caption{Diagrama de las distintas arquitecturas de hardware para la comunicación de múltiples procesadores.}
+\label{fig:arquitecturas}
+\end{figure}
+
+Con objeto de explotar mejor el potencial de un esquema multiprocesador, se desarrollaron varios rediseños del esquema \textbf{FSB} con el fin de eliminar el punto de contención en el bus compartido. Así es como surgieron las arquitecturas \textbf{Dual Independent Bus} y \textbf{Dedicated High-Speed Interconnects} (imagen \ref{fig:DIB} y \ref{fig:DHSI} respectivamente) que prostulaban un enfoque similar a FSB pero garantizando un canal exclusivo para cada procesador del sistema. Éstas modificaciones revelaron otro aspecto que considerar. En sistemas SMP, y básicamente en cualquier sistema que teóricamente plantee la capacidad de procesamiento paralelo, deben haber mecanismos de control de consistencia de los datos que permitan mantener un registro coherente de los valores almacenados en distintas porciones del sistema. Vale decir, como los esquemas de procesamiento múltiple emplean procesadores provistos de memoria local y de además de memoria compartida, se deben emplear mecanismos que garanticen la consistencia y coherencia de los valores que tengan presencia en el sistema. A dicho conjunto de esquemas de control de valores se les denomina \emph{Protocolos de coherencia de cache} y son los que dan flexibilidad en un sistema para que la memoria local de un procesador disponga de valores coherentes con la más reciente modificación de dicho valor, aún habiendo ocurrido en otro núcleo de procesamiento.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.3]{imagenes/fcfm}
+	\caption{Diagrama de transiciones del protocolo MESI.}
+	\label{fig:MESI}
+\end{figure}
+
+En lo que a estos protocolos respecta, el más popular en los sistemas modernos es el denominado protocolo \textbf{MESI}\footnote{También se le denomina protocolo Illinois, en sentido de la universidad del mismo nombre.} \cite{paper:MESI}, denominado así por las iniciales de las palabras en inglés: \textbf{M}odified (Modificado), \textbf{E}xclusive (Exclusivo), \textbf{S}hared (Compartido) e \textbf{I}nvalid (Inválido). Es un protocolo que plantea un diagrama de estado (basado en los 4 estados ya mencionados) para cada una linea de cache con valores almacenados, a modo de mantener su integridad en el sistema frente a modificaciones que realice algún procesador. En conjunto con el protocolo \emph{MESI} existe la técnica \textbf{Buss Snooping} \cite{paper:snoop} que consiste en un esquema de coordinación para interceptar, notificar, modificar y coordinar los valores de memoria a medida que se van realziando cambios de los mismos por una determinada tarea. En conjunto, el protocolo \emph{MESI} y la operación del \emph{Bus Snooping} hace posible las operaciones paralelas en entornos multiprocesador.
 
 \subsection{Programación Multi-Hilo}
-Hablar de capacidades de programación paralela, y uso de pthreads como la base de dicho enfoque.
+En la práctica, existen distintas maneras de conseguir paralelísmo a la hora de programar un sistema. Los dos enfoques tradicionales es pensar en esquemas \textbf{multiproceso} (denominados, procesos pesados) y \textbf{multihilo} (denominados procesos ligeros), diferenciados principamente porque los primeros disponen de espacios de memoria disjunto entre ellos, no así los segundos. La programación multihilo es muy usada en aplicaciones por ser un enfoque probado y de fácil adopción por el soporte que brindan los sistemas operativos modernos a través de librerias que brindan llamadas a sistema para tales fines. Posiblemente la más popular de las mismas es \textbf{PThreads}.
 
-\subsection{Mecanismos de Sincronización}
+PThreads (o \emph{POSIX Threads} de su nombre original) es una interfaz prácticamente estándar de programación hoy entre sistemas UNIX, resultado del trabajo de diseñadores de sistemas operativos que, a finales de los 80 se abocaron al desarrollo de sistemas escalables para las nuevas arquitecturas de multiprocesadores. Ésta interfaz provee funciones para gatillar y controlar hilos de ejecución a partir de un proceso padre. Los hilos se caracterízan por disponer de un espacio de memoria propio a cada uno con información privada (Con valores como el puntero de instrucciones, el \emph{Stack} de memoria, etc.) y además de compartir entre ellos otros elementos como el espacio de direccionamiento, señales del sistema, descriptores de archivos, etc. Que permite cierta comunicación entre ellos. Son una forma liviana de proveer paralelísmo, pues su símil multirpoceso (provista por la llamada a sistema \verb=fork()= es más pesada y lenta). Aún siendo procesos denominados "livianos" y de incorporar ciertas dificultades a la hora de concebir el diseño de una aplicación, el uso de threads a la hora de programar pormite postular a un importante beneficio como lo es la escalabilidad en sistemas multiprocesador, al permitir que los distintos hilos se ejecuten en distintos procesadores físicos, logrando ganacias en los tiempos netos de ejecución.
+
+En contraparte con lo anterior, la programación concurrente conlleva ciertas dificultades inherentes al efecto de la capacidad de ejecución simultanea. Quizá el desafío más importante que conlleva éste tipo de programación es que, la misma lleva inevitablemente a cambiar el diseño de las aplicaciones, siendo necesario aplicar criterios más sofisticados para enfrentar problemas que son propios de ésta disciplina, como lo es el problema de la sincronización y del acceso a secciones críticas.
+
+
+\subsection{Mecanismos de Sincronización del Sistema}
 Una responsabilidad fundamental de los sistemas operativos modernos es asignar el uso de recursos a las aplicaciones y garantiar un entorno seguro para la ejecución de dichas aplicaciones, en el sentido del acceso a datos o recursos del sistema. En ésta linea, garantizar \textbf{consistencia en los datos} es una labor crucial en esquemas modernos, capaces de generar escenarios de multiples aplicaciones con acceso simultáneo a datos compartidos entre ellas. La característica de operaciones paralelas es una introducción al kernel de Linux desde su versión 2.6\footnote{En versiones previas del kernel, la operación por defecto del scheduller del kernel era serializar las tareas con accesos simultaneos al sistema.} [AKA REF] que apareció a la vez que se popularizaron los equipos con capacidad multi-procesador, lo cual introdujo un nuevo nivel de complejidad en la labor de los sistemas operativos, teniendo que hacerce cargo el mismo de mantener la correcta consistencia de la infromación en memoria, en un escenario de ejecuciones paralelas. Problema conocido típicamente como de \emph{Secciones Críticas} [AKA una referencia a algo que estudie solo el tema de seciones criticas].
 
 Para proveer operaciones sobre los datos en escenarios concurrentes, los sistemas operativos modernos implementan mecanismos de sincronización que permiten garantizar consistencia en sus estructuras de datos, permitiendo así operaciones "simultaneas" sobre una determinada estructura, logrando así compartir una estructura entre distintos procesos que la modifiquen coincidentemente. Procesos que en la práctica pueden estár ejecutaándose en nucleos de procesamiento distintos.
@@ -153,14 +191,10 @@ Bien utilizados, los spinlocks son capaces de proveer un mejor desempeño que la
 
 Los spinlocks son una de las estructuras de sincronización preferidas a la hora de solucionar escenarios de concurrencia en otras estructuras desplegadas en el kernel. Están presentes en ESTRUCTURA1, ESTRUCTURA2, ESTRUCTURA3, etc. Siempre trantando de mantener el cuidado de resguardar sólo regiones de código acotadas que no arriesguen el desempeño general del sistema en contextos de concurrencia.
 
-\subsection{Interfaces de Comunicación}
-
-Aka no he puesto nada aún...
-
 \subsection{Sockets en Linux}
-El modelo OSI ha estipulado a la familia de los protocolos TCP/IP como un estándar a la hora de establecer mecanismos de conexión entre computadoras. Sin embargo, las interfaces de programación no siguen la misma naturaleza estándar. Los distintos sistemas operativos implementan distintas interfaces públicas de aplicación (API) para el uso práctico de TCP/IP. \textbf{Socket} es la denominación tradicional para las interfaces de programación que proveen los mecanísmos para realizar tales conexiones. En la práctica un \textbf{Socket} representa una interfaz o punto de comunicación que maneja un protocolo de comunicación especifico. En la práctica, los sockets operan bajo una dinámica denominada \emph{Cliente/Servidor}, que especifíca que la comunicación debe ser promovida inicialmente por un cliente y atendida por un servidor.
+El modelo OSI ha estipulado a la familia de los protocolos TCP/IP como un estándar a la hora de establecer mecanismos de conexión entre computadoras. Sin embargo, las interfaces de programación no siguen la misma naturaleza estándar. Los distintos sistemas operativos implementan distintas interfaces públicas de aplicación (API) para el uso práctico de TCP/IP. \textbf{Socket} es la denominación tradicional para las interfaces de programación que proveen los mecanísmos para realizar tales conexiones, en otras palabras, es la interfaz que provee el sistema operativo para enviar mensajes a través de la red. En la práctica un \textbf{Socket} representa una interfaz o punto de comunicación que maneja un protocolo de comunicación especifico. Los sockets operan bajo una dinámica denominada \emph{Cliente/Servidor} que especifíca que la comunicación debe ser promovida inicialmente por un cliente y atendida posteriormente por un servidor, en ese orden.
 
-Los sockets son estructuras que se construyen por medio de la llamada de sistema \verb=socket()=. Son estructuras provistas por el kernel del sistema\footnote{Típicamente implementada e importada desde el prototipo \verb=<sys/socket.h>=, disponible en los encabezados del kernel.} que al utilizarlos se manejan simplemente como descriptores de archivo, a pesar de que en su implementación a bajo nivel son bastante más complejos que una interfaz de sólo entrada y salida de datos. La gran diferencia de los sockets es que están concebidos para una operación basada en un principio \emph{Cliente-Servidor}, lo que impacta finalmente en que su descriptor no apunta directamente a un archivo y su utilidad queda determinada sólo desde el momento en que se complete la dinámica de llamadas a sistema que hagan se establezca una conexión efectiva, dependiendo del protocolo a usar (ver imagen \ref{fig:socketHandshake}). Linux cuenta con una API que provee métodos de comunicación sencillos para la maniulación de los sockets de acuerdo al protocolo para el que se configure el mismo.
+Los sockets \cite{rfc:147, book:sockets} son estructuras que se construyen por medio de la llamada de sistema \verb=socket()=. Son estructuras provistas por el kernel del sistema\footnote{Típicamente implementada e importada desde el prototipo \verb=<sys/socket.h>=, disponible en los encabezados del kernel.} que al utilizarlos se manejan simplemente como descriptores de archivo, a pesar de que en su implementación a bajo nivel son bastante más complejos que una interfaz de sólo entrada y salida de datos. La gran diferencia de los sockets es que están concebidos para una operación basada en un principio \emph{Cliente-Servidor}, lo que impacta finalmente en que su descriptor no apunta directamente a un archivo y su utilidad queda determinada sólo desde el momento en que se complete la dinámica de llamadas a sistema que hagan se establezca una conexión efectiva, dependiendo del protocolo a usar (ver imagen \ref{fig:socketHandshake}). Linux cuenta con una API que provee métodos de comunicación sencillos para la maniulación de los sockets de acuerdo al protocolo para el que se configure el mismo.
 
 \begin{figure}[h!]
 	\centering
@@ -171,16 +205,12 @@ Los sockets son estructuras que se construyen por medio de la llamada de sistema
 	\subfigure[Llamadas de sistema en esquemas de comunicación orientados a la mensajería, como el caso de UDP.]{
 		\includegraphics[width=.4\textwidth]{imagenes/llamadasUDP.png}
 	}
-	\caption{Un esquemático de las llamadas a sistema que se deben suceder para establecer una conexión.}
+	\caption{Un esquemático de las llamadas a sistema que se deben suceder para establecer una conexión \cite{book:sockets}.}
 	\label{fig:socketHandshake}
 	\hspace*{\fill}
 \end{figure}
 
-El sistema operativo reconoce a los diferentes sockets en operación a través de sus detalles de conexión de red, ello por medio de tuplas que contienen información de la conexión que provee el mismo. Una tupla congrega datos como: El protocolo de comunicación, las direcciones local y remota (con datos de las capas de red y de transporte para la identificación del punto de acceso: IP:PUERTO) y los identificadores de procesos local y remoto propietarios del punto de comunicación.
-
-\begin{verbatim}
-{Protocolo, dirección_local, proceso_local, dirección_remota, proceso_remoto}
-\end{verbatim}
+El sistema operativo reconoce a los diferentes sockets en operación a través de sus detalles de conexión de red, ello por medio de tuplas que contienen información de la conexión que provee el mismo. Una tupla congrega datos como: El protocolo de comunicación, las direcciones local y remota (con información de las capas de red y de transporte para la identificación del punto de acceso) y los identificadores de procesos local y remoto propietarios del punto de comunicación.
 
 Los sockets son elementos muy versátiles en cuanto a su manipulación y uso. Se pueden usar en dos variantes principales que determinan el \emph{dominio del socket}:
 \begin{description}
@@ -193,8 +223,7 @@ Para las variedades recien mencionadas hay que sumar la capacidad de configuraci
 Más allá de la configuración puntual de la que se dote a un socket, la estructura interna de éste elemento es estándar y tiene especificaciones importantes de comentar para comprender su funcionamiento y posibles limitaciones.
 
 \subsubsection{Estructura Interna}
-Los socket de Linux están definidos como una estructura en el núcleo del sistema en \verb=include/linux/net.h=.
-ACÁ RELLENAR CON LO QUE YA HIZO DIEGO
+Los socket de Linux están definidos como una estructura en el núcleo del sistema en \verb=include/linux/net.h=... SIGUE PENDIENTE!!!
 
 \section{Presentación del Problema}
 Como ya se mencionó, el escenario advertido para los próximos años prevé un inmenso tráfico a Internet que podría llevar la cantidad de procesamiento del servicio DNS a varios órdenes de magnitud por encima de la carga actual. Es más, el panorama futuro propone que los dispositivos más avanzados serían muchísimo más versátiles en su operación pudiendo hacer un uso más agresivo y demandante de la red. 
@@ -210,7 +239,7 @@ A modo de preparativo para el escenario anterior distintas instituciones han tra
 	\label{fig:multi_thread}
 \end{figure}
 
-Inspirados en la consistencia del argumento teórico detrás de la propuesta anterior, varias instituciones han evaluado este enfoque de procesamiento \cite{url:facebook, paper:toshiba}, pero con resultados poco alentadores. La experiencia de NIC Chile es un buen ejemplo del problema detectado. Aprovechando su infraestructura en pos de mejorar sus propios servicios, NIC Chile (Administrador del Top Level Domain \emph{.CL}) evaluó un diseño multi-hilos en el procesamiento de consultas DNS a sus servidores, a fin de lograr una mejora de performance en su procesamiento DNS tal y como el diseño teórico anterior plantea sin sospechar el resultado real. Al incorporar paralelismo, el rendimiento final en la práctica no estuvo ni cerca de las proyecciones esperadas, y lejos de reducirse, los tiempos de procesamiento aumentaron con respecto al esquema sin multi-hilos, ello aun cuando no existían indicios de sobrecarga en las máquinas.
+Inspirados en la consistencia del argumento teórico detrás de la propuesta anterior, varias instituciones han evaluado este enfoque de procesamiento \cite{post:facebook, paper:toshiba}, pero con resultados poco alentadores. La experiencia de NIC Chile es un buen ejemplo del problema detectado. Aprovechando su infraestructura en pos de mejorar sus propios servicios, NIC Chile (Administrador del Top Level Domain \emph{.CL}) evaluó un diseño multi-hilos en el procesamiento de consultas DNS a sus servidores, a fin de lograr una mejora de performance en su procesamiento DNS tal y como el diseño teórico anterior plantea sin sospechar el resultado real. Al incorporar paralelismo, el rendimiento final en la práctica no estuvo ni cerca de las proyecciones esperadas, y lejos de reducirse, los tiempos de procesamiento aumentaron con respecto al esquema sin multi-hilos, ello aun cuando no existían indicios de sobrecarga en las máquinas.
 
 \subsection{Validación del Problema}
 
@@ -296,12 +325,5 @@ Las sospechas iniciales acerca del responsable de éste problema apuntan a que p
 La sospecha inicial apunta a que probablemente, el efecto encontrado al evaluar diseños como el de la ilustración \ref{fig:multi_thread} es precisamente reflejo de un problema a nivel del kernel, donde alguna estructura de sincronización de bajo nivel está presentando un problema de contención, que se traduce en una serialziación de acceso, o similar, y que repercute en tiempos muertos en casos de concurrencia. Una sospecha que es avalada por los resultados obtenidos hasta éste punto de la investigación, donde no encontrando defectos propios a una componente ni de hardware, ni de software del núcleo del sistema.
 
 Tras importantes trabajos de líderes en la industria como Google [CITAR A REUSEPORT DE GOOGLE] relacionados a nuestro caso de estudio, se ha llegado a establecer una hipótesis consensuada en que son varios los factores que contribuyen a la degradación generalizada que se presenta. En Primer lugar, se postula un punto de contención generado a raíz de la compartición de la estructura socket entre varios hilos de ejecución, la cual no estaría apropiadamente diseñada para sobrellevar un escenario de concurrencia como al que se le ha expuesto. Otra teoría para explicar ésta situación se basa en el fenómeno de los rebotes de caché, propios de un esquema \emph{SMP} pero que se vería acrecentado en situaciones como las descritas por la necesidad de mantener información estructural de los sockets entre varios hilos que se distribuirían entre los múltiples núcleos de procesamiento disponible. Una tercera linea apunta en el sentido de brindar el beneficio de la duda a la estructura socket, y atribuir las responsabilidades del mal desempeño a los mecanísmos de distribución de tareas (El denominado schedulling para escenarios de distribución de carga) del sistema operativo, el cual, en entornos \emph{SMP} jugaría en contra, degradando el rendimiento al modificar la localidad de los datos para con los procesos constantemente, por medio de migraciones de los procesos entre las CPU disponibles. Otra hipótesis hace referencia a la posibilidad de que sean los propios canales de comunicación los que presentan un bajo rendimiento en situaciones de concurrencia como la descrita y cuyo overhead terminaría impactando en los tiempos netos.
-
-\begin{figure}[!h]
-	\centering
-	\includegraphics[scale=.3]{imagenes/fcfm}
-	\caption{Esquema de las líneas hipotéticas de responsabilidad del problema de rendimiento del caso expuesto.}
-	\label{fig:hipotesis}
-\end{figure}
 
 El problema real es que ninguna de las distintas hipótesis ha sido experimentalmente estudiada, con lo que no se ha podido validar ni refutar la veracidad de las mismas. No tener claridad sobre cual sería la componente responsable incurre en otros problemas como el no poder postular una solución que consiga solucionar correctamente el problema, al no tener claro cual arista trabajar.

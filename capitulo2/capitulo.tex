@@ -32,7 +32,7 @@ Asociadas a las anteriores llamadas de sistema están las variantes \verb=*_unlo
 Para poder rescatar las llamadas a sistema existen herramientas de software de bajo nivel, creados por los mismos desarrolladores del núcleo de Linux, que permiten realizar la tarea que nos proponemos en éste caso.
 
 \subsubsection{Perf}
-Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Documentación oficial disponible en \url{https://perf.wiki.kernel.org/}}} es una herramienta de análisis de performance para entornos Linux. Corresponde a un subsistema del kernel de Linux que provee todo un framework para estudio de performance del sistema y de programas por medio de la captura de una amplia variedad de fuentes de datos. Perf es capaz de colectar datos por operatividad de software (contadores de software, \emph{tracepoints}, ejecución de funciones, paso a assembler, etc.) y también colectar a nivel de hardware (manejo de PMU, lectura de \emph{Performance Counters}, etc.), características que lo postulan como uno de los sistemas más completos para las tareas de profilling de aplicaciones y sistemas.
+Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Documentación oficial disponible en \url{https://perf.wiki.kernel.org/}}} es una herramienta de análisis de performance para entornos Linux. Corresponde a un subsistema del kernel de Linux que provee todo un framework para estudio de performance del sistema y de programas por medio de la captura de una amplia variedad de fuentes de datos. Perf es capaz de colectar datos por operatividad de software (contadores de software, \emph{tracepoints}, ejecución de funciones, paso a assembler, etc.) y también colectar información a nivel de hardware (manejo de PMU, lectura de \emph{Performance Counters}, etc.), características que lo postulan como uno de los sistemas más completos para las tareas de profilling de aplicaciones y sistemas.
 
 \begin{figure}[!h]
 	\centering
@@ -41,7 +41,7 @@ Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Docu
 	\label{fig:perfFramework}
 \end{figure}
 
-Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso. Su uso en general se basa en la supervisión de un determinado proceso o tarea, de la cual construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}.
+Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso, basado en la supervisión de un determinado proceso o tarea, de la cual construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}.
 
 \begin{figure}[!h]
 	\centering
@@ -56,9 +56,16 @@ Sony \cite{paper:FTraceSony}
 
 \subsection{Resultados}
 Nos topamos con que las tendencias de tiempos son similares a las de los tiempos de esas llamadas, luego, hay una correlacion de esta estructura inhenrente al socket es la que causa el cuello de botella: indicio, el socket entero está siendo contenido por el spinlock de su estructura.
+
 \subsubsection{Perf}
-\subsubsection{Call-Graph}
 \subsubsection{FTrace}
+
+\subsection{Análisis y Discusión de Resultados}
+Aka un análisis general de los resultados en términis de gráficos obtenidos
+
+\subsubsection{Call-Graph}
+Una visualización de call-graph, quizá no como subseccion
+
 \subsubsection{TraceDisplay}
 Para poder obtener una interpretación adicional del fenómeno reconocido, se implementó una herramienta de visualziación de las llamadas a sistema para funciones de sincronización que permitiese reconocer las porciones de tiempo que tomaban en cada procesador dichas funciones. Para ello, la herramienta recibe un log de \emph{FTrace} con las llamadas de sistema yá filtradas y construye un mapa de tiempo coloreado, donde se pueden apreciar las porciones de tiempo que consumen las llamadas y desde que CPU se originan. El resultado se puede apreciar en la imagen \ref{fig:traceDisplay}. Éste subproducto de la investigación principal junto con su documentación de uso está publicado\footnote{Disponible en \url{https://github.com/sebablasko/TraceDisplay}} y disponible para su uso.
 
@@ -71,11 +78,14 @@ Para poder obtener una interpretación adicional del fenómeno reconocido, se im
 
 AKA ME FALTA DECIR PARA QUE ME SIRVIO ESTA HERRAMIENTA
 
-\subsection{Análisis}
+
 
 \section{Estudio de Canales de Comunicación de Hardware}
+La segunda hipótesis para explicar la mala performance del caso de estudio presentado se centra en una componente de hardware más que de software. Cómo ya se mencionó, la capacidad multiprocesador de que se dispone en equipos modernos no es un recurso facil de aprovechar, de hecho, requiere una sofisticada operación y diseño tanto de las aplicaciones que solicitarán recursos, como del sistema operativo que ha de administrarlos. Como se repaso en secciones anteriores, en la práctica, la capacidad de paralelísmo viene dada gracias a un conjunto de protocolos y algoritmos de muy bajo nivel que coordinan y mantienen coherentes las componentes de datos para los diferentes procesadores \cite{paper:MESI, paper:snoop}, sin embargo, por muy sofisticados que dichos mecanismos sean, las nuevas tecnologías de hardware que prometen velocidades de trasnferencia y acceso nunca antes imaginiadas podrían significar un problema para éstas componentes.
 
-Explicar a grosso modo la idea del cuello de botella en el bus de datos, y cómo ese enfoque se hereda entre distintos cambios de arquitectura de computadores.
+Es precisamente en ésta línea que se establece la segunda hipótesis. En éste caso, se responsabiliza por el mal rendimiento a un problema de contención de recursos  nuevamente al spinlock de los sockets, pero ésta vez relacionado a la persistencia en el acceso al mismo y a la disponibilidad que se da del mismo a través de los mecanismos antes mencionados. En las arquitecturas modernas, los protocolos \emph{MESI} y de  \emph{SNOOP} son cruciales en la operación de ejecuciones paralelas para garantizar integridad en los datos, pero las arquitecturas mdoernas proponen nuevas distribuciones de los componentes internos de hardware, dotando de canales de mayor velocidad y reasignando los recursos. Ésta hipótesis plantea la posibilidad de que el degradamiento del caso de estudio sea causado por un fenómeno de \emph{Caché Bouncing}, que consiste en un 
+
+En ésta línea, el fenómeno de \emph{Cache Bouncing} se podría acrecentar dada la arquitectura del sistema, la que al contemplar bancos de memoria distribuidos, algunos compartidos y otros exclusivos para los núcleos de procesamiento, podría estar manifestandose como resultado de las modificaciones concurrentes de los distintos procesadores sobre el socket, combinado a la operación de los protocolos de consistencia y correctitud para las lineas de caché del sistema.
 
 \subsection{Desarrollo de Arquitecturas Modernas de Hardware}
 \subsubsection{FSB}
@@ -90,7 +100,7 @@ Performance counters are CPU hardware registers that count hardware events such 
 \subsubsection{Correlación de Eventos}
 Para poder comprender mejor la tendencia de comportamiento en el experimento entre los distintos eventos capturados se repasaron posibles mecanismos de visualziación que permitieran una simple comparación entre dichas mediciones. Finalmente se optó por emplear una visualziación mediante el uso de una matriz de correlación, de manera de poder detectar facilmente conjuntos de eventos relacionados, ello combinando algúna estratégia de clusterización en el proceso de visualizar los datos. Ésta técnica es muy práctica y se ha empleado en otros escenarios sobre el mismo kernel en otras investigaciones con buenos resultados \cite{paper:clusteringKernel}.
 
-\subsection{Análisis}
+\subsection{Análisis y Discusión de Resultados}
 
 \section{Estudio de Distribución de Carga}
 La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado, es normal que el sistema operativo realice como procedimiento de rutina la migración de procesos y la re-alocación de recursos y datos del sistema. Un caso práctico de ello es cuando un núcleo de procesamiento está sobreexigido y el sistema operativo redistribuye los hilos en dicho núcleo entre los procesadores disponibles del sistema, como una estratégia de balanceo de carga [AKA UNA REFERENCIA DE ESO].
@@ -100,3 +110,4 @@ La tercera hipótesis de investigación plantea como responsable del mal rendimi
 \subsection{Processor Affinity}
 \subsection{Esquemas de Distribución}
 \subsection{Resultados Experimentales}
+\subsection{Análisis y Discusión de Resultados}

@@ -69,18 +69,82 @@
   note = {\url{http://www.gartner.com/newsroom/id/2636073}}
  }
  
- @techreport{rfc:udp,
-  author = {Postel, J.},
-  institution = {Internet Engineering Task Force},
-  keywords = {datagram protocol udp user},
-  month = {August},
-  number = 768,
-  pages = 3,
-  timestamp = {2008-07-15T20:32:02.000+0200},
-  title = {User Datagram Protocol},
-  type = {RFC},
-  note = {\url{http://www.rfc-editor.org/rfc/rfc768.txt}},
-  year = 1980
+@book{book:sockets,
+ author = {Stevens, W. Richard and Fenner, Bill and Rudoff, Andrew M.},
+ title = {UNIX Network Programming, Vol. 1},
+ year = {1990},
+ publisher = {Prentice-Hall, Inc.}
+} 
+ 
+@inproceedings{paper:MESI,
+  title={A low-overhead coherence solution for multiprocessors with private cache memories},
+  author={Papamarcos, Mark S and Patel, Janak H},
+  booktitle={ACM SIGARCH Computer Architecture News},
+  pages={348--354},
+  year={1984},
+  organization={ACM}
+}
+
+
+@misc{paper:snoop,
+  title={Cache implementation for multiple microprocessors},
+  author={Ravishankar, C.V. and Goodman, J.R.},
+  publisher={IEEE,New York, NY},
+  year={1983},
+  month={Jan}
+}
+
+ 
+@misc{rfc:147,
+  author={J.M. Winett},
+  title={Definition of a socket},
+  series={Request for Comments},
+  number={147},
+  howpublished={RFC 147},
+  publisher={IETF},
+  organization={Internet Engineering Task Force},
+  year={1971},
+  month={may},
+  note = {\url{http://www.ietf.org/rfc/rfc147.txt}}
+} 
+ 
+@misc{rfc:768,
+  author={J. Postel},
+  title={User Datagram Protocol},
+  series={Request for Comments},
+  number={768},
+  howpublished={RFC 768 (INTERNET STANDARD)},
+  publisher={IETF},
+  organization={Internet Engineering Task Force},
+  year={1980},
+  month={aug},
+  note = {\url{http://www.ietf.org/rfc/rfc768.txt}}
+}
+
+@misc{rfc:1034,
+  author={P.V. Mockapetris},
+  title={Domain names - concepts and facilities},
+  series={Request for Comments},
+  number={1034},
+  howpublished={RFC 1034 (INTERNET STANDARD)},
+  publisher={IETF},
+  organization={Internet Engineering Task Force},
+  year={1987},
+  month={nov},
+  note={\url{http://www.ietf.org/rfc/rfc1034.txt}}
+}
+
+@misc{rfc:1035,
+  author={P.V. Mockapetris},
+  title={Domain names - implementation and specification},
+  series={Request for Comments},
+  number={1035},
+  howpublished={RFC 1035 (INTERNET STANDARD)},
+  publisher={IETF},
+  organization={Internet Engineering Task Force},
+  year={1987},
+  month={nov},
+  note={\url{http://www.ietf.org/rfc/rfc1035.txt}}
 }
 
 %REVISAR
@@ -91,6 +155,7 @@
   year={2003},
   publisher={Citeseer}
 }
+
 @article{udp:video,
   title={An improved UDP protocol for video transmission over internet-to-wireless networks},
   author={Zheng, Haitao and Boyce, Jill},
@@ -108,13 +173,6 @@
   year = {2014},
   note = {\url{http://es.wikipedia.org/w/index.php?title=Dominio_de_Internet&oldid=77332519}}
 }
-
-@misc{url:facebook,
-  author = {PAUL SAAB},
-  title = {Scaling memcached at facebook},
-  year = {2008},
-  note = {\url{https://www.facebook.com/note.php?note_id=39391378919}}
- }
 
 @inproceedings{paper:toshiba,
   author = {Jinmei, Tatuya and Vixie, Paul},
@@ -152,7 +210,7 @@
   author = {PAUL SAAB},
   title = {Scaling memcached at facebook},
   year = {2008},
-    note = {\url{https://www.facebook.com/note.php?note_id=39391378919}}
+  note = {\url{https://www.facebook.com/note.php?note_id=39391378919}}
  }  
  
 @misc{article:perf,
