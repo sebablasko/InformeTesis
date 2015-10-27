@@ -90,53 +90,56 @@ AKA ME FALTA DECIR PARA QUE ME SIRVIO ESTA HERRAMIENTA
 
 
 \section{Estudio de Canales de Comunicación de Hardware}
-La segunda hipótesis para explicar la mala performance del caso de estudio presentado se centra en una componente de hardware más que de software. Cómo ya se mencionó, la capacidad multiprocesador de que se dispone en equipos modernos no es un recurso facil de aprovechar, de hecho, requiere una sofisticada operación y diseño tanto de las aplicaciones que solicitarán recursos, como del sistema operativo que ha de administrarlos. Como se repaso en secciones anteriores, en la práctica, la capacidad de paralelísmo viene dada gracias a un conjunto de protocolos y algoritmos de muy bajo nivel que coordinan y mantienen coherentes las componentes de datos para los diferentes procesadores \cite{paper:MESI, paper:snoop}, sin embargo, por muy sofisticados que dichos mecanismos sean, las nuevas tecnologías de hardware que prometen velocidades de trasnferencia y acceso nunca antes imaginiadas podrían significar un problema para éstas componentes.
+La segunda hipótesis para explicar la mala performance del caso de estudio presentado se centra en una componente de hardware más que de software. Cómo ya se mencionó, la capacidad multiprocesador de que se dispone en equipos modernos no es un recurso facil de aprovechar, de hecho requiere una sofisticada operación y diseño tanto de las aplicaciones que solicitarán recursos, como del sistema operativo que ha de administrarlos. Como se repasó en secciones anteriores, la capacidad de paralelísmo viene dada gracias a un conjunto de protocolos y algoritmos de muy bajo nivel que coordinan y mantienen en estado coherente las distintas componentes de datos para los diferentes procesadores \cite{paper:MESI, paper:snoop}, sin embargo, por muy sofisticados que dichos mecanismos sean las nuevas tecnologías de hardware que prometen velocidades de trasnferencia y acceso nunca antes imaginiadas podrían significar un problema para éstas componentes.
 
-Es precisamente en ésta línea que se establece la segunda hipótesis. En éste caso, se responsabiliza por el mal rendimiento a un problema de contención de recursos  nuevamente al spinlock de los sockets, pero ésta vez relacionado a la persistencia en el acceso al mismo y a la disponibilidad que se da del mismo a través de los mecanismos antes mencionados. En las arquitecturas modernas, los protocolos \emph{MESI} y de  \emph{SNOOP} son cruciales en la operación de ejecuciones paralelas para garantizar integridad en los datos, pero las arquitecturas mdoernas proponen nuevas distribuciones de los componentes internos de hardware, dotando de canales de mayor velocidad y reasignando los recursos. Ésta hipótesis plantea la posibilidad de que el degradamiento del caso de estudio sea causado por un fenómeno de \emph{Caché Bouncing}, que consiste en un 
+Es precisamente en ésta línea que se establece la segunda hipótesis. En éste caso, se adjudican las responsabilidades por el mal rendimiento presentado a un problema de contención de recursos nuevamente al spinlock de los sockets, pero ésta vez relacionado a la persistencia en el acceso al mismo y a la disponibilidad que se da del mismo a través de los mecanismos antes mencionados. En las arquitecturas modernas, los protocolos \emph{MESI} y de \emph{SNOOP} son cruciales en la operación de ejecuciones paralelas para garantizar integridad en los datos, pero las arquitecturas modernas proponen nuevas distribuciones de los componentes internos de hardware, dotando de canales de mayor velocidad de transmisión y reasignando los recursos físicos. Ésta hipótesis plantea la posibilidad de que el degradamiento del caso de estudio sea generado por un fenómeno de \emph{Caché Bouncing}.
 
-En ésta línea, el fenómeno de \emph{Cache Bouncing} se podría acrecentar dada la arquitectura del sistema, la que al contemplar bancos de memoria distribuidos, algunos compartidos y otros exclusivos para los núcleos de procesamiento podría estar manifestandose como resultado de las modificaciones concurrentes de los distintos procesadores sobre el socket compartido, combinado a la operación de los protocolos de consistencia y correctitud para las lineas de caché del sistema que perfectamente pueden generar un overhead que termine sobrecargando los timepos totales.
+\begin{defn}[ver \cite{paper:cachebouncing}] \textbf{Caché Bouncing} y acá la definición de caché bouncing.
+\end{defn}
 
-Para validar la hipótesis anterior, es preciso un cabal entendimiento de la arquitectura de hardware objeto de estudio, a fin de poder localizar puntos de contención, junto con una comprensión importante de la \emph{Performance Monitoring Unit} que provee el fabricante, lograr configurarla y aprovecharla para la recolección de datos finales. En las siguientes secciones se realiza un estudio de la arquitectura descrita en la figura \ref{fig:pc3} del equipo sobre el que se realizan las pruebas experimentales reales. Posteriormente se realiza un análisis experimental de las tendencias presentes en una tarea de acceso concurrente como aldescrita en el caso de estudio de ésta investigación con el fin de corroborar o descartar las sospechas ya mencionadas del efecto de contención por eventos de perfomance de hardware.
+En ésta línea, el fenómeno de \emph{Cache Bouncing} se podría manifestar dada la arquitectura del sistema, la que al contemplar bancos de memoria distribuidos, algunos compartidos y otros exclusivos para los núcleos de procesamiento, podría estar manifestandose como resultado de las modificaciones concurrentes de los distintos procesadores sobre la estructura socket compartido. Lo anterior combinado a la operación de los protocolos de consistencia y correctitud para las lineas de caché del sistema postulan evidencia que hace perfectamente posible el que se esté generando un overhead que termine sobrecargando los tiempos totales.
+
+Para validar la hipótesis anterior es preciso un cabal entendimiento de la arquitectura de hardware objeto de estudio, a fin de poder localizar puntos de contención, junto con una comprensión importante de la \emph{Performance Monitoring Unit} que provee el fabricante, lograr configurarla y aprovecharla para la recolección de datos finales. En las siguientes secciones se realiza un estudio de la arquitectura descrita en la figura \ref{fig:pc3} del equipo sobre el que se realizan las pruebas experimentales reales. Posteriormente se realiza un análisis experimental de las tendencias presentes en una tarea de acceso concurrente como la descrita en el caso de estudio de ésta investigación con el fin de corroborar o descartar las sospechas ya mencionadas del efecto de contención y \emph{caché bouncing} por eventos de perfomance de hardware.
 
 \subsection{Características de Arquitecturas de Hardware Modernas}
-Cómo ya se mencionó en secciones anteriores, los fabricantes de partes y piezas de computadoras están constantemente desarrollando importantes avances de la mano con el desarrollo técnico que brinda mejores componentes de hardware cada día, y la linea de la infraestructura de hardware principal de los computadores no está excenta de dicha evolución. En secciones anteriores se presentó como las arquitecturas han evolucionado desde el primer esquema \emph{SMP} propuesto con la distribución \emph{FSB}, pasando luego por nuevas configuraciones como \emph{DIB} y \emph{DHSI}, entre otras.
+Cómo ya se mencionó en secciones anteriores los fabricantes de partes y piezas de computadoras están constantemente desarrollando importantes avances, de la mano con el desarrollo técnico de piezas que brinda mejores componentes de hardware cada día. La linea de desarrollo de infraestructura de hardware principal de los computadores no está excenta de dicha evolución. En secciones anteriores se presentó como las arquitecturas han evolucionado desde el primer esquema \emph{SMP} propuesto con la distribución \emph{FSB}, pasando luego por nuevas configuraciones como \emph{DIB} y \emph{DHSI}, entre otras. Sin embargo, el desarrollo ha sido constante y hoy las arquitecturas han degenerado en esquemas bastante más complejos en pos de aprovechar al máximo la capacidad de los procesadores en la línea del paralelísmo.
 
 \subsubsection{Arquitectura Intel QuickPath}
-Al año 2008, el fabricante de procesadores Intel® lanzó al mercado una nueva tecnología denominada \emph{Intel® QuickPath Architecture} la que planteaba un nuevo esquema organizacional de los componentes internos de la placa principal de las computadoras, así como también un nuevo esquema de conectividad entre los componentes de la misma, prometiendo entre otras cosas: un sistemas más confiable, eficiente, rápido y escalable, que podría aprovechar mejor la capacidad de los procesadores de su misma linea [AKA CITA AL QUICKPATH]. La apuesta de Intel resultó todo un éxito. Rápidamente \emph{QuickPath} se impuso por sobre la tecnología \emph{HyperTransport} desarrollada por \emph{AMD}, consiguiendo una improtante cuota del mercado en procesadores multicore [AKA REF A ESO].
+Al año 2008, el fabricante de procesadores Intel® lanzó al mercado una nueva tecnología denominada \emph{Intel QuickPath Architecture} \cite{paper:quickpath} la que platea un nuevo esquema organizacional de los componentes internos de la placa principal de las computadoras, así como también un nuevo esquema de conectividad entre los componentes de la misma, prometiendo entre otras cosas: Un sistema más confiable, eficiente, rápido y escalable, que podría aprovechar mejor la capacidad de los múltiples procesadores de su misma linea. La apuesta de Intel resultó todo un éxito. Rápidamente \emph{QuickPath} se posicionó en el mercado para competir con la tecnología \emph{HyperTransport} desarrollada por \emph{AMD}\footnote{AMD es el principal competidor de Intel en la industria de la manufactura de microprocesadores. En conjunto representan el 92.7\% del mercado mundial de dicha industria.\\ \url{http://www.desarrolloweb.com/actualidad/intel-amd-concentran-industria-microprocesadores-337.html}}, abriendo paso definitivamente a una era, dejando atras el enfoque \emph{FSB}.
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.3]{imagenes/fcfm}
+	\includegraphics[scale=.6]{imagenes/quickpath.png}
 	\caption{Diseño organizacional de los componentes de sistema en una arquitectura \emph{QuickPath} de Intel.}
 	\label{fig:quickpath}
 \end{figure}
 
-El esquema \emph{QuickPath} postula una reformación arquitectural de los componentes principales de un sistema \ref{fig:quickpath}. En éste esquema, las distintas unidades de procesamiento (CPU) están interconectadas por canales de comunicación especiales denominados \emph{Intel® QuickPath Interconnect (QPI)} que son conexiones punto a punto entre CPU de enorme velocidad de transferencia (llegando hasta 25 GB/s) que junto con modificaciones al tradicional protocolo MESI flexibiliza los protocolos de coherencia de caché (planteando modificaciones de cache-a-cache entre procesadores y un nuevo protocolo MESIF, similar al original pero con un estado nuevo para valores XXXXXX) dotando así de mayor eficiencia y velocidad de acción entre procesadores al ser una comunicación directa.
-Por otro lado, en \emph{QuickPath} CPU dispone de su propio controlador de memoria y de un banco de memoria de acceso próximo. Dicho diseño se denomina \textbf{NUMA} de sus siglas en inglés \emph{\textbf{N}on \textbf{U}niform \textbf{M}emory \textbf{A}ccess} [CITA A NUMA] la que permite a las CPU de cada nodo NUMA disponer de un banco de memoria con un acceso garantizado más rápido que al que se tendría acceso en una arquitectura tradicional. El enfoque \emph{NUMA} se aprovecha del principio de localidad de memoria [CITA URGENTE], por la cual postula que los datos son separables en su acceso por las distintas CPU, logrando así mayor velocidad en el acceso a la memoria, y menor problemas de coherencia de la misma por modificaciones entre CPUs.
+El esquema \emph{QuickPath} postula una reformación arquitectural de los componentes principales de un sistema \ref{fig:quickpath}. En éste esquema, las distintas unidades de procesamiento (CPU) están interconectadas por canales de comunicación especiales denominados \emph{Intel QuickPath Interconnect - QPI} que son conexiones punto a punto entre CPU de enorme velocidad de transferencia (llegando hasta 25 GB/s), los que junto con modificaciones al tradicional protocolo MESI, flexibiliza los protocolos de coherencia de caché dotando así de mayor eficiencia y velocidad de acción entre procesadores al ser una comunicación directa.
+Por otro lado, en \emph{QuickPath} cada CPU dispone de su propio controlador de memoria y de un banco de memoria de acceso próximo. Dicho diseño se denomina un nodo \textbf{NUMA} de sus siglas en inglés \emph{\textbf{N}on \textbf{U}niform \textbf{M}emory \textbf{A}ccess} [CITA A NUMA] la que permite a las CPU de cada nodo NUMA disponer de un banco de memoria con un acceso garantizado más rápido que al que se tendría acceso en una arquitectura tradicional. El enfoque \emph{NUMA} se aprovecha del principio de localidad de memoria [CITA URGENTE], por la cual postula que los datos son separables en su acceso por las distintas CPU, logrando así mayor velocidad en el acceso a la memoria, y menor problemas de coherencia de la misma por modificaciones entre CPUs.
 
-El diseño de Intel va más allá. Concientes de la necesidad de herramientas y utilidades para analizar la verdadera perfomance que provee ésta arquitectura, Intel provee unidades de monitoreo de perfomance (o \textbf{PMU}, por sus siglas en ingles \emph{\textbf{P}erformance} \textbf{M}onitoring \textbf{U}nit) que son componentes de hardware incorporado a los sistemas que permiten operaciones de inspección del nivel de comunicación entre componentes del sistema. A éste tipo de análisis de se denomína \emph{Estudio de Perfomance Counters}, dado que para poder realizar una medición, el fabricante de la PMU provee una colección de posibles \emph{Eventos} a colectar, con significaciones puntuales.
+El diseño de Intel va más allá. Concientes de la necesidad de herramientas y utilidades para analizar la verdadera perfomance que provee ésta arquitectura, Intel provee unidades de monitoreo de perfomance (o \textbf{PMU}, por sus siglas en ingles \emph{\textbf{P}erformance} \textbf{M}onitoring \textbf{U}nit) que son componentes de hardware incorporado a los sistemas que permiten operaciones de inspección a nivel de comunicación entre componentes del sistema. A éste tipo de análisis se denomínan \emph{Estudios de Perfomance Counters}, dado que para poder realizar una medición, el fabricante de la PMU provee una colección de posibles eventos a colectar, con significaciones puntuales cada uno.
 
-\begin{defn}[ver \cite{KAR00}] \textbf{Performance Counters} son identificadores de maquina que permiten ''contar'' determinados eventos a nivel de hardware, como lecturas de caché, corrección de lineas de caché, comunicación de protocolos de coherencia, etc. Usados para analizar el comportamiento de ciertas unidades de hardware y que conforman la base de las herramientas de profiling para el rastreo en el comportamiento de funciones de un sistema.
+\begin{defn}[ver \cite{KAR00}] \textbf{Performance Counters} son identificadores de maquina que permiten cuantificar determinados eventos a nivel de hardware, como lecturas de caché, corrección de lineas de caché, comunicación de protocolos de coherencia, etc. Usados para analizar el comportamiento de ciertas unidades de hardware y que conforman la base de las herramientas de profiling para el rastreo en el comportamiento de funciones de un sistema.
 \end{defn}
  
 QPI imple,enta la wea de 5 capas!!!!! importante ponerlo!
 
-El estudio de performance counters corresponde a uno de los estudios de más bajo nivel realizables en pos de obtener datos que representen la forma de comunicación entre componentes del sistema. Ello lo hace también dificultoso pues amerita gran conocimiento de la arquitectura puntual sobre el sistema que se desea estudiar.
+El estudio de performance counters corresponde a uno de los estudios de más bajo nivel realizables en pos de obtener datos que representen la forma objetiva la comunicación entre componentes del sistema. Ello lo hace también un estudio dificultoso de realizar pues amerita un gran conocimiento de la arquitectura puntual sobre el sistema que se desea estudiar.
 
 \subsection{Especificación y Captura de Eventos}
-Para definir el marco conceptual de la prueba, se debe mantener presente el contexto de la hipótesis que fundamenta la misma. En éste caso, la motivación de éste estudio está en linea con entender el comportamiento de un comsumo concurrente en una estructura socket, o más precisamente ver cómo una instancia de una primitiva de sincronización --un spinlock-- se conporta en un escenario multithread, dado la misma podría alocarse en caches de distintos procesadores, y cómo se manifestaría la expresión de los protocolos de coherencia de cache en ese caso. Dichas circunstancias en un escenario mutiprocesador podrian dar cuenta de que el mal desempeño general del  caso de estudio tiene sus origines en los mismos sistemas de coordinación de bajo nivel del sistema.
+Para definir el marco conceptual de la prueba, se debe mantener presente el contexto de la hipótesis que fundamenta la misma. En éste caso, la motivación de éste estudio está en linea con entender el comportamiento de un comsumo concurrente en una estructura socket, o más precisamente, ver cómo una instancia de una primitiva de sincronización --un spinlock en este caso-- se comporta en un escenario multithread, dado que la misma podría alocarse en caches de distintos procesadores. En ese escenario, se busca estudiar cómo se manifestaría la expresión de los protocolos de coherencia de cache bajo circunstancias de ejecución en un escenario mutiprocesador que podrian dar cuenta de que el mal desempeño general del caso de estudio tiene sus origines en los mismos sistemas de coordinación de bajo nivel del sistema.
 
 \subsubsection{Arquitectura de la máquina para las pruebas}
-Siguiendo el caso de prueba evaluado a lo largo de la investigación, se inspeccionará el caso de estudio de saturación de un socket UDP en el equipo XXXXXXXXX \ref{fig:hwspecs}. En éste caso, se cuenta con un equipo placa Dell Inc. 00NH4P A07, provisto de dos CPU Intel Xeon 5600 2.8Ghz, dotado de 6 cores cada uno. Cada CPU dispone de hasta tres niveles de cache de 192 kb, 1536kb y 12288kb respectivamente, que combinados con tres memorias de 4096MB (DDR3 1333MHz) cada uno, conforman 2 nodos NUMA, con un monto total de 24GB de memoria.
+Siguiendo el caso de prueba evaluado a lo largo de la investigación, se inspeccionará el caso de estudio de saturación de un socket UDP en el equipo servidor multicore para pruebas (Ver fig. \ref{fig:hwspecs}). En éste caso, se cuenta con un equipo placa Dell Inc. 00NH4P A07, provisto de dos CPU Intel Xeon 5600 2.8Ghz, dotado de 6 cores cada uno. Cada CPU dispone de hasta tres niveles de cache de 192 kb, 1536kb y 12288kb respectivamente, que combinados con tres memorias de 4096MB (DDR3 1333MHz) cada uno, conforman 2 nodos NUMA, con un monto total de 24GB de memoria. Una configuración que es precisamente de la familia \emph{Intel QuickPath Architecture} y es enfocada a servidores multicpu \cite{report:intelxeon5600, manual:intelxeon5600}.
 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.3]{imagenes/fcfm}
-	\caption{Esquema de arquitectura interna del esquipo XXXX sobre el que se realizan las pruebas de performance counters.}
+	\caption{Esquema de arquitectura interna del esquipo servidor multicore sobre el que se realizan las pruebas de performance counters.}
 	\label{fig:hwspecs}
 \end{figure}
 
-Por otro lado, al inspeccionar el sistema en detalle, se da cuenta de que para el modelo de procesador presente, se dispone de 5 unidades de PMU disponibles en el sistema, las cuales las separamos en 3 grupos:
+Al inspeccionar el sistema donde se evalúan las pruebas en detalle, se da cuenta de que para el modelo de procesador presente se dispone de 5 unidades de PMU disponibles, separables en 3 grupos:
 \begin{description}
 \item[PMU Genéricas] Incluyen a \verb=perf= y  \verb=perf_raw=. Disponen de las especificaciones estándar de perfomrance counters de la línea del software \emph{Perf}, lo cual las hace poco exactas en los valores descritos por cada evento y no necesariamente fieles a su descripción pues dependen en gran parte de que el fabricante sea riguroso en su implementación.
 \item[PMU x86] PMU generacional de Intel para la línea x86 de Intel que incluye a \verb=ix86arch=. Dispone de eventos comunes a dicha linea de procesadores por lo que no da soporte especifico para la arquitectura \emph{quickPath} y del comportamiento multiprocesador.
@@ -157,7 +160,7 @@ Detected PMU models:
 \end{lstlisting}
 
 \subsubsection{Metodología de captura de eventos}
-Para la especificación de la captura de eventos, se debe prestar especial atención a la arquitectura interna en la comunicación interprocesador del sistema. En la figura \ref{fig:hwcomm} se da cuenta de los mecanísmos de comunicación y canales de que dispone el sistema estudiado. 
+Para la especificación de la captura de eventos, lo primero es prestar especial atención a la arquitectura interna en la comunicación interprocesador del sistema. En la figura \ref{fig:hwcomm} se da cuenta de los canales de comunicación que dispone el sistema estudiado.
 
 \begin{figure}[!h]
 	\centering
@@ -166,7 +169,7 @@ Para la especificación de la captura de eventos, se debe prestar especial atenc
 	\label{fig:hwcomm}
 \end{figure}
 
-La figura \ref{fig:hwcomm} da cuenta de los puntos en que se pueden suceder escenarios de congestión dados ya sea por un alto nivel de uso de los protocolos de coordinación de memoria. Dichos canales de comunicación podemos resumirlos en las siguientes funciones dedicadas, que están asociadas a ciertos \emph{Performance Counters} del sistema:
+La figura \ref{fig:hwcomm} da cuenta de los puntos en que se pueden suceder escenarios de congestión dados ya sea por un alto nivel de uso de los protocolos de coordinación de memoria o por un alto tráfico de comunicación entre CPUs. Dichos canales de comunicación podemos resumirlos en las siguientes funciones dedicadas de la arquitectura estudiada, que a su vez están asociadas a ciertos Performance Counters del sistema:
 \begin{itemize}
 \item Uso de QPI
 \item Acciones de SNOOP
@@ -174,12 +177,44 @@ La figura \ref{fig:hwcomm} da cuenta de los puntos en que se pueden suceder esce
 \item Transiciones en MESI(F) Protocol
 \end{itemize}
 
-Con ello en mente, se consultó el manual del fabricante en búsqueda de documentación de los cerca de XXXXXX eventos disponible en el sistema.
+Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bigbigevents} en búsqueda de documentación acerca de eventos disponible en el sistema que se relacionaran a las operaciones antes descritas. De dicha documentación, combinado con la utilidad \emph{libpfm4}\footnote{Corresponde a una utilidad confeccionada para recuperar información sobre los código de inspección de eventos de performance counters de un sistema. \url{http://www.bnikolic.co.uk/blog/hpc-prof-events.html}} para la recolección de eventos disponibles en el sistema se detectaron un total de 143 eventos, cada uno con hasta 6 variantes de configuración, dando casi 500 posibles eventos totales a estudiar. En este escenario, es preciso acotar los eventos a considerar de acuerdo a los 4 criterios antes descritos.
 
 
 [[[Hablar un poco de dicha busqueda y del manual]]]]
 
-Finalmente, se confeccionó una colección de eventos (ver Tabla \ref{table:eventos}) según los cuales se debería tener una correcta representación del nivel de saturación y uso de los componentes.
+Finalmente, siguiendo los 4 criterios de puntos problemáticos a estudiar se construyó una selección de eventos a considerar resumida en la tabla \ref{tabla:eventos}. Los eventos están divididos en dos grupos: \textbf{QPI/GQ/Cache} para eventos relacionados con movimiento o traslación de datos entre distintas estructuras de hardware, y \textbf{LinkLayer} para eventos referidos a protocolos de consistencia y sincronización que son pertinenetes a la capa de corrección en el esquema de capas del \emph{Quickpath}.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{l|l}
+\multicolumn{1}{c|}{{\bf QPI/GQ/CACHE}} & \multicolumn{1}{c}{{\bf LinkLayer}} \\ \hline
+{ UNC\_GQ\_DATA\_FROM} & SNOOPQ\_REQUESTS \\
+{ UNC\_GQ\_DATA\_TO} & SNOOPQ\_REQUESTS\_OUTSTANDING \\
+{ UNC\_QHL\_REQUESTS} & SNOOP\_RESPONSE \\
+{ L1D} & UNC\_QPI\_RX\_NO\_PPT\_CREDIT \\
+{ L2\_DATA\_RQSTS} & UNC\_QPI\_TX\_STALLED\_MULTI\_FLIT \\
+{ UNC\_LLC\_HITS} & UNC\_QPI\_TX\_STALLED\_SINGLE\_FLIT \\
+{ UNC\_LLC\_MISS} & UNC\_SNP\_RESP\_TO\_LOCAL\_HOME \\
+{ UNC\_LLC\_LINES\_IN} & UNC\_SNP\_RESP\_TO\_REMOTE\_HOME \\
+{ UNC\_LLC\_LINES\_OUT} & UNC\_IMC\_RETRY
+\end{tabular}
+\caption{Total de eventos inspeccionados y estudiados en el caso de estudio de consumo concurrente sobre sockets UDP.}
+\label{table:eventos}
+\end{table}
+
+Con los eventos a colectar más claros, se confeccionó una utilidad para la obtención de los códigos de registros de cada evento de interés. Utilidad que operando en conjunto con \emph{libpfm4} es capaz de parsear datos del sistema para generar una colección de eventos (ver Tabla \ref{table:codigoseventos}) en formato \verb=JSON=\footnote{Proyecto disponible en \url{https://github.com/sebablasko/libpfm4PerformanceEventParser}}. según los cuales se debería tener una correcta representación del nivel de saturación y uso de los componentes.
+
+Con el \verb=JSON= generado, se pueden hacer mediciones de forma sencilla usando la herramienta \verb=stat= de \emph{Perf} para generar un reporte de la cantidad de veces que se registre actividad en el evento estudiado, especificado en la misma herramienta. Un ejemplo de ello puede verse en el cuadro de código XXXXX.
+
+\lstset{language=Bash,
+		breaklines=true,
+		frame=single
+		}
+\begin{lstlisting}[caption=Ejemplo de uso de Perf para colectar datos de una colección de eventos sobre un script llamado programa. En éste caso se configura para colectar datos de 2 eventos y dejar el reporte de salida en un archivo resultado.txt]
+perf stat -e r53003c,r5300c0 -o resultado.txt -- ./programa
+\end{lstlisting}
+
+Finalmente, de los output de Perf, se pueden estudiar los resultados finales de la comunicación efectiva generada a lo largo de la prueba.
 
 \begin{table}[]
 \centering
@@ -218,25 +253,54 @@ Nivel de Inspección                 & Registro & Descripción                  
                                     & r530526  & L2 data demand loads in S state                            \\ \hline
 \end{tabular}
 \caption{Colección de eventos resumidos para la inspección de los canales de comunicación del sistema en escenarios multithread.}
-\label{table:eventos}
+\label{table:codigoseventos}
 \end{table}
-
 
 \subsubsection{Resultados}
 
 \subsubsection{Correlación de Eventos}
-Para poder comprender mejor la tendencia de comportamiento en el experimento entre los distintos eventos capturados se repasaron posibles mecanismos de visualziación que permitieran una simple comparación entre dichas mediciones. Finalmente se optó por emplear una visualziación mediante el uso de una matriz de correlación, de manera de poder detectar facilmente conjuntos de eventos relacionados, ello combinando algúna estratégia de clusterización en el proceso de visualizar los datos. Ésta técnica es muy práctica y se ha empleado en otros escenarios sobre el mismo kernel en otras investigaciones con buenos resultados \cite{paper:clusteringKernel}.
+Para poder comprender mejor la tendencia de comportamiento en el experimento entre los distintos eventos capturados se repasaron posibles mecanismos de visualziación que permitieran una simple comparación entre dichas mediciones. Se optó por emplear una visualziación mediante el uso de una matriz de correlación\footnote{\url{https://en.wikipedia.org/wiki/Correlation_and_dependence#Correlation_matrices}}, de manera de poder detectar facilmente conjuntos de eventos relacionados, ello combinando algúna estratégia de clusterización en el proceso de visualizar los datos. Ésta técnica es muy práctica y se ha empleado en otros escenarios sobre el mismo kernel en otras investigaciones con buenos resultados \cite{paper:clusteringKernel}.
+
+\begin{figure}[h!]
+	\centering
+	\hspace*{\fill}
+	\subfigure[]{
+		\includegraphics[width=.45\textwidth]{imagenes/corrgram1.png}
+		\label{fig:corrgram:a}
+	}\hfill
+	\subfigure[]{
+		\includegraphics[width=.45\textwidth]{imagenes/corrgram1.png}
+		\label{fig:corrgram:b}
+	}
+	\caption{Resultado de la visualización de la matriz de correlación con el software \emph{statgraphics}. En la figura \ref{fig:corrgram:a} se pueden visualizar los datos en bruto, mientras en \ref{fig:corrgram:b} se presentan los datos agrupados, tras ordenar la matriz de acuerdo al criterio de los vectores propios, logrando un efecto clusterizador.}
+	\label{fig:corrmatrix}
+	\hspace*{\fill}
+\end{figure}
+
+Para ésta tarea, se empleó el software de visualización \emph{statgraphics}\footnote{\url{http://www.statgraphics.com/}} en su edición trial. El software tiene la capacidad de generar una visualización estupénda aprovechando un ordenamiento por medio del primer vector propio de la matriz de correlación misma, de manera de generar un efecto clusterizador sobre los datos, agrupando aquellos con alta correlación.
+
 
 \subsection{Análisis y Discusión de Resultados}
 
 \section{Estudio de Distribución de Carga}
-La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado, es normal que el sistema operativo realice como procedimiento de rutina la migración de procesos y la re-alocación de recursos y datos del sistema. Un caso práctico de ello es cuando un núcleo de procesamiento está sobreexigido y el sistema operativo redistribuye los hilos en dicho núcleo entre los procesadores disponibles del sistema, como una estratégia de balanceo de carga \cite{paper:NUMA}.
+La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado, es normal que el sistema operativo realice como procedimiento de rutina la migración de procesos y la re-alocación de recursos y datos del sistema para evitar la saturación de las componentes del mismo. Un caso práctico de ello es cuando un núcleo de procesamiento está sobreexigido y el sistema operativo redistribuye los hilos en dicho núcleo entre los procesadores disponibles del sistema, con el costo que ello conlleva. Existen varios mecanísmos de aprovechamiento de dicho esquema como una estratégia de balanceo de carga en arquitecturas como la estudiada \cite{paper:NUMA}.
 
-Ésta tercera hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia basandose en que, mientras un proceso está en plena ejecución al incorporar más y más tareas en el mismo nucleo de procesamiento agregando hilos de ejecución, sería el sistema operativo quien comienzaría la reasignación automática de dichos hilos entre los distintos procesadores, cayendo en problemas como perdida de referencias de memoria en niveles de chacé primario de procesos en cuestión. En su peor escenario, ésta teoría lleva al conocido problema de \emph{caché bouncing} \cite{paper:cachebouncing} que corresponde al fenómeno de sobre corrección de los datos a nivel de lineas de cache de un procesador, producido por constantes cambios de contexto del \emph{scheduller} que genera migración de procesos. Un problema que ya se mencionó en el estudio de la sección previa.
+Esta tercera hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia basandose en que, mientras un proceso está en plena ejecución al incorporar más y más tareas en el mismo nucleo de procesamiento agregando hilos de ejecución, sería el sistema operativo quien comienzaría la reasignación automática de dichos hilos entre los distintos procesadores, cayendo en problemas como perdida de referencias de memoria en niveles de caché primario de los procesos en cuestión. En su peor escenario, ésta teoría lleva al ya mencionado problema de \emph{caché bouncing} \cite{paper:cachebouncing} que corresponde al fenómeno de sobre corrección de los datos a nivel de lineas de cache de un procesador, producido por constantes cambios de contexto del \emph{scheduller} que genera migración de procesos. Un problema que ya se mencionó en el estudio de la sección previa.
 
-Una alternativa que se ha estudiado para solventar éste problema es la técnica de \emph{Processor Affinity} que consiste en la asociación de tareas o procesos en procesadores especificos, de manera de controlar la ubicación de memoria y zona de ejecución del código. En otras palabras, se remueve la utilidad del mismo scheduler del sistema oeprativo para coordinar la mejor operación en la asignación de las mismas a las distintas CPU disponible, reemplazándolo por un criterio propio y estricto. Es una técnica muy interesante en el sentido de que, bien empleada puede proveer muy buenos resultados \cite{paper:cacheaffinity}, sin embargo también es facil degradar fuertemente el sistema al hacer mal uso de la misma.
+Una alternativa que se ha estudiado para solventar éste problema es la técnica de \emph{Processor Affinity} que consiste en la asociación de tareas o procesos en CPUs especificas, de manera de controlar la ubicación de memoria y zona real de ejecución del código en la máquina. En otras palabras, se remueve la utilidad del mismo scheduler del sistema operativo para coordinar la mejor operación en la asignación de las mismas a las distintas CPU disponible, reemplazándolo por un criterio de diseño, construido en base a la tarea que se desee realizar. Es una técnica muy ambiciosa en el sentido de que bien empleada puede proveer muy buenos resultados en el sistema \cite{paper:cacheaffinity}, sin embargo, es muy facil errar en el sistema de asignación y así, degradar fuertemente el sistema completo.
+
+En ésta tercer estudio, se plantea la utilización de la técnica de \emph{Processor Affinity} en pos de conseguir un mejor rendimiento del caso de estudio presentado, por medio de la reasignación de los hilos de ejecución. Se plantean distintos esquemas de asignación de recursos basados en distintos argumentos arquitecturales del escenario de prueba y se evalúan comparativamente los resultados.
 
 \subsection{Processor Affinity}
 \subsection{Esquemas de Distribución}
+Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoques de aprovechamiento del principio de localidad de memoria. En total se diseñaron 6 esquemas que se detallan a continuación:
+\begin{description}
+\item[SO] Asignación por SO según prioridad de proceso, carga de cpu, etc.
+\item[EquitativeAffinity] Asigna 1 Thread por CPU secuencialmente.
+\item[PairAffinity] Asigna 1 Thread por CPU, sólo en CPU’s pares.
+\item[DummyAffinity] Asigna Todos los Threads al CPU 0.
+\item[NumaOddAffinity] Asigna los Threads a CPU’s del nodo Numa par.
+\item[NumaEvenAffinity] Asigna los Threads a CPU’s del nodo Numa impar.
+\end{description}
 \subsection{Resultados Experimentales}
 \subsection{Análisis y Discusión de Resultados}

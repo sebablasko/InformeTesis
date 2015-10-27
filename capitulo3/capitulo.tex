@@ -41,10 +41,13 @@ En la presente sección se validará el rendimiento alcanzable por la opción \e
 \subsection{Incorporación de Multithreading}
 
 \subsection{Incorporación de Multithreading con Processor Affinity}
+Similar al estudio en la arista de distribución de carga del capítulo anterior, se evaluo el desempeño de Reuseport en escenarios donde múltiples hilos de consumo al socket fuesen distribuido lógicamente entre los distintos CPU del sistema. En éste caso, se evaluaron 3 configuraciones:
 
-\subsubsection{All0}
-\subsubsection{Equitative}
-\subsubsection{Comparación de esquemas}
+\begin{description}
+\item[All0] Todos los sockets se trabajarán en el CPU 0.
+\item[Equitative] Se distribujen las CPU equitativamente.
+\item[SO] El SO ve como lo hace
+\end{description}
 
 
 \section{Aspectos Negativos}
