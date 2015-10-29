@@ -29,11 +29,21 @@ La opción está implementada íntegramente en el código fuente del kernel, dis
 La adopción de ésta funcionalidad ha sido incorporada a software con requerimientos de alta disponibilidad de atención de consultas con buenos resultados \cite{paper:apache}. En la práctica, para usar ésta opción se debe modificar la estructura socket que primero tome control del puerto local para escucharlo por medio de la llamada \verb=bind()=. Ello se puede hacer por medio de la llamada de sistema \verb=setsockopt()= con la cual se puede modificar el descriptor de una estrutura socket. En éste punto es necesario entregar la constante \verb=SO_REUSEPORT= como una opción para activar en la estructura socket. Con ello, el puerto puede ser posteriormente re-acoplado por otros sockets sin la necesidad de que éstos últimos tengan la característica activada (Ver imagen \ref{fig:soReuseport}).
 
 \section{Rendimiento}
+Para evaluar el rendimiento práctico de la opción \emph{reuseport} se modificó sutilmente el caso de estudio evaluado a lo largo de la investigación apra hacerlo compatible para con éste enfoque de solución. Al igual que en el escenario original, el objetivo es calcular el tiempo de consumo de 1G de paquetes desde un socket UDP en escenario de saturación. La diferencia en éste caso radica en que, en pos de aprovechar las promesas de \emph{reuseport}, se cambia el consumo concurrente desde el mismo socket usando múltiples hilos por un consumo de múltiple hilos que consume cada uno a un socket distinto, alocado en la misma interzaf lógica del sistema del socket saturado. De ésta manera, el consumo por socket ahora es exclusivo para cada thread y eliminando ese punto de contención de la prueba original.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.3]{imagenes/fcfm}
+	\caption{Nuevo esquema de la prueba UDP en escenarios reuseport}
+	\label{fig:casoPruebaReuseport}
+\end{figure}
+
+Para poder llevar a cabo ésta prueba, es necesario garantizar que el primer socket creado para la recepción de información posea la opción \verb=SO_REUSEPORT= habilitada, además la cantidad total de consumo (1G de paquetes) debe ser redistribuida entre los sockets que se evalúen, asignando una \textbf{cuota de consumo} a cada socket de lectura que en conjunto sume la cantidad neta del caso de prueba original. Además, la medición de tiempos en éste caso debe ser en función del último socket que termine el consumo de su cuota, pues dicho tiempo representa el tiempo total en que se completó la transferencia total en relación al caso de estudio original. Un esquemático de ésta prueba puede apreciarse en la figura \ref{fig:casoPruebaReuseport}.
 
 \subsection{Diferencias entre arquitecturas}
 
 
-\section{Optimizaciones Adicionales}
+\section{Evaluación de Optimizaciones Adicionales}
 Los resultados anteriores evidencian un claro incremento en el rendimiento alcanzable por la prueba ya conocida aprovechando múltiples hilos de ejecución. Sin embargo cabe preguntarse si será posible mejorar aún más esos resultados combinando la opción de \emph{Reuseport} con técnicas de consumo concurrente sobre los sockets. Una hipótesis que apoya ésta idea se basa en que, al emplear la opción \emph{Reuseport} los sockets tienen una menor cuota de consumo cada uno, por lo tanto, un acceso concurrente en ese escenario de bajo consumo podría impactar en una reducción de tiempos finales.
 
 En la presente sección se validará el rendimiento alcanzable por la opción \emph{Reuseport} usándola en combinación con diferentes estratégias de multithreading como las vistas en el capítulo anterior.
@@ -41,14 +51,18 @@ En la presente sección se validará el rendimiento alcanzable por la opción \e
 \subsection{Incorporación de Multithreading}
 
 \subsection{Incorporación de Multithreading con Processor Affinity}
-Similar al estudio en la arista de distribución de carga del capítulo anterior, se evaluo el desempeño de Reuseport en escenarios donde múltiples hilos de consumo al socket fuesen distribuido lógicamente entre los distintos CPU del sistema. En éste caso, se evaluaron 3 configuraciones:
+Similar al estudio del capítulo anterior en la arista de distribución de carga, se evaluó el desempeño de Reuseport en escenarios donde múltiples hilos de consumo al socket fuesen distribuido lógicamente entre los distintos CPU del sistema aprovechando la técnica de \emph{Processor Affinity}. En éste caso, se evaluaron 3 configuraciones:
 
 \begin{description}
-\item[All0] Todos los sockets se trabajarán en el CPU 0.
-\item[Equitative] Se distribujen las CPU equitativamente.
-\item[SO] El SO ve como lo hace
+\item[All0] Los distintos hilos de ejecución se alocan en el mismo core (core 0 por simplicidad). Persigue aprovechar localidad de datos en la ejecución simultanea de los hilos.
+\item[Equitative] Los hilos se distribuyen equitativamente entre los cores lógicos del sistema, persiguiendo una distribución de carga entre unidades de procesamiento real.
+\item[SO] Los hilos son distribuidos por el mismo sistema operativo a través de la oepración de su algoritmo de \emph{schedulling}. Es la base de comparación para con los demás esquemas de distribución.
 \end{description}
 
+\subsection{Análisis y Discusión de Resultados}
+Como se aprecia de los resultados experimentales, la incorporación de multithreading en el consumo de datos desde una estructura socket con soporte para \emph{reuseport} siempre degrada el rendimiento completo del caso de estudio, independiente de si se emplean esquemas de distribución de carga entre los núcleos de procesamiento efectivo. Resulta interesante que más allá de las estratégias que se adopten para la mejor distribución de carga, las variaciones no permiten justificar una verdadera ganancia o pérdida entre esquemas que se adopten, siendo simplemente sobrecargas con respecto al esquema de distribución propio del sistema oeprativo.
+
+Éste resultado viene a confirmar la conclusión de los estudios del capítulo anterior que terminan por postular que es la misma estructura socket de Linux la que no cuenta con un diseño compatible con técnicas de consumo concurrente, degenerando siempre en escenarios de degradación de performance generalizada en su consumo.
 
 \section{Aspectos Negativos}
 

@@ -145,9 +145,9 @@ Con objeto de explotar mejor el potencial de un esquema multiprocesador se desar
 En lo que a estos protocolos respecta, el más popular en los sistemas modernos es el denominado protocolo \textbf{MESI}\footnote{También se le denomina protocolo Illinois, en sentido de la universidad del mismo nombre.} \cite{paper:MESI}, denominado así por las iniciales de las palabras en inglés: \textbf{M}odified (Modificado), \textbf{E}xclusive (Exclusivo), \textbf{S}hared (Compartido) e \textbf{I}nvalid (Inválido). Es un protocolo que plantea un diagrama de estado (basado en los 4 estados que componen su nombre) para cada linea de memoria cache con información almacenada, a modo de mantener su integridad en el sistema frente a modificaciones que realice algún procesador (ya sea dueño de dicho banco de memoria o no). En conjunto con el protocolo \emph{MESI} existe la técnica \textbf{Buss Snooping} \cite{paper:snoop} que consiste en un esquema de coordinación para interceptar, notificar, modificar y coordinar los valores de memoria a medida que se van realziando cambios de los mismos por una determinada tarea. En conjunto, el protocolo \emph{MESI} y la operación del \emph{Bus Snooping} hacen posible las operaciones paralelas en entornos multiprocesador, proveiendo un ambiente adecuado para programar aplicaciones con ejecución verdaderamente paralela.
 
 \subsection{Programación Multi-Hilo}
-En la práctica, existen distintas maneras de conseguir paralelísmo a la hora de programar un sistema. Los dos enfoques tradicionales es pensar en esquemas \textbf{multiproceso} (denominados procesos pesados) y \textbf{multihilo} (denominados procesos ligeros), diferenciados principamente porque los primeros disponen de espacios de memoria disjunto entre ellos, no así los segundos. La programación multihilo es muy usada en aplicaciones por ser un enfoque probado y de fácil adopción por el soporte que brindan los sistemas operativos modernos a través de librerias que brindan llamadas a sistema para tales fines. Posiblemente la más popular de las mismas en entornos UNIX sea \textbf{PThreads}.
+En la práctica, existen distintas maneras de conseguir paralelísmo a la hora de programar un sistema. Los dos enfoques tradicionales es pensar en esquemas \textbf{multiproceso} (denominados procesos pesados) y \textbf{multihilo} (denominados procesos ligeros), diferenciados principamente porque los primeros disponen de espacios de memoria disjunto entre ellos, no así los segundos. La programación multihilo es muy usada en aplicaciones por ser un enfoque probado y de fácil adopción por el soporte que brindan los sistemas operativos modernos a través de librerias que brindan llamadas a sistema para tales fines. Posiblemente la más popular de las mismas en entornos UNIX es \textbf{PThreads}.
 
-PThreads (o \emph{POSIX Threads} de su nombre original) es una interfaz prácticamente estándar de programación hoy entre sistemas UNIX, resultado del trabajo de diseñadores de sistemas operativos que, a finales de los 80 se abocaron al desarrollo de sistemas escalables para las nuevas arquitecturas de multiprocesadores [CITA A PTHREADS]. Ésta interfaz provee funciones para gatillar y controlar hilos de ejecución creados a partir de un proceso padre. Los hilos se caracterízan por disponer de un espacio de memoria propio a cada uno con información privada (Con valores como el puntero de instrucciones, el \emph{Stack} de memoria, etc.) y además de compartir entre ellos otros elementos como el espacio de direccionamiento, señales del sistema, descriptores de archivos, etc. Que permite cierta comunicación entre ellos. Son una forma liviana de proveer paralelísmo, pues su símil multirpoceso (provista por la llamada a sistema \verb=fork()=) es más pesada y lenta. Aún siendo procesos denominados "livianos" y de incorporar ciertas dificultades a la hora de concebir el diseño de una aplicación, el uso de threads a la hora de programar permite postular a un importante beneficio como lo es la escalabilidad en sistemas multiprocesador, ello al permitir que los distintos hilos se ejecuten en distintos procesadores físicos, logrando ganacias en los tiempos netos de ejecución al distribuir la carga en distintos núcleos de procesamiento.
+PThreads (o \emph{POSIX Threads} de su nombre completo) es una interfaz prácticamente estándar de programación hoy entre sistemas UNIX, resultado del trabajo de diseñadores de sistemas operativos que, a finales de los 80 se abocaron al desarrollo de sistemas escalables para las nuevas arquitecturas de multiprocesadores [CITA A PTHREADS]. Ésta interfaz provee funciones para gatillar y controlar hilos de ejecución creados a partir de un proceso padre. Los hilos se caracterízan por disponer de un espacio de memoria propio a cada uno con información privada (Con valores como el puntero de instrucciones, el \emph{Stack} de memoria, etc.) y además de compartir entre ellos otros elementos como el espacio de direccionamiento, señales del sistema, descriptores de archivos, etc. Que permite cierta comunicación entre ellos. Son una forma liviana de proveer paralelísmo, pues su símil multirpoceso (provista por la llamada a sistema \verb=fork()=) es más pesada y lenta. Aún siendo procesos denominados "livianos" y de incorporar ciertas dificultades a la hora de concebir el diseño de una aplicación, el uso de threads a la hora de programar permite postular a un importante beneficio como lo es la escalabilidad en sistemas multiprocesador, ello al permitir que los distintos hilos se ejecuten en distintos procesadores físicos, logrando ganacias en los tiempos netos de ejecución al distribuir la carga en distintos núcleos de procesamiento.
 
 En contraparte con lo anterior, la programación concurrente conlleva ciertas dificultades inherentes al efecto de la capacidad de ejecución simultanea. Quizá el desafío más importante que conlleva éste tipo de programación sea que conlleva inevitablemente a cambiar el diseño de las aplicaciones, siendo necesario aplicar criterios más sofisticados para enfrentar problemas que son propios de ésta disciplina, como lo es el problema de la sincronización y del acceso a secciones críticas.
 
@@ -290,26 +290,31 @@ El comportamiento no escalable al usar threads es una característica que podrí
 	\includegraphics[width=.85\textwidth]{imagenes/pc1.pdf}
 	\label{fig:pc1}
 }
-\caption{Esquemas de hardware de los 3 equipos evaluados generados con la herramienta \texttt{lstopo}.}
+\caption{Esquemas de hardware de los 3 equipos evaluados para la validación del problema. Imagenes generadas con la herramienta \texttt{lstopo} del paquete \texttt{hwloc}.}
 \end{figure}
 
 \subsubsection{Validación en Distintas Versiones de Kernel de Linux}
 
-Al igual que con la arista de hardware, el fenómeno de mal rendimiento de threads detectado podría ser propio de la componente de software del sistema, entendido  una determinada versión del kernel de Linux, una sospecha que se acentúa al recordar que parte importante del código fuente del núcleo es heredado entre versiones, y que las versiones más populares del kernel abarcan una importante razón de tiempo entre sus publicaciones. A continuación se muestra una linea de tiempo con algunos de los releases más importantes del kernel de linux:
+Al igual que con la arista de hardware, el fenómeno de mal rendimiento de threads detectado podría ser propio de la componente de software del sistema, entendido  una determinada versión del kernel de Linux, una sospecha que se acentúa al recordar que parte importante del código fuente del núcleo es heredado entre versiones, y que las versiones más populares del kernel abarcan una importante razón de tiempo entre sus publicaciones. A continuación se muestra una linea de tiempo con algunos de los releases más importantes del kernel de linux de las versiones \emph{Longterm\footnote{Término empleado para referirse a versiones con mantenimiento de largo plazo que incluyen correcciones de errores graves siendo la base de las veriones con modificaciones más granulares.}\footnote{\url{https://www.kernel.org/category/releases.html}}}
 
+
+\definecolor{myhighlight}{RGB}{250,250,60}
 \begin{center}
 \scalebox{1.2}{
 \begin{tabular}{r |@{\timeline} l}
-4 Enero 2012 & \colorbox{yellow}{3.2}\\
-30 Junio 2013 & \colorbox{yellow}{3.10}\\
-2 Noviembre 2013 & \colorbox{yellow}{3.12}\\
-30 Marzo 2014 & \colorbox{yellow}{3.14}\\
-12 Abril 2015 & \colorbox{yellow}{4.0.4}\\
+3 Diciembre 2009 & 2.6.32\\
+4 Enero 2012 & \colorbox{myhighlight}{3.2}\\
+20 Mayo 2012 & 3.4\\
+30 Junio 2013 & \colorbox{myhighlight}{3.10}\\
+2 Noviembre 2013 & \colorbox{myhighlight}{3.12}\\
+30 Marzo 2014 & \colorbox{myhighlight}{3.14}\\
+7 Diciembre 2014 & 3.18\\
+12 Abril 2015 & \colorbox{myhighlight}{4.0.4}\\
 \end{tabular}
 }
 \end{center}
 
-Las versiones destacadas son aquellas que se consideraron como entornos de estudio interesantes para la validación del problema. La justificación de la elección se basa en dos criterios: Primero, que el conjunto de versiones elegidas abarca aproximadamente el XXXXXXXX\% de los sistemas funcionales activos (AKA necesito una fuente que me valide ese dato). Segundo, pues existen trabajos previos que ya se encargan de analizar el comportamiento estudiado en ediciones más antiguas del Kernel \cite{tesis:diegoDCC}.
+Las versiones destacadas son aquellas que se consideraron como entornos de estudio interesantes para la validación del problema. La justificación de la elección se basa en dos criterios: Primero, que el conjunto de versiones elegidas abarca aproximadamente el XXXXXXXX\% de los sistemas funcionales activos (AKA necesito una fuente que me valide ese dato). Segundo, pues existen trabajos previos que ya se encargan de analizar el comportamiento estudiado en ediciones más antiguas del Kernel cómo en la versión base 2.6 \cite{tesis:diegoDCC}.
 
 Para la evaluación, se instalaron las versiones destacadas de la linea de tiempo previamente mostrada en un equipo de prueba XXXXXXXXXXX[AKA: mi pc de escritorio] . Un resultado comparativo de los distintos rendimientos entre versiones del kernel está ilustrado en la figura \ref{fig:tests_kernel}.
 

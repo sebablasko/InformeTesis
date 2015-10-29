@@ -146,11 +146,7 @@ Al inspeccionar el sistema donde se evalúan las pruebas en detalle, se da cuent
 \item[PMU westmere] PMU especificas de la línea Westmere [AKA UNA CITA] que soporta la base del desarrollo de la \emph{Intel QuickPath Architecture}, incluyendo a \verb=wsm_dp= y \verb=wsm_unc=. Es el nivel más exacto de PMU que provee el fabricante con los eventos más especificos y documentados del sistema.
 \end{description}
 
-\lstset{language=Bash,
-		breaklines=true,
-		frame=single
-		}
-\begin{lstlisting}[caption=Sacado con la super herramienta]
+\begin{lstlisting}[language=bash, breaklines=true, frame=single, caption={Sacado con la super herramienta}, captionpos=b]
 Detected PMU models:
 [18, ix86arch, "Intel X86 architectural PMU", 6 events, 1 max encoding, 7 counters, core PMU]
 [51, perf, "perf_events generic PMU", 104 events, 1 max encoding, 0 counters, OS generic PMU]
@@ -170,12 +166,14 @@ Para la especificación de la captura de eventos, lo primero es prestar especial
 \end{figure}
 
 La figura \ref{fig:hwcomm} da cuenta de los puntos en que se pueden suceder escenarios de congestión dados ya sea por un alto nivel de uso de los protocolos de coordinación de memoria o por un alto tráfico de comunicación entre CPUs. Dichos canales de comunicación podemos resumirlos en las siguientes funciones dedicadas de la arquitectura estudiada, que a su vez están asociadas a ciertos Performance Counters del sistema:
+
 \begin{itemize}
-\item Uso de QPI
-\item Acciones de SNOOP
-\item Pasos de data entre caches
-\item Transiciones en MESI(F) Protocol
+\item Uso de los canales \emph{Intel QuickPath QPI}
+\item Acciones del protocolo \emph{SNOOP}
+\item Pasos de datos entre distintos caches
+\item Transiciones del protocolo \emph{MESI(F)}
 \end{itemize}
+
 
 Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bigbigevents} en búsqueda de documentación acerca de eventos disponible en el sistema que se relacionaran a las operaciones antes descritas. De dicha documentación, combinado con la utilidad \emph{libpfm4}\footnote{Corresponde a una utilidad confeccionada para recuperar información sobre los código de inspección de eventos de performance counters de un sistema. \url{http://www.bnikolic.co.uk/blog/hpc-prof-events.html}} para la recolección de eventos disponibles en el sistema se detectaron un total de 143 eventos, cada uno con hasta 6 variantes de configuración, dando casi 500 posibles eventos totales a estudiar. En este escenario, es preciso acotar los eventos a considerar de acuerdo a los 4 criterios antes descritos.
 
@@ -283,24 +281,26 @@ Para ésta tarea, se empleó el software de visualización \emph{statgraphics}\f
 \subsection{Análisis y Discusión de Resultados}
 
 \section{Estudio de Distribución de Carga}
-La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado, es normal que el sistema operativo realice como procedimiento de rutina la migración de procesos y la re-alocación de recursos y datos del sistema para evitar la saturación de las componentes del mismo. Un caso práctico de ello es cuando un núcleo de procesamiento está sobreexigido y el sistema operativo redistribuye los hilos en dicho núcleo entre los procesadores disponibles del sistema, con el costo que ello conlleva. Existen varios mecanísmos de aprovechamiento de dicho esquema como una estratégia de balanceo de carga en arquitecturas como la estudiada \cite{paper:NUMA}.
+La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado es normal que el sistema operativo realice, como procedimiento de rutina, la migración de procesos y la re-alocación de recursos y datos para evitar la saturación de las componentes del mismo. Un caso práctico de ello es cuando un núcleo de procesamiento está sobreexigido y el sistema operativo redistribuye los hilos que están ejecutándose en dicho núcleo entre los otros procesadores disponibles del sistema. Ésta práctica es conocida como \textbf{distribución de carga}, y a pesar de que existen varios mecanísmos de aprovechamiento de dicho esquema como una estratégia de balanceo de carga en arquitecturas como la estudiada \cite{paper:NUMA}, en ciertos escenarios puede degradar el desempeño general del sistema.
 
-Esta tercera hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia basandose en que, mientras un proceso está en plena ejecución al incorporar más y más tareas en el mismo nucleo de procesamiento agregando hilos de ejecución, sería el sistema operativo quien comienzaría la reasignación automática de dichos hilos entre los distintos procesadores, cayendo en problemas como perdida de referencias de memoria en niveles de caché primario de los procesos en cuestión. En su peor escenario, ésta teoría lleva al ya mencionado problema de \emph{caché bouncing} \cite{paper:cachebouncing} que corresponde al fenómeno de sobre corrección de los datos a nivel de lineas de cache de un procesador, producido por constantes cambios de contexto del \emph{scheduller} que genera migración de procesos. Un problema que ya se mencionó en el estudio de la sección previa.
+Ésta tercera hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia, sobre arquitecturas como la estudiada, basandose en que mientras un proceso está en plena ejecución, al incorporar más y más tareas en el mismo nucleo de procesamiento agregando nuevos hilos de ejecución sería el sistema operativo quien comienzaría la reasignación automática de dichos hilos entre los distintos procesadores, cayendo en problemas como perdida de referencias de memoria en niveles de caché primario de los procesos en cuestión. En su peor escenario, ésta teoría lleva al ya mencionado problema de \emph{caché bouncing} \cite{paper:cachebouncing} que corresponde al fenómeno de sobre corrección de los datos a nivel de lineas de cache de un procesador, producido por constantes cambios de contexto del \emph{scheduller} que genera migración de procesos. Un problema que ya se mencionó en el estudio de la sección previa.
 
-Una alternativa que se ha estudiado para solventar éste problema es la técnica de \emph{Processor Affinity} que consiste en la asociación de tareas o procesos en CPUs especificas, de manera de controlar la ubicación de memoria y zona real de ejecución del código en la máquina. En otras palabras, se remueve la utilidad del mismo scheduler del sistema operativo para coordinar la mejor operación en la asignación de las mismas a las distintas CPU disponible, reemplazándolo por un criterio de diseño, construido en base a la tarea que se desee realizar. Es una técnica muy ambiciosa en el sentido de que bien empleada puede proveer muy buenos resultados en el sistema \cite{paper:cacheaffinity}, sin embargo, es muy facil errar en el sistema de asignación y así, degradar fuertemente el sistema completo.
+Una alternativa que se ha estudiado para solventar éste problema es la técnica de \emph{Processor Affinity} que consiste en la asociación de tareas o procesos en CPUs especificas, de manera de controlar la ubicación de memoria y zona real de ejecución del código en la máquina. En otras palabras, se remueve la utilidad del mismo scheduler del sistema operativo para coordinar la mejor operación en la asignación de los hilos de ejecución a las distintas CPU disponible, reemplazándolo por un criterio de diseño humano, construido concientes de la tarea que se desea realizar. Es una técnica muy ambiciosa en el sentido de que bien empleada puede proveer muy buenos resultados en el sistema \cite{paper:cacheaffinity}, sin embargo, es muy facil errar al interpretar el diseño de operación que se desea coordinar, llevando a una mala implementación en la asignación de recursos que termina degradando fuertemente el desempeño del sistema completo.
 
-En ésta tercer estudio, se plantea la utilización de la técnica de \emph{Processor Affinity} en pos de conseguir un mejor rendimiento del caso de estudio presentado, por medio de la reasignación de los hilos de ejecución. Se plantean distintos esquemas de asignación de recursos basados en distintos argumentos arquitecturales del escenario de prueba y se evalúan comparativamente los resultados.
+En ésta tercer estudio se plantea la utilización de la técnica de \emph{Processor Affinity} en pos de conseguir un mejor rendimiento del caso de estudio presentado, por medio de la reasignación de los hilos de ejecución entre los distintos cores lógicos del sistema. Para evaluar ello, se plantean distintos esquemas de asignación de recursos basados en distintos argumentos arquitecturales del escenario de prueba y se evalúan comparativamente los resultados.
 
 \subsection{Processor Affinity}
 \subsection{Esquemas de Distribución}
-Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoques de aprovechamiento del principio de localidad de memoria. En total se diseñaron 6 esquemas que se detallan a continuación:
+Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoques de aprovechamiento del principio de localidad de memoria. En total se diseñaron 6 esquemas para evaluar combinaciones dinámicas de cores lógicos reconocidos por el sistema operativo en búsqueda de mejores rendimientos. Los esquemas se detallan a continuación:
 \begin{description}
-\item[SO] Asignación por SO según prioridad de proceso, carga de cpu, etc.
-\item[EquitativeAffinity] Asigna 1 Thread por CPU secuencialmente.
-\item[PairAffinity] Asigna 1 Thread por CPU, sólo en CPU’s pares.
-\item[DummyAffinity] Asigna Todos los Threads al CPU 0.
-\item[NumaOddAffinity] Asigna los Threads a CPU’s del nodo Numa par.
-\item[NumaEvenAffinity] Asigna los Threads a CPU’s del nodo Numa impar.
+\item[SO] Asignación dinámica por scheduller del sistema operativo. En éste caso, la elección la hace el sistema de acuerdo a complejos argumentos de prioridad de proceso, carga de cpu, etc. Sirve como punto base de comparación con respecto a los demás esquemas.
+\item[EquitativeAffinity] Asignación secuencial equitativa entre los cores lógicos del sistema, siguiendo la numeración que el sistema operativo dispone de los núcleos mismos. Supone que la distribución completamente justa y equitativa entre cores entrega un mejor rendimiento general.
+\item[PairAffinity] Asignación secuencial de hilos a cores de numeración par. Búsca descartar explorar un escenario donde los cores duplicados por efecto de la tecnología \emph{hyperthreading} de Intel pudiera no aprovechar cores reales, y así generar un mejor desempeño final.
+\item[DummyAffinity] Asignación directa de hilos a ejecución en el core 0 del sistema. Todos los hilos se delegan al mismo core. Bajo éste esquema se presume que se puede aprovechar mejor la localidad de memoria al disponer en el banco de memoria más próximo al núclo de ejecución todas las referencias necesirias, disminuyendo el efecto de sobrecarga de los protocolos de coherencia y coordinación de cache.
+\item[NumaOddAffinity] Asignación de los hilos a cores del segundo conjunto NUMA disponible en el sistema. Sigue la idea de aprovechar toda una unidad lógica de procesamiento según la arquitectura \emph{Quickpath}, persiguiendo mejores tiempos al tener mejor acceso a memoria desde éstos cores.
+\item[NumaEvenAffinity] Asignación de los hilos a cores del primer conjunto NUMA disponible en el sistema. Similar al argumento de \textbf{NumaOddAffinity}, pero usando el otro nodo NUMA disponible.
 \end{description}
 \subsection{Resultados Experimentales}
 \subsection{Análisis y Discusión de Resultados}
+
+
