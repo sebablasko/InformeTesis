@@ -6,11 +6,11 @@ En el presente capítulo se estudian las tres líneas hipotéticas responsables 
 
 \section{Estudio de Operación Primitivas de sincronización del Sistema}
 
-La primera hipótesis a estudiar plantea que el bajo rendimiento de la operación de la interfaz de red -Ilustrada en nuestro caso de estudio por medio de sockets UDP- en escenarios de concurrencia, es causado por un mal desempeño de las estructuras que proveen los mecanismos de sincronización para dichos escenarios. Cómo se mencionó en el capítulo anterior, la capacidad multiprocesador de las computadoras modernas provee de un mayor poder de cómputo que se postula a ser aprovechado por medio del uso de técnicas de programación paralela, con el cuidado de que, en esos contextos de trabajo, los sistemas operativos deben estar preparados para atender situaciones de conflicto en el acceso a los recursos compartidos. Para éste propósito, se disponen de los mecanísmos de sincronización ya repasados en secciones anteriores que para estructuras de bajo nivel, cómo son los sockets de internet provistos por el propio sistema operativo- emplean el uso de mecanísmos de sincronización de bajo nivel como lo son los spinlocks, que protegen ciertas secciones de la estructura, tal y como se repasó en la sección XXXXX.
+La primera hipótesis a estudiar plantea que el bajo rendimiento de la operación de la interfaz de red -Ilustrada en nuestro caso de estudio por medio de sockets UDP- en escenarios de concurrencia, es causado por un mal desempeño de las estructuras que proveen los mecanismos de sincronización para dichos escenarios. Cómo se mencionó en el capítulo anterior, la capacidad multiprocesador de las computadoras modernas provee de un mayor poder de cómputo que se postula a ser aprovechado por medio del uso de técnicas de programación paralela, con el cuidado de que, en esos contextos de trabajo, los sistemas operativos deben estar preparados para atender situaciones de conflicto en el acceso a los recursos compartidos. Para éste propósito, se disponen de los mecanísmos de sincronización ya repasados en secciones anteriores que para estructuras de bajo nivel, cómo son los sockets de internet provistos por el propio sistema operativo- emplean el uso de mecanísmos de sincronización de bajo nivel como lo son los spinlocks, que protegen ciertas secciones de la estructura, tal y como se repasó en el capítulo anterior.
 
 En éste caso, la priemra hipótesis describe que el causante del mal rendimiento al incorporar concurrencia en las lecturas a un socket es generado derechamente por dichas estructuras de protección en el acceso, situación causaría un fenómeno denominado \emph{Contención de Recurso}.
 
-\begin{defn}[ver [PENDIENTE]] \textbf{Contención de Recurso} corresponde a un estado de conflicto en el acceso a un recurso compartido, producido por una situación de competencia en el acceso al mismo.
+\begin{defn}[ver \cite{paper:resourceContention}] \textbf{Contención de Recurso} corresponde a un estado de conflicto en el acceso a un recurso compartido entre distintas componentes de un sistema, producido por una situación de competencia en el acceso al mismo que puede degenerar en escenarios problemáticos, como situaciones de bloqueo, conflictos por situaciones de carrera y degradación de performance, entre otros.
 \end{defn}
 
 Para ratificar el planteamiento anterior, se hizo un estudio de llamadas a sistema siguiendo otros modelos de recopilación de datos ya evaluados en otros trabajos exitosos \cite{slides:hpPerf} que permitiese vislumbrar la operación de las primitivas de sincronización operativas en el caso de estudio, a medida que se van agregando hilos de procesamiento en el consumo de una misma estructura socket compartida entre todos los hilos. En ésta linea, es interesante analizar cómo el socket mismo actúa como un potencial punto de contención, o como alguna de las estructuras de limitación en sus acceso (como es el spinlock del socket mismo) tienen responsabilidad en el rendimiento general.
@@ -79,12 +79,14 @@ Aka un análisis general de los resultados en términis de gráficos obtenidos
 Una visualización de call-graph, quizá no como subseccion
 
 \subsubsection{TraceDisplay}
-Para poder obtener una interpretación adicional del fenómeno reconocido, se construyó una herramienta de visualziación de las llamadas a sistema para funciones de sincronización que permitiese reconocer las porciones de tiempo que tomasen en cada procesador dichas funciones. Para ello, la herramienta denominada \emph{TraceDisplay} recibe un log generado con \emph{FTrace} que incluya las llamadas de sistema yá filtradas, y construye un mapa de tiempo coloreado donde se pueden apreciar las porciones de tiempo que consume cada llamada y desde cual CPU se originan. El resultado se puede apreciar en la imagen \ref{fig:traceDisplay}. Éste subproducto de la investigación principal junto con su documentación de uso está publicado\footnote{Disponible en \url{https://github.com/sebablasko/TraceDisplay}} y disponible para su uso.
+Para poder obtener una interpretación adicional del fenómeno reconocido, se construyó una herramienta de visualziación de las llamadas a sistema para funciones de sincronización que permitiese reconocer las porciones de tiempo que tomasen en cada procesador dichas funciones. Para ello, la herramienta denominada \emph{TraceDisplay} recibe un log generado con \emph{FTrace} que incluya las llamadas de sistema yá filtradas, y construye un mapa de tiempo coloreado donde se pueden apreciar las porciones de tiempo que consume cada llamada y desde cual CPU se originan. El resultado se puede apreciar en la imagen \ref{fig:traceDisplay} donde se ilustra el caso de analizar [[AKA FALTA EXPLICAR EL CASO EVALUADO]].
+
+Éste subproducto de la investigación principal junto con su documentación de uso está publicado\footnote{Disponible en \url{https://github.com/sebablasko/TraceDisplay}} y disponible para su uso.
 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=0.34]{imagenes/traceVisualization.png}
-	\caption{Visualización de aplicación de llamadas de sistema de sincronización realizadas entre procesadores, generada con la herramienta TraceDisplay desarrollada en el marco de éste trabajo. AKA FALTA EXPLICAR EL CASO EVALUADO}
+	\caption{Visualización de aplicación de llamadas de sistema de sincronización realizadas entre procesadores, generada con la herramienta TraceDisplay.}
 	\label{fig:traceDisplay}
 \end{figure}
 
@@ -93,18 +95,18 @@ Resultados como el mostrado en la figura \ref{fig:traceDisplay} ilustran como, e
 \subsection{Conclusiones}
 A raíz del estudio de operación de primitivas de sincronización del sistema se pueden rescatar varios aspectos interesantes:
 \begin{itemize}
-\item asd
-\item asd
-\item asd
-\item asd
+\item La tendencia en los costos de tiempo son crecientes a medida que se agregan hilos que consumen el mismo socket. Ello tanto en porcentaje de llamadas de sistema, como también en tiempos netos en esas llamdas.
+\item Se identifican distintas estructuras bloqueantes para sincronización activas a lo largo del caso de estudio, sin embargo se destacan estructuras de tipo spinlock como las más reiteradas en el rastro de llamadas a sistema. Spinlock propio del mecanísmo de protección de la estructura socket accesada.
+\item Se destaca una tendencia de naturaleza logaritmica en el crecmimiento de tiempos que toman las llamadas bloqueantes sobre el spinlock del socket, ajustada con un coeficiente de determinación superior al 90\%.
 \end{itemize}
+A raíz de lo anterior, se reconoce en el spinlock de protección del socket como un punto de cuello de botella al momento de emplear accesos concurrentes a una estructura socket. Ello al actuar como un punto de bloqueo que termina serializando el acceso al consumo de datos y que, lejos de reducir los tiempos paralelizando el acceso, los aumenta al serialziarlos y deber coordinar los hilos para ello.
 
 \section{Estudio de Canales de Comunicación de Hardware}
 La segunda hipótesis para explicar la mala performance del caso de estudio presentado se centra en una componente de hardware más que de software. Cómo ya se mencionó, la capacidad multiprocesador de que se dispone en equipos modernos no es un recurso facil de aprovechar, de hecho requiere una sofisticada operación y diseño tanto de las aplicaciones que solicitarán recursos, como del sistema operativo que ha de administrarlos. Como se repasó en secciones anteriores, la capacidad de paralelísmo viene dada gracias a un conjunto de protocolos y algoritmos de muy bajo nivel que coordinan y mantienen en estado coherente las distintas componentes de datos para los diferentes procesadores \cite{paper:MESI, paper:snoop}, sin embargo, por muy sofisticados que dichos mecanismos sean, las nuevas tecnologías de hardware que prometen velocidades de trasnferencia y acceso nunca antes imaginiadas podrían significar un problema para éstas componentes, sobrepasandolos de cierta forma.
 
 Es precisamente en ésta línea que se establece la segunda hipótesis. En éste caso, se adjudican las responsabilidades por el mal rendimiento presentado a un problema de contención de recursos (nuevamente al spinlock de los sockets), pero ésta vez relacionado a la persistencia en el acceso al mismo y a la disponibilidad que se da del mismo a través de los mecanismos antes mencionados. En las arquitecturas modernas, los protocolos \emph{MESI} y de \emph{SNOOP} son cruciales en la operación de ejecuciones paralelas para garantizar integridad en los datos, pero las arquitecturas modernas proponen nuevas distribuciones de los componentes internos de hardware, dotando de canales de mayor velocidad de transmisión y reasignando los recursos físicos. Ésta hipótesis plantea la posibilidad de que el degradamiento del caso de estudio sea generado por un fenómeno de \emph{Caché Bouncing}.
 
-\begin{defn}[ver \cite{paper:cachebouncing}] \textbf{Caché Bouncing} y acá la definición de caché bouncing.
+\begin{defn}[ver \cite{paper:cachebouncing}] \textbf{Caché Bouncing} corresponde a un fenómeno producido en entornos multiprocesador, cuando distintas CPU realizan modificaciones a una linea de caché especifica que está siendo referenciada por varios procesadores. La modificación de la linea modificada se trasnfiere de caché en caché según los protocolos de consistencia del sistema. Éste fenómeno impone una significativa carga en el bus de memoria y los canales de comunicación afectados.
 \end{defn}
 
 En ésta línea, el fenómeno de \emph{Cache Bouncing} se podría manifestar dada la arquitectura del sistema, la que al contemplar bancos de memoria diversos, algunos compartidos y otros exclusivos para los núcleos de procesamiento, podría estar manifestandose como resultado de las modificaciones concurrentes de los distintos procesadores sobre la estructura socket compartida. Lo anterior combinado a la operación de los protocolos de consistencia y correctitud para las lineas de caché del sistema postulan evidencia que hace perfectamente posible el que se esté generando un overhead que termine sobrecargando los tiempos totales.
@@ -115,7 +117,7 @@ Para validar la hipótesis anterior es preciso un cabal entendimiento de la arqu
 Cómo ya se mencionó en secciones anteriores los fabricantes de partes y piezas de computadoras están constantemente desarrollando importantes avances, de la mano con el desarrollo técnico de piezas que brinda mejores componentes de hardware cada día. La linea de desarrollo de infraestructura de hardware principal de los computadores no está excenta de dicha evolución. En secciones anteriores se presentó como las arquitecturas han evolucionado desde el primer esquema \emph{SMP} propuesto con la distribución \emph{FSB}, pasando luego por nuevas configuraciones como \emph{DIB} y \emph{DHSI}, entre otras. Sin embargo, el desarrollo ha sido constante y hoy las arquitecturas han degenerado en esquemas bastante más complejos en pos de aprovechar al máximo la capacidad de los procesadores en la línea del paralelísmo.
 
 \subsubsection{Arquitectura Intel QuickPath}
-Al año 2008, el fabricante de procesadores Intel® lanzó al mercado una nueva tecnología denominada \emph{Intel QuickPath Architecture} \cite{paper:quickpath} la que platea un nuevo esquema organizacional de los componentes internos de la placa principal de las computadoras, así como también un nuevo esquema de conectividad entre los componentes de la misma, prometiendo entre otras cosas: Un sistema más confiable, eficiente, rápido y escalable, que podría aprovechar mejor la capacidad de los múltiples procesadores de su misma linea. La apuesta de Intel resultó todo un éxito. Rápidamente \emph{QuickPath} se posicionó en el mercado para competir con la tecnología \emph{HyperTransport} desarrollada por \emph{AMD}\footnote{AMD es el principal competidor de Intel en la industria de la manufactura de microprocesadores. En conjunto representan el 92.7\% del mercado mundial de dicha industria.\\ \url{http://www.desarrolloweb.com/actualidad/intel-amd-concentran-industria-microprocesadores-337.html}}, abriendo paso definitivamente a una era, dejando atras el enfoque \emph{FSB}.
+Al año 2008, el fabricante de procesadores Intel® lanzó al mercado una nueva tecnología denominada \emph{Intel QuickPath Architecture} \cite{paper:quickpath} la que platea un nuevo esquema organizacional de los componentes internos de la placa principal de las computadoras, así como también un nuevo esquema de conectividad entre los componentes de la misma, prometiendo entre otras cosas: Un sistema más confiable, eficiente, rápido y escalable, que podría aprovechar mejor la capacidad de los múltiples procesadores de su misma linea. La apuesta de Intel resultó todo un éxito. Rápidamente \emph{QuickPath} se posicionó en el mercado para competir con la tecnología \emph{HyperTransport} desarrollada por \emph{AMD}\footnote{AMD es el principal competidor de Intel en la industria de la manufactura de microprocesadores. \url{http://www.gestiopolis.com/intel-vs-amd-guerra-procesador/}}, abriendo paso definitivamente a una era, dejando atras el enfoque \emph{FSB}.
 
 \begin{figure}[!h]
 	\centering
@@ -125,7 +127,7 @@ Al año 2008, el fabricante de procesadores Intel® lanzó al mercado una nueva 
 \end{figure}
 
 El esquema \emph{QuickPath} postula una reformación arquitectural de los componentes principales de un sistema \ref{fig:quickpath}. En éste esquema, las distintas unidades de procesamiento (CPU) están interconectadas por canales de comunicación especiales denominados \emph{Intel QuickPath Interconnect - QPI} que son conexiones punto a punto entre CPU de enorme velocidad de transferencia (llegando hasta 25 GB/s), los que junto con modificaciones al tradicional protocolo MESI, flexibiliza los protocolos de coherencia de caché dotando así de mayor eficiencia y velocidad de acción entre procesadores al ser una comunicación directa.
-Por otro lado, en \emph{QuickPath} cada CPU dispone de su propio controlador de memoria y de un banco de memoria de acceso próximo. Dicho diseño se denomina un nodo \textbf{NUMA} de sus siglas en inglés \emph{\textbf{N}on \textbf{U}niform \textbf{M}emory \textbf{A}ccess} [CITA A NUMA] la que permite a las CPU de cada nodo NUMA disponer de un banco de memoria con un acceso garantizado más rápido que al que se tendría acceso en una arquitectura tradicional. El enfoque \emph{NUMA} se aprovecha del principio de localidad de memoria [CITA URGENTE], por la cual postula que los datos son separables en su acceso por las distintas CPU, logrando así mayor velocidad en el acceso a la memoria, y menor problemas de coherencia de la misma por modificaciones entre CPUs.
+Por otro lado, en \emph{QuickPath} cada CPU dispone de su propio controlador de memoria y de un banco de memoria de acceso próximo. Dicho diseño se denomina un nodo \textbf{NUMA} de sus siglas en inglés \emph{\textbf{N}on \textbf{U}niform \textbf{M}emory \textbf{A}ccess} [CITA A NUMA] la que permite a las CPU de cada nodo NUMA disponer de un banco de memoria con un acceso garantizado más rápido que al que se tendría acceso en una arquitectura tradicional. El enfoque \emph{NUMA} se aprovecha del principio de localidad de memoria \cite{paper:memorylocality}, por la cual postula que los datos son separables en su acceso por las distintas CPU, logrando así mayor velocidad en el acceso a la memoria, y menor problemas de coherencia de la misma por modificaciones entre CPUs.
 
 El diseño de Intel va más allá. Concientes de la necesidad de herramientas y utilidades para analizar la verdadera perfomance que provee ésta arquitectura, Intel provee unidades de monitoreo de perfomance (o \textbf{PMU}, por sus siglas en ingles \emph{\textbf{P}erformance} \textbf{M}onitoring \textbf{U}nit) que son componentes de hardware incorporado a los sistemas que permiten operaciones de inspección a nivel de comunicación entre componentes del sistema. A éste tipo de análisis se denomínan \emph{Estudios de Perfomance Counters}, dado que para poder realizar una medición, el fabricante de la PMU provee una colección de posibles eventos a colectar, con significaciones puntuales cada uno.
 
@@ -180,12 +182,12 @@ La figura \ref{fig:hwcomm} da cuenta de los puntos en que se pueden suceder esce
 \begin{itemize}
 \item Uso de los canales \emph{Intel QuickPath QPI}
 \item Acciones del protocolo \emph{SNOOP}
-\item Pasos de datos entre distintos caches
+\item Pasos de datos entre distintos caché y memoria
 \item Transiciones del protocolo \emph{MESI(F)}
 \end{itemize}
 
 
-Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bigbigevents} en búsqueda de documentación acerca de eventos disponible en el sistema que se relacionaran a las operaciones antes descritas. De dicha documentación, combinado con la utilidad \emph{libpfm4}\footnote{Corresponde a una utilidad confeccionada para recuperar información sobre los código de inspección de eventos de performance counters de un sistema. \url{http://www.bnikolic.co.uk/blog/hpc-prof-events.html}} para la recolección de eventos disponibles en el sistema se detectaron un total de 143 eventos, cada uno con hasta 6 variantes de configuración, dando casi 500 posibles eventos totales a estudiar. En este escenario, es preciso acotar los eventos a considerar de acuerdo a los 4 criterios antes descritos.
+Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bigbigevents} en búsqueda de documentación acerca de eventos disponible en el sistema que se relacionaran a las operaciones antes descritas. De dicha documentación, combinado con la utilidad \emph{libpfm4}\footnote{Corresponde a una utilidad confeccionada para recuperar información sobre los código de inspección de eventos de performance counters de un sistema.}\footnote{\url{http://www.bnikolic.co.uk/blog/hpc-prof-events.html}} para la recolección de eventos disponibles en el sistema se colectaron un total de 143 eventos, cada uno con hasta 6 variantes de configuración, dando en total casi 500 posibles eventos a estudiar. En este escenario es preciso acotar los eventos a considerar de acuerdo a los 4 criterios antes descritos.
 
 
 [[[Hablar un poco de dicha busqueda y del manual]]]]
@@ -210,15 +212,11 @@ Finalmente, siguiendo los 4 criterios de puntos problemáticos a estudiar se con
 \label{table:eventos}
 \end{table}
 
-Con los eventos a colectar más claros, se confeccionó una utilidad para la obtención de los códigos de registros de cada evento de interés. Utilidad que operando en conjunto con \emph{libpfm4} es capaz de parsear datos del sistema para generar una colección de eventos (ver Tabla \ref{table:codigoseventos}) en formato \verb=JSON=\footnote{Proyecto disponible en \url{https://github.com/sebablasko/libpfm4PerformanceEventParser}}. según los cuales se debería tener una correcta representación del nivel de saturación y uso de los componentes.
+Con los eventos a colectar más claros, se confeccionó una utilidad para la obtención de los códigos de registros de cada evento de interés. Utilidad que operando en conjunto con \emph{libpfm4} es capaz de parsear datos del sistema para generar una colección de eventos (ver Tabla \ref{table:codigoseventos}) en formato \verb=JSON=\footnote{\url{https://github.com/sebablasko/libpfm4PerformanceEventParser}}. según los cuales se debería tener una correcta representación del nivel de saturación y uso de los componentes.
 
-Con el \verb=JSON= generado, se pueden hacer mediciones de forma sencilla usando la herramienta \verb=stat= de \emph{Perf} para generar un reporte de la cantidad de veces que se registre actividad en el evento estudiado, especificado en la misma herramienta. Un ejemplo de ello puede verse en el cuadro de código XXXXX.
+Con el \verb=JSON= generado, se pueden hacer mediciones de forma sencilla usando la herramienta \verb=stat= de \emph{Perf} para generar un reporte de la cantidad de veces que se registre actividad en el evento estudiado, especificado en la misma herramienta.
 
-\lstset{language=Bash,
-		breaklines=true,
-		frame=single
-		}
-\begin{lstlisting}[caption=Ejemplo de uso de Perf para colectar datos de una colección de eventos sobre un script llamado programa. En éste caso se configura para colectar datos de 2 eventos y dejar el reporte de salida en un archivo resultado.txt]
+\begin{lstlisting}[language=Bash, breaklines=true, frame=single, captionpos=b, caption=Ejemplo de uso de Perf para colectar datos de una colección de eventos sobre un script llamado programa. En éste caso se configura para colectar datos de 2 eventos y dejar el reporte de salida en un archivo resultado.txt]
 perf stat -e r53003c,r5300c0 -o resultado.txt -- ./programa
 \end{lstlisting}
 
@@ -264,7 +262,18 @@ Nivel de Inspección                 & Registro & Descripción                  
 \label{table:codigoseventos}
 \end{table}
 
-\subsubsection{Resultados}
+Para poder comprender mejor las tendencias de comportamiento de los distintos eventos en cada instancia de prueba con una determinada configuración de threads, se evaluaron 3 escenarios de consumo para visualizar sus resultados\footnote{AKA URL AL REPO QUE TIENE ESTA PRUEBA DE PERFCOUNTERS}:
+\begin{enumerate}
+\item Lectura concurrente desde un dispositivo virtual como \verb=dev_null=.
+\item Lectura exclusiva desde un socket UDP.
+\item Lectura concurrente desde un socket UDP.
+\end{enumerate}
+
+De esta manera, se busca tener un punto de comparación de qué fenómeno se manifiesta en escenarios de lectura concurrente sobre un socket que no se manifiesta en otros escenarios.
+
+\subsection{Resultados}
+AKA mostrar que se reconocen dos tendencias entre los grupos de eventos (sobre el caso de udp concurrente).
+
 
 \subsubsection{Correlación de Eventos}
 Para poder comprender mejor la tendencia de comportamiento en el experimento entre los distintos eventos capturados se repasaron posibles mecanismos de visualziación que permitieran una simple comparación entre dichas mediciones. Se optó por emplear una visualziación mediante el uso de una matriz de correlación\footnote{\url{https://en.wikipedia.org/wiki/Correlation_and_dependence#Correlation_matrices}}, de manera de poder detectar facilmente conjuntos de eventos relacionados, ello combinando algúna estratégia de clusterización en el proceso de visualizar los datos. Ésta técnica es muy práctica y se ha empleado en otros escenarios sobre el mismo kernel en otras investigaciones con buenos resultados \cite{paper:clusteringKernel}.
@@ -292,10 +301,9 @@ Para ésta tarea, se empleó el software de visualización \emph{statgraphics}\f
 \subsection{Conclusiones}
 A raíz del estudio de canales de comunicación de hardware del sistema se pueden rescatar varios aspectos interesantes:
 \begin{itemize}
-\item asd
-\item asd
-\item asd
-\item asd
+\item Se identificó un comportamiento creciente en el registro de eventos capturados, trasversal entre todos los eventos postulados en el estudio.
+\item La colección de eventos postulada en la tabla \ref{table:codigoseventos} de acuerdo con las componentes de la tabla \ref{table:eventos} registró 2 tendencias principales, una abarcando la gran mayoría de los eventos estudiados y otra, representativa de pocos eventos y de naturaleza exponencial.
+\item Al observar en detalle la mayoría de los eventos, se da cuenta de cómo la tendencia de saturación sigue un régimen similar al de los tiempos generales del caso de estudio.
 \end{itemize}
 
 \section{Estudio de Distribución de Carga}
@@ -326,9 +334,8 @@ Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoqu
 \subsection{Conclusiones}
 A raíz del estudio de distribución de carga se pueden rescatar varios aspectos interesantes:
 \begin{itemize}
-\item asd
-\item asd
-\item asd
-\item asd
+\item Las técnicas de processor affinity degradaron aún más el rendimiento de consumo en el caso de estudio, con respecto al caso base de comparación.
+\item Los distintos esquemas, a pesar de mostrar variaciones en cada caso, no lograron mejorar con respecto a los tiempos que brindó la administración del mismo sistema operativo.
+\item Se vuelve a encontrar en el mismo socket una estructura que se vuelve un punto de contención, calificando al mismo como no apto para soportar accesos concurrentes, ello dado su diseño y mecanísmos de protección implementados (aka. el spinlock interno).
 \end{itemize}
 

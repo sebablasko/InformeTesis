@@ -96,21 +96,21 @@ El mecanismo de funcionamiento planetado en la sección anterior postula modific
 Dados los requerimientos anteriores, para la implementación de la solución se optó por el diseño de un módulo del kernel operacional sobre el framework de \emph{Netfilters} del kernel, el cual permite intervenir paquetes de las características relacionadas al caso de estudio y brinda la flexibilidad para modificar los encabezados de los mismos, logrando el efecto de redistribución entre distintos puertos, y siendo lo suficientemente flexible como para emplear distintos esquemas de distribución para la redirección de los mismos. Además, al ser un módulo del kernel, existen diversas guias técnicas que profundizan los aspectos de diseño a considerar en construcción del mismo ?????????.
 
 \subsection{NetFilter Framework}
-Netfilter \cite{report:netfilterModule} es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes en distintos niveles del tránsito de los mismos a través del stack de protocolos de red del kernel. Para ello, Netfilters provee una interfaz para implementar los denominados \emph{hooks}, que son funciones de intervención de paquetes donde se da la libertad de programar libremente operaciones sobre cada estructura de paquete intervenido. Los \emph{hooks} implementados deben ser registrados en el sistema en un \emph{punto de intercepción} y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema, aplicándolos de acuerdo a reglas de prioridad y puntos de intervención bien definidos. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario como es \textbf{IPTables} y MASASSSSSSSSSS.
+Netfilter \cite{report:netfilterModule} es un framework disponible en el núcleo de sistemas Linux que permite la manipulación de paquetes en distintos niveles del tránsito de los mismos a través del stack de protocolos de red del kernel. Parte del módulo de red del mismo kernel de Linux, Netfilters provee una interfaz para implementar los denominados \emph{hooks}, que son funciones de intervención de paquetes donde se da la libertad de programar libremente operaciones sobre cada estructura de paquete intervenido. Los \emph{hooks} implementados deben ser registrados en el sistema en un \emph{punto de intercepción} y es el mismo kernel el encargado de incluirlos en su rutina de inspección de paquetes a medida que los mismos van llegando al sistema, aplicándolos de acuerdo a reglas de prioridad y puntos de intervención bien definidos. Netfilters es una de las herramientas más potentes para la manipulación de paquetes, siendo la base de distintas herramientas que operan en espacio usuario como por ejemplo IPTables.
 
-Las capacidades de manipulación que provee Netfilters son bastante poderosas, abarcando un amplio espacio de acción en el sistema, postulandose como una interesante herramienta que contemplar en el desarrollo de la solución al desafío planteado.
+Las capacidades de manipulación que provee Netfilters son sumamente potentes abarcando un amplio espacio de acción en el sistema, postulandose así como una interesante herramienta que contemplar en el desarrollo de la solución al desafío planteado.
 
 \subsubsection{Arquitectura de Interrupción en Netfilters}
-El framework provee una arquitectura de seguimiento de los distintos paquetes para interceptar que se modela en un esquema definido en la imagen \ref{netfilterArchitecture}. Ésta arquitectura es lo suficientemente amplia como para intervenir paquetes en distintos niveles de comunicación y transito a través del kernel.
+El framework provee una arquitectura de seguimiento de los distintos paquetes para interceptar que se modela en un esquema definido en la imagen \ref{fig:netfilterArchitecture}. Esta arquitectura es lo suficientemente amplia como para intervenir paquetes en distintos niveles de comunicación y transito a través del kernel.
 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.5]{imagenes/netfilterArchitecture}
 	\caption{Esquema de la arquitectura de interrupción disponible para la intervención de paquetes provisto por el Netfilters Framework. REVISAR EN \url{http://amsekharkernel.blogspot.cl/2012/01/what-is-netfilter-in-linux.html}}
-	\label{netfilterArchitecture}
+	\label{fig:netfilterArchitecture}
 \end{figure}
 
-El esquema ilustrado en la figura \ref{netfilterArchitecture} da cuenta del flujo que recorre un paquete en el kernel en consideración de los modos de intervención que brinda el framework de Netfilters. Cada uno de los puntos ilustrados en dicho diagrama es un potencial \emph{punto de intervención}, y da cuenta de alguna etapa en el arrivo o salida de un paquete. Los distintos puntos de intervención disponibles en \emph{IPv4} se detallan a continuación:
+El esquema ilustrado en la figura \ref{fig:netfilterArchitecture} da cuenta del flujo que recorre un paquete en el kernel en consideración de los modos de intervención que brinda el framework de Netfilters. Cada uno de los puntos ilustrados en dicho diagrama es un potencial punto de intervención, y da cuenta de alguna etapa en el arrivo o salida de un paquete. Los distintos puntos de intervención disponibles en \emph{IPv4} que soporta Netfilters se detallan a continuación:
 
 \begin{description}
 \item[NF\_IP\_PRE\_ROUTING] Incoming packets pass this hook in \verb=ip_rcv()= before routing
@@ -122,14 +122,14 @@ El esquema ilustrado en la figura \ref{netfilterArchitecture} da cuenta del fluj
 
 \subsubsection{Implementación de funciones de Interrupción usando Netfilters}
 
-El framework en cuestión está diseñado para poder aprovechar sus funcionalidades facilmente a partir de un módulo del kernel, para ello, basta incluir las directivas de encabezados del framework en el módulo (\verb=#include <linux/netfilter.h>=) e implementar los mecanísmos de registro del \emph{hook} en el sistema, especificando sus opciones como prioridad, familia y punto de interrupción, para ello, se usan valores de constantes provistos por el mismo framework. Además de lo anterior, se debe implementar la función a aplicar sobre cada paquete intervenido, para lo cual es necesario seguir la convención que especifica el mismo framework, esto es un prototipo de función que propone el framework que se ilustra en el segmento de código ?????????????.
+El framework en cuestión está diseñado para poder aprovechar sus funcionalidades facilmente a partir de un módulo adicionado al kernel. Para ello, basta incluir las directivas de encabezados del framework en el módulo implementado (\verb=#include <linux/netfilter.h>=) e implementar los mecanísmos de registro del \emph{hook} en el sistema, especificando sus opciones como: \textbf{Prioridad}, \textbf{familia} y \textbf{punto de interrupción}. En ésta tarea, se emplean valores constantes provistos por el mismo framework. Además de lo anterior, en el módulo se ha de implementar la función a aplicar sobre cada paquete intervenido, para lo cual es necesario seguir la convención que especifíca el mismo framework, esto es, implementar un prototipo de función que propone el framework que se ilustra en el segmento de código siguiente:
 
 \definecolor{mygray}{rgb}{0.95,0.95,0.95}
 \lstset{language=C,
 		frame=single,
 		backgroundcolor=\color{mygray}
 		}
-\begin{lstlisting}[caption=ESO]
+\begin{lstlisting}[language=C, frame=single, backgroundcolor=\color{mygray}, captionpos=b, caption=ESO]
 static unsigned int hook_func(
             		unsigned int hooknum,
             		struct sk_buff *skb, 
@@ -138,7 +138,7 @@ static unsigned int hook_func(
             		int (*okfn)(struct sk_buff *));
 \end{lstlisting}
 
-Este prototipo de función comprende 5 valores a recibir que contienen información relacionada al paquete que se ha de intervenir por la función \verb=hook_func= misma. \textbf{hooknum} Que corresponde al valor del mismo nombre que se asigna al momento de registrar la función de \emph{hook} y que hace referencia al punto de interrupción en que inspeccionará paquetes nuestro \emph{hook}. \textbf{skb} que es una estructura tipo \verb=sk_buff= que almacena el paquete interceptado propiamente tal, y del cual se pueden extraer y modificar los encabezados de las capas de transporte y red para modificar el tránsito del paquete. Los punteros \textbf{in} y \textbf{out} de estruturas \verb=net_device= que se refieren a las interfaces de procedencia y destino del paquete que registra al momento de interceptarlo, Y finalmente \textbf{sk\_buff}, que se refiere a AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
+Dicho prototipo de función comprende 5 valores a recibir que contienen información relacionada al paquete que se ha de intervenir: \textbf{hooknum} Que corresponde al valor del mismo nombre que se asigna al momento de registrar la función de \emph{hook} y que hace referencia al punto de interrupción en que inspeccionará paquetes nuestro \emph{hook}. \textbf{skb} que es una estructura tipo \verb=sk_buff= que almacena el paquete interceptado propiamente tal, y del cual se pueden extraer y modificar los encabezados de las capas de transporte y red para modificar el tránsito del paquete. Los punteros \textbf{in} y \textbf{out} de estruturas \verb=net_device= que se refieren a las interfaces de procedencia y destino del paquete que registra al momento de interceptarlo, Y finalmente \textbf{sk\_buff}, que se refiere a AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
 
 Finalmente, las funciones de \emph{hook} deben especificar un valor de retorno que determina el camino a seguir por el paquete intervenido. En éste sentido, el framework especifica 5 posibles valores de retorno para las funciones de interrupción especificadas a continuación:
 \begin{description}

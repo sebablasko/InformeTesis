@@ -273,6 +273,13 @@ El comportamiento no escalable al usar threads es una característica que podrí
 \item[Servidor 24 Core] Equipo servidor multiprocesador. Equipado con dos CPU Intel(R) Xeon(R) CPU X5660 @ 2.80GHz y 24 GB de memoria, distribuidos en dos nodos NUMA de procesamiento, organizado en base a la \emph{Intel QuickPath Architecture}. Diagrama del sistema en imagen \ref{fig:pc1}.
 \end{description}
 
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.3]{imagenes/fcfm}
+	\caption{Grafico comparativo del rendimiento de prueba UDP entre distintas arquitecturas de hardware. Los valores mostrados son representativos de 60 repeticiones de la prueba de transferencia UDP.}
+	\label{fig:tests_arch}
+\end{figure}
+
 \begin{figure}
 \centering
 \hspace*{\fill}
@@ -291,13 +298,6 @@ El comportamiento no escalable al usar threads es una característica que podrí
 	\label{fig:pc1}
 }
 \caption{Esquemas de hardware de los 3 equipos evaluados para la validación del problema. Imagenes generadas con la herramienta \texttt{lstopo} del paquete \texttt{hwloc}.}
-\end{figure}
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[scale=0.3]{imagenes/fcfm}
-	\caption{Grafico comparativo del rendimiento de prueba UDP entre distintas arquitecturas de hardware. Los valores mostrados son representativos de 60 repeticiones de la prueba de transferencia UDP.}
-	\label{fig:tests_arch}
 \end{figure}
 
 De los resultados experimentales de la figura \ref{fig:tests_arch} se pueden rescatar dos aspectos relevantes:
