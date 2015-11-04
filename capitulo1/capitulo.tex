@@ -329,9 +329,16 @@ Al igual que con la arista de hardware, el fenómeno de mal rendimiento de threa
 }
 \end{center}
 
-Las versiones destacadas son aquellas que se consideraron como entornos de estudio interesantes para la validación del problema. La justificación de la elección se basa en dos criterios: Primero, que el conjunto de versiones elegidas abarca aproximadamente el XXXXXXXX\% de los sistemas funcionales activos (AKA necesito una fuente que me valide ese dato). Segundo, pues existen trabajos previos que ya se encargan de analizar el comportamiento estudiado en ediciones más antiguas del Kernel cómo en la versión base 2.6 \cite{tesis:diegoDCC}.
+Las versiones destacadas son aquellas que se consideraron como entornos de estudio interesantes para la validación del problema. La justificación de la elección se basa en dos criterios: Primero, que el conjunto de versiones elegidas son todas \emph{Long Term Support} por lo que son principales en las ramas de desarrollo de otras versiones (sólo con correcciones de bugs importantes) y por lo tanto son representativas de sistemas Linux estables. Segundo, pues existen trabajos previos que ya se encargan de analizar el comportamiento estudiado en ediciones más antiguas del Kernel cómo en la versión base 2.6 \cite{tesis:diegoDCC}.
 
-Para la evaluación, se instalaron las versiones destacadas de la linea de tiempo previamente mostrada en un equipo de prueba [AKA: mi pc de escritorio] . Un resultado comparativo de los distintos rendimientos entre versiones del kernel está ilustrado en la figura \ref{fig:tests_kernel}.
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.6]{imagenes/desktopkernelpc.pdf}
+	\caption{Esquema de hardware del equipo donde se evaluó el rendimiento del caso de estudio sobre distintas versiones del kernel de Linux. El equipo es XXXXXXXXXXXXXXXXXXXXXXXX.}
+	\label{fig:desktop_kernel_pc}
+\end{figure}
+
+Para la evaluación, se instalaron las versiones destacadas de la linea de tiempo previamente mostrada en un equipo de prueba (Ver figura \ref{fig:desktop_kernel_pc}) En el cual se evalúo el caso de estudio ya propuesto, registrándose los distintos tiempos finales entre cada versión del kernel. Más allá de mostrar un incremento o reducción de tiempos con respecto a la arquitectura ilustrada en la máquina servidor multicore, el objetivo de ésta prueba busca evidenciar si existe una tendencia constante en el tiempo de la prueba entre lass diferentes versiones del kernel. Un resultado comparativo de los distintos rendimientos entre versiones del kernel está ilustrado en la figura \ref{fig:tests_kernel}.
 
 \begin{figure}[h!]
 	\centering

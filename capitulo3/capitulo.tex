@@ -34,11 +34,18 @@ Para evaluar el rendimiento práctico de la opción \emph{reuseport} se modific�
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.3]{imagenes/fcfm}
-	\caption{Nuevo esquema de la prueba UDP en escenarios reuseport}
+	\caption{Nuevo esquema de la prueba UDP en escenarios donde se aproveche Reuseport.}
 	\label{fig:casoPruebaReuseport}
 \end{figure}
 
-Para poder llevar a cabo ésta prueba, es necesario garantizar que el primer socket creado para la recepción de información posea la opción \verb=SO_REUSEPORT= habilitada, además la cantidad total de consumo (1G de paquetes) debe ser redistribuida entre los sockets que se evalúen, asignando una \textbf{cuota de consumo} a cada socket de lectura que en conjunto sume la cantidad neta del caso de prueba original. Además, la medición de tiempos en éste caso debe ser en función del último socket que termine el consumo de su cuota, pues dicho tiempo representa el tiempo total en que se completó la transferencia total en relación al caso de estudio original. Un esquemático de ésta prueba puede apreciarse en la figura \ref{fig:casoPruebaReuseport}.
+Así mismo, se definen los siguientes conceptos a tener presentes en este nuevo caso de estudio:
+\begin{description}
+\item[Tiempo Mínimo] Corresponde al tiempo en que el primer socket termina de consumir su cuota asignada.
+\item[Tiempo Neto] Corresponde al tiempo en que el último socket termina de consumir su cuota asignada. De esta forma, corresponde al tiempo en que se completa la trasferencia total.
+\item[Cuota de Consumo] Corresponde a la porción de paquetes que le corresponde consumir a cada socket. Si el envío total se denomina como $N$ y se tienen $k$ sockets para emplear el consumo con reuseport, la cuota de consumo de cada uno es el cociente $\frac{N}{k}$.
+\end{description}
+
+Para poder llevar a cabo ésta prueba, es necesario garantizar que el primer socket creado para la recepción de información posea la opción \verb=SO_REUSEPORT= habilitada, además la cantidad total de consumo (1G de paquetes) debe ser redistribuida entre los sockets que se evalúen, asignando una \textbf{cuota de consumo} a cada socket de lectura que en conjunto sume la cantidad neta del caso de prueba original. La medición de tiempos en éste caso debe ser en función del último socket que termine el consumo de su cuota, pues dicho tiempo representa el tiempo total en que se completa la transferencia total en relación al caso de estudio original. Un esquemático de ésta prueba puede apreciarse en la figura \ref{fig:casoPruebaReuseport}.
 
 \subsection{Diferencias entre arquitecturas}
 

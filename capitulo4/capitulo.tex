@@ -155,7 +155,7 @@ Para el proceso de registro del \emph{hook} se tomaron ciertas consideraciones q
 En primer lugar, se seleccionó como punto de interrupción del \emph{hook} a \verb=NF_INET_PRE_ROUTING=, ello pues corresponde al nivel más temprano de interrupción desde el arribo del paquete por la interfaz del sistema que admite el framework y básicamente captura todo transito de paquetes. Por cuestiones de naturaleza de paquetes a trabajar se configuró la familia del \emph{hook} como \verb=PF_INET= que abarca a la familia de los protocolos de internet\footnote{REFERENCIAAAAAAAAAAAA} que contiene tipos útiles para la manipulación de los paquetes que son del tipo que nos interesa interceptar. Para el apartado de prioridad del \emph{hook}, que especifica el órden de ejecución los diferentes hooks programados en el sistema, se seleccionó como el valor constante \verb=NF_IP_PRI_FIRST= que provee el framework mismo y que garantiza la más pronta aplicación posible de nuestro hook a los paquetes interceptados. Ésta desición se apoya en que se desea el menor impacto para con otras componentes del sistema, por ello la intervención debe ser temprana y poco invasiva. Finalmente, se implementó el cuerpo de la función para tratar cada paquete interceptado (\verb=hook_func=) cuya especificación puede ser encontrada en el anexo XXXXXXXXXXX.
 
 \subsection{Código Fuente}
-La solución fue elaborada siguiendo los principios de construcción de un módulo estándar de Linux \cite{report:netfilterModule} Básicamente se implementaron los métodos \verb=init_module= y \verb=cleanup_module= para la instalación y eliminación del módulo respectivamente. Es en el primer método donde se gatilla la construcción y el registro del \emph{hook} definido para la interrupción de los paquetes. Para los procesos de registro y eliminación del \emph{hook} del sistema se usan respectivamente las llamadas \verb=nf_register_hook= y \verb=nf_unregister_hook= provistas por el framework de Netfilters. Más detalles del código fuente de la solución pueden ser encontrados en el anexo XXSADASDASDASD.
+La solución fue elaborada siguiendo los principios de construcción de un módulo estándar de Linux \cite{report:netfilterModule}. Básicamente se implementaron los métodos \verb=init_module= y \verb=cleanup_module= para la instalación y eliminación del módulo respectivamente. Es en el primer método donde se gatilla la construcción y el registro del \emph{hook} definido para la interrupción de los paquetes. Para los procesos de registro y eliminación del \emph{hook} del sistema se usan respectivamente las llamadas \verb=nf_register_hook= y \verb=nf_unregister_hook= provistas por el framework de Netfilters. Más detalles del código fuente de la solución pueden ser encontrados en el código publicado\footnote{\url{https://github.com/sebablasko/UDPRedistributeModule}} para su libre uso.
 
 
 \section{Instalación y Utilización}
@@ -167,7 +167,7 @@ Para el proceso de compilación se requiere disponer tanto de los encabezados de
 La solución desarrollada incorpora un archivo \verb=Makefile= que resume las instrucciones para la compilación y correcta limpieza del mismo, utilizable en la mayoría de los escenarios sin necesidad de ningún cambio.
 
 \subsection{Instalación y Configuración}
-Ya compilado, para la instalación en el sistema se deben emplear los comandos tradicionales de Linux para agregar módulos al kernel, usando \verb=insmod= para instalar. Es importante recordar que ésta es una operación que requiere privilegios en el sistema, por lo que debe ser ejecutada en modo administrador.
+Una vez compilado, para la instalación en el sistema se deben emplear los comandos tradicionales de Linux para agregar módulos al kernel, específicamente \verb=insmod= para instalar. Es importante recordar que ésta es una operación que requiere privilegios en el sistema por lo que debe ser ejecutada en modo administrador.
 
 Al momento de realizar la instalación se debe proveer la configuración que regirá la operación de la solución. La configuración consta de la incorporación de las siguientes opciones:
 
@@ -186,24 +186,19 @@ Al momento de realizar la instalación se debe proveer la configuración que reg
 
 En la práctica, los puertos de redirección quedan determinados a partir del valor de \verb=start_redirect_port= y hasta \verb=start_redirect_port + number_redirect_ports=.
 
-\lstset{language=Bash,
-		breaklines=true,
-		frame=single,
-		backgroundcolor=\color{mygray}
-		}
-\begin{lstlisting}[caption=ESO3]
+\begin{lstlisting}[language=Bash,	breaklines=true,frame=single,backgroundcolor=\color{mygray},caption=Ejemplo de instalación de la solución, captionpos=b]
 sudo insmod UDPRedistributeModule.ko verbose=2 hook_port=13131 start_redirect_port=1820 number_redirect_ports=4 port_sched={1,2}
 \end{lstlisting}
 
 
 \subsection{Utilización}
-Una vez instalada, la solución queda plenamente operativa en el sistema, llevando un registro de sus operaciones dependiendo del nivel de verbosidad definido al instante de la instalación. Es importante resaltar que es responsabilidad del usuario tomar posesión del conjunto de puertos de redirección definido en la solución, usándolos para los fines que él mismo desee. Un ejemplo de lo anterior puede verse en la figura ???????.
+Una vez instalada, la solución queda plenamente operativa en el sistema llevando un registro de sus operaciones dependiendo del nivel de verbosidad definido al instante de la instalación. Es importante resaltar que es responsabilidad del usuario tomar posesión del conjunto de puertos de redirección definido en la solución, usándolos para los fines que él mismo desee. Un ejemplo de lo anterior puede verse en la figura \ref{fig:usageUDPModule}.
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.5]{imagenes/netfilterArchitecture}
-	\caption{Esquema de la arquitectura de interrupción disponible para la intervención de paquetes provisto por el Netfilters Framework. REVISAR EN \url{http://amsekharkernel.blogspot.cl/2012/01/what-is-netfilter-in-linux.html}}
-	\label{netfilterArchitecture}
+	\includegraphics[scale=.3]{imagenes/fcfm}
+	\caption{Ejemplo de uso de la solución UDPRedistributeModule. En éste caso, se está atendiendo los paquetes recibidos de una misma interfaz lógica del sistema con distintas aplciaciones que consumen dichos paquetes.}
+	\label{fig:usageUDPModule}
 \end{figure}
 
 \subsection{Eliminación}
@@ -231,7 +226,7 @@ El último y más importante acierto a reconocer de neustra solución consiste e
 \section{Proyecciones}
 La solución planteada en la presente investigación cumple correctamente para los fines con que se postuló originalmente, basada en su satisfacción de los requerimientos especificados en la seccion previa. Sin embargo, el mismo modelo de operación que se ilustró en la solución puede ser aprovechado y extendido para ser usado en otros escenarios o contextos.
 
-Un caso interesante consiste en extender la solución para funcionar con otros protocolos orientados a la conexión, como por ejemplo TCP. El gran problema de la solución desarrollada para con el caso de TCP es salvar correctamente la etapa de negociación inicial para establecer la conexión -El denominado \emph{Handshake} de TCP-. En este contexto, nuestra solución debe poder contemplar un mecanismo para poder hacer una correcta redistribución de paquetes para respetar la asignación apropiada entre los paquetes recibidos y las conexiones que se están llevando a cabo.
+Un caso interesante consiste en extender la solución para funcionar con otros protocolos orientados a la conexión, como por ejemplo TCP. El gran problema de la solución desarrollada para con el caso de TCP es salvar correctamente la etapa de negociación inicial para establecer la conexión -El denominado \emph{Handshake} de TCP-. En este contexto, la solución desarrollada debe poder contemplar un mecanismo para poder hacer una correcta redistribución de paquetes para respetar la asignación apropiada entre los paquetes recibidos y las conexiones que se están llevando a cabo.
 
 \begin{figure}[!h]
 	\centering
@@ -240,13 +235,22 @@ Un caso interesante consiste en extender la solución para funcionar con otros p
 	\label{netfilterArchitecture}
 \end{figure}
 
-Gracias a su buen diseño, suplir el requerimiento anterior es sencillo con nuestra solución. Basta implementar un nuevo esquema de distribución que sea conciente de la distribución de paquetes para, usando las tuplas de datos de origen/destino de cada paquete, hacer una distribución correcta entre los sockets de redirección, para que las ocnexiones sean correctas. Para ello, una solución interesante puede ser, en lugar de aplicar un criterio aleatorio o secuencial de distribución como se usó en los esquemas provistos en éste trabajo, se puede emplear una \emph{función de Hash} que use las tuplas de origen/destino de cada paquete y así, lleve un registro lógico correcto de las conexiones que están operativas sobre un mismo socket.
+Gracias a su buen diseño, suplir el requerimiento anterior es sencillo con nuestra solución. Basta implementar un nuevo esquema de distribución que sea conciente de la distribución de paquetes para, usando las tuplas de datos de origen/destino de cada paquete, hacer una distribución correcta entre los sockets de redirección, para que las conexiones sean correctas. Para ello, una solución interesante es en lugar de aplicar un criterio aleatorio o secuencial de distribución como se usó en los esquemas provistos en éste trabajo, emplear una \emph{función de Hash} que use las tuplas de origen/destino de cada paquete y así, lleve un registro lógico correcto de las conexiones que están operativas sobre un mismo socket.
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.2]{imagenes/netfilterArchitecture}
+	\includegraphics[scale=.2]{imagenes/fcfm}
 	\caption{Acá hablar de multiplexar un socket, un canal que permite mucha comunicacion usando multiples colores.}
-	\label{netfilterArchitecture}
+	\label{fig:multiplexarPuerto}
 \end{figure}
 
-El enfoque antes planteado es sumamente poderoso pues en la práctica, postula la capacidad de multiplexar una misma interfaz de socket del sistema, proveyéndole recepción de paquetes a un pool de otros sockets atendidos por aplicaciones independientes. Permitiendo también incrementar el número -teoricamente limitado- de sockets a usar en un sistema\footnote{Dado por la limitación de 65536 puertos disponibles a usar}.
+El enfoque antes planteado es sumamente poderoso y extensible pues en la práctica postula la capacidad de multiplexar una misma interfaz de socket del sistema, proveyéndole recepción de paquetes a un pool de otros sockets atendidos por aplicaciones independientes. En otras palabras, se podría multiplezar una misma interfaz lógica del sistema, asociada a un puerto del sistema para atender una variedad de servicios, rigiendo la distribución según las características mismas de un paquete (Ver imagen \ref{fig:multiplexarPuerto}).
+
+Tan flexible es éste enfoque que permite soportar una diversidad de servicios (ya sean orientados a la conexión o a la mensajería) sobre una única interfaz lógica de conexión según las capas 3 y 4 del modelo OSI. Ésto en la práctica ha de permitir mejoras en aspectos como seguridad pues sólo los servicios esperados consiguen realizar conexiones correctas. Un ejemplo práctico de llo anterior se ilustra en la imagen \ref{fig:multiplexarPuertoEjemplo} donde se muestran distintas aplicaciones que operan trabajando con paquetes de diversa naturaleza (tanto por sus características, como por sus orígenes) siendo procesados a través de una misma interfaz lógica.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.2]{imagenes/fcfm}
+	\caption{Acá hablar de multiplexar un socket, un canal que permite mucha comunicacion usando multiples colores.}
+	\label{fig:multiplexarPuertoEjemplo}
+\end{figure}
