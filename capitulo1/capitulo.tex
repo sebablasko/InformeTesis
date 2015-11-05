@@ -142,6 +142,51 @@ Con objeto de explotar mejor el potencial de un esquema multiprocesador se desar
 	\label{fig:MESI}
 \end{figure}
 
+%\begin{center}
+%\begin{tikzpicture}[scale=0.13]
+%\tikzstyle{every node}+=[inner sep=0pt]
+%\draw [black] (10.3,-21.8) circle (3);
+%\draw (10.3,-21.8) node {$M$};
+%\draw [black] (29.9,-21.8) circle (3);
+%\draw (29.9,-21.8) node {$E$};
+%\draw [black] (50.5,-21.8) circle (3);
+%\draw (50.5,-21.8) node {$S$};
+%\draw [black] (70.6,-21.8) circle (3);
+%\draw (70.6,-21.8) node {$I$};
+%\draw [black] (11.517,-19.059) arc (153.39789:26.60211:32.358);
+%\fill [black] (69.38,-19.06) -- (69.47,-18.12) -- (68.58,-18.57);
+%\draw [black] (9.739,-24.735) arc (16.90501:-271.09499:2.25);
+%\fill [black] (7.63,-23.14) -- (6.72,-22.89) -- (7.01,-23.85);
+%\draw [black] (52.948,-20.074) arc (119.61129:60.38871:15.386);
+%\fill [black] (68.15,-20.07) -- (67.7,-19.24) -- (67.21,-20.11);
+%\draw [black] (31.697,-19.4) arc (139.64058:40.35942:24.348);
+%\fill [black] (68.8,-19.4) -- (68.67,-18.47) -- (67.9,-19.11);
+%\draw [black] (68.363,-23.79) arc (-54.70403:-125.29597:13.522);
+%\fill [black] (52.74,-23.79) -- (53.1,-24.66) -- (53.68,-23.84);
+%\draw [black] (68.442,-23.882) arc (-49.11238:-130.88762:27.792);
+%\fill [black] (32.06,-23.88) -- (32.34,-24.78) -- (32.99,-24.03);
+%\draw [black] (51.823,-24.48) arc (54:-234:2.25);
+%\fill [black] (49.18,-24.48) -- (48.3,-24.83) -- (49.11,-25.42);
+%\draw [black] (49.177,-19.12) arc (234:-54:2.25);
+%\fill [black] (51.82,-19.12) -- (52.7,-18.77) -- (51.89,-18.18);
+%\draw [black] (32.324,-20.04) arc (120.44489:59.55511:15.543);
+%\fill [black] (48.08,-20.04) -- (47.64,-19.2) -- (47.13,-20.07);
+%\draw [black] (12.237,-19.511) arc (136.33228:43.66772:25.109);
+%\fill [black] (48.56,-19.51) -- (48.37,-18.59) -- (47.65,-19.28);
+%\draw [black] (28.577,-19.12) arc (234:-54:2.25);
+%\fill [black] (31.22,-19.12) -- (32.1,-18.77) -- (31.29,-18.18);
+%\draw [black] (7.601,-20.517) arc (272.30317:-15.69683:2.25);
+%\fill [black] (9.68,-18.88) -- (10.14,-18.06) -- (9.15,-18.1);
+%\draw [black] (12.857,-20.239) arc (116.16519:63.83481:16.425);
+%\fill [black] (12.86,-20.24) -- (13.8,-20.34) -- (13.35,-19.44);
+%\draw [black] (48.372,-23.913) arc (-48.37501:-131.62499:27.057);
+%\fill [black] (12.43,-23.91) -- (12.69,-24.82) -- (13.36,-24.07);
+%\draw [black] (69.21,-24.458) arc (-30.18959:-149.81041:33.273);
+%\fill [black] (11.69,-24.46) -- (11.66,-25.4) -- (12.52,-24.9);
+%\end{tikzpicture}
+%\end{center}
+
+
 En lo que a estos protocolos respecta, el más popular en los sistemas modernos es el denominado protocolo \textbf{MESI}\footnote{También se le denomina protocolo Illinois, en sentido de la universidad del mismo nombre.} \cite{paper:MESI}, denominado así por las iniciales de las palabras en inglés: \textbf{M}odified (Modificado), \textbf{E}xclusive (Exclusivo), \textbf{S}hared (Compartido) e \textbf{I}nvalid (Inválido). Es un protocolo que plantea un diagrama de estado (basado en los 4 estados que componen su nombre) para cada linea de memoria caché con información almacenada, a modo de mantener su integridad en el sistema frente a modificaciones que realice algún procesador (ya sea dueño de dicho banco de memoria o no). En conjunto con el protocolo \emph{MESI} existe la técnica \textbf{Buss Snooping} \cite{paper:snoop} que consiste en un esquema de coordinación para interceptar, notificar, modificar y coordinar los valores de memoria a medida que se van realizando cambios de los mismos por una determinada tarea. En conjunto, el protocolo \emph{MESI} y la operación del \emph{Bus Snooping} hacen posible las operaciones paralelas en entornos multiprocesador, proveiendo un ambiente adecuado para programar aplicaciones con ejecución verdaderamente paralela al brindar una capa de abstracción suficientemente flexible para aprovechar ésta técnica.
 
 \subsection{Programación Multi-Hilo}
@@ -187,9 +232,9 @@ Los \textbf{Mutex} -o Monitores en español- Son otra estructura de sincronizaci
 \subsubsection{SpinLock}
 Son las primitivas de sincronización de más bajo nivel disponible en los sistemas Linux para garantizar exclusión mutua. Su operación se basa en ciclos de espera denominados \emph{busy-waiting} que son ciclos de procesador muertos, donde no se hace más que verificar el cambio de una condición que en la práctica consiste en ''obtener'' el \emph{lock}. Esta lógica de operación hace de los spinlocks una herramienta de sincronización de cuidado pues su operación está pensada solo para secciones críticas ligeras (de pocas instrucciones). Se diferencia de las otras herramientas de sincronización pues es usada en entornos de código que no puede dormir y debe estár preparado para retomar su operación\footnote{Un ejemplo de éste tipo de códigos son los \textit{Handlers} de interrupciones, que deben estár siempre listos para manejar un evento}. Los sistemas operativos modernos proveen ésta estructura de sincronización y una completa interfaz de uso, disponible desde sus encabezados en \verb=include/linux/spinlock.h=.
 
-Bien utilizados, los spinlocks son capaces de proveer un mejor desempeño que las otras estructuras revisadas. Por el contrario, es sabido que el mal uso de éste tipo de herramientas de sincronización produce degradaciones importantes en los tiempos de operación generales de todo el sistema, pues significa el consumo de recursos en ciclos de procesamiento muerto, lo que en la practica se traduce en un bloqueo de un hilo de ejecución [AKA UNA CITA QUE ILUSTRA EL CASO DE QUE EL SPINLOCK DEGRADA EL FUNCIONAMIENTO DE LA WEA]. Aún cuando las implementaciones modernas de sistemas operativos incluyen optimizaciones en el rendimiento de éstas estructuras (ya sea con optimizaciones energéticas o mejoras de schedulling [AKA REFERENCIA]) lo cierto es que la naturaleza inhenerete para brindar sincronización de los spinlocks es por medio del mecanismo de \emph{busy-waiting}, que significa desperdiciar ciclos de reloj sólo esperando.
+Bien utilizados, los spinlocks son capaces de proveer un mejor desempeño que las otras estructuras revisadas. Por el contrario, es sabido que el mal uso de éste tipo de herramientas de sincronización produce degradaciones importantes en los tiempos de operación generales de todo el sistema, pues significa el consumo de recursos en ciclos de procesamiento muerto, lo que en la practica se traduce en un bloqueo de un hilo de ejecución \cite{paper:nonscalablelocks, paper:cachebouncing}. Aún cuando las implementaciones modernas de sistemas operativos incluyen optimizaciones en el rendimiento de éstas estructuras (ya sea con optimizaciones energéticas o mejoras de schedulling \cite{paper:cacheaffinity}) lo cierto es que la naturaleza inhenerete para brindar sincronización de los spinlocks es por medio del mecanismo de \emph{busy-waiting}, que significa desperdiciar ciclos de reloj sólo esperando.
 
-Los spinlocks son una de las estructuras de sincronización preferidas a la hora de solucionar escenarios de concurrencia en otras estructuras desplegadas en el kernel. Están presentes en ESTRUCTURA1, ESTRUCTURA2, ESTRUCTURA3, etc. Siempre trantando de mantener el cuidado de resguardar sólo regiones de código acotadas que no arriesguen el desempeño general del sistema en contextos de concurrencia.
+Los spinlocks son una de las estructuras de sincronización preferidas a la hora de solucionar escenarios de concurrencia en otras estructuras desplegadas en el kernel, siempre trantando de mantener el cuidado de resguardar sólo regiones de código acotadas que no arriesguen el desempeño general del sistema en contextos de concurrencia.
 
 \subsection{Sockets en Linux}
 El modelo OSI ha estipulado a la familia de los protocolos TCP/IP como un estándar a la hora de establecer mecanismos de conexión entre computadoras. Sin embargo, las interfaces de programación no siguen la misma naturaleza estándar. Los distintos sistemas operativos implementan distintas interfaces públicas de aplicación (APIs) para el uso práctico de TCP/IP. \textbf{Socket} es la denominación tradicional para las interfaces de programación que proveen los mecanísmos para realizar tales conexiones. En otras palabras, es la interfaz que provee el sistema operativo para enviar mensajes a través de la red. En la práctica un socket representa una interfaz o punto de comunicación que maneja un protocolo de comunicación especifico. Los sockets operan bajo una dinámica denominada \emph{Cliente/Servidor} que especifíca que la comunicación debe ser promovida inicialmente por un cliente y atendida posteriormente por un servidor, en ese orden.
@@ -214,8 +259,8 @@ El sistema operativo reconoce a los diferentes sockets en operación a través d
 
 Los sockets son elementos muy versátiles en cuanto a su manipulación y uso. Se pueden usar en dos variantes principales que determinan el \emph{dominio del socket}:
 \begin{description}
-\item[Unix Sockets] Una descripcion de los unix socket
-\item[Internet Sockets] Una descripcion de los internet socket socket.
+\item[Unix Sockets] Corresponden a un tipo de punto de comunicación que proveen los sistemas UNIX para realizar comunicación entre procesos de un mismo host.
+\item[Internet Sockets] Son otro tipo de sistema de puntos de comunicación provistos en sistemas UNIX, basados en proveer una interfaz simple para implementar mecanismos de comunicación sobre una red.
 \end{description}
 
 Para las variedades recien mencionadas hay que sumar la capacidad de configuración de un socket. La primera y más importante es la configuración del modo de conexión que rige la dinámica de comunicación del socket: El \emph{protocolo de comunicación}. En éste apartado existen dos variantes comúnmente usadas: \verb=SOCK_STREAM= y \verb=SOCK_DGRAM= para usar TCP o UDP respectivamente. Sumado a lo anterior, los sistemas Linux proveen de la llamada de sistema \verb=setsockopt= que permite modificar características de una instancia socket, activando ciertas funcionalidades especificas o habilitando implementaciones con modificaciones especiales con respecto al funcionamiento estándar.
@@ -254,7 +299,7 @@ Sin embargo éste estudio planteó dudas importantes acerca de los elementos res
 
 Para ilustrar el interés y vigencia del problema antes descrito es necesario validar la persistencia del mismo en escenarios actuales de interés como viene siendo el caso de servidores DNS. Para ello, se realizó un estudio de la situación actual del escenario multithreading en el consumo de datos desde una interfaz de red separando los dos contextos antes mendionados: \textbf{Hardware}, verificando el rendimiento en sistemas de arquitecturas de hardware diferente, y \textbf{Software}, estudiando el rendimiento en escenarios de ejecución basados en distintas versiones del kernel de Linux que son los que proveen el funcionamiento a estudiar.
 
-En linea con lo anterior, se diseñó un \textbf{caso de estudio} para evaluar el desempeño promedio de una interfaz de red\footnote{Diseño de librería para manejar conexiones de red \url{https://github.com/sebablasko/ssocket}} representada por un socket UDP en el ejercicio de consumo de datos en un escenario de saturación\footnote{URL al repo github con la prueba}. El modelo de la prueba incluye la evaluación del tiempo de consumo de una cantidad de datos de entrada correspondiente a 1 millon de paquetes de 512 bytes cada uno, emulando de ésta manera un escenario clásico de congestión de un servidor de consultas DNS. En el caso de estudio se evalúan distintas configuraciones de threads consumiendo concurrentemente al mismo socket rescatando el tiempo total de consumo en cada caso. Para respetar la validez estadística de los resultados, la prueba anterior se repite un total de 60 veces por configuración de threads (Ver figura \ref{fig:testUDP}).
+En linea con lo anterior, se diseñó un \textbf{caso de estudio} para evaluar el desempeño promedio de una interfaz de red\footnote{Diseño de librería para manejar conexiones de red \url{https://github.com/sebablasko/ssocket}} representada por un socket UDP en el ejercicio de consumo de datos en un escenario de saturación\footnote{\url{https://github.com/sebablasko/Test_SaturationReusePortUDPSockets}}. El modelo de la prueba incluye la evaluación del tiempo de consumo de una cantidad de datos de entrada correspondiente a 1 millon de paquetes de 512 bytes cada uno, emulando de ésta manera un escenario clásico de congestión de un servidor de consultas DNS. En el caso de estudio se evalúan distintas configuraciones de threads consumiendo concurrentemente al mismo socket rescatando el tiempo total de consumo en cada caso. Para respetar la validez estadística de los resultados, la prueba anterior se repite un total de 60 veces por configuración de threads (Ver figura \ref{fig:testUDP}).
 
 \begin{figure}[!h]
 	\centering
