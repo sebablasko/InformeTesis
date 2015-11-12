@@ -190,7 +190,7 @@ Con objeto de explotar mejor el potencial de un esquema multiprocesador se desar
 En lo que a estos protocolos respecta, el más popular en los sistemas modernos es el denominado protocolo \textbf{MESI}\footnote{También se le denomina protocolo Illinois, en sentido de la universidad del mismo nombre.} \cite{paper:MESI}, denominado así por las iniciales de las palabras en inglés: \textbf{M}odified (Modificado), \textbf{E}xclusive (Exclusivo), \textbf{S}hared (Compartido) e \textbf{I}nvalid (Inválido). Es un protocolo que plantea un diagrama de estado (basado en los 4 estados que componen su nombre) para cada linea de memoria caché con información almacenada, a modo de mantener su integridad en el sistema frente a modificaciones que realice algún procesador (ya sea dueño de dicho banco de memoria o no). En conjunto con el protocolo \emph{MESI} existe la técnica \textbf{Buss Snooping} \cite{paper:snoop} que consiste en un esquema de coordinación para interceptar, notificar, modificar y coordinar los valores de memoria a medida que se van realizando cambios de los mismos por una determinada tarea. En conjunto, el protocolo \emph{MESI} y la operación del \emph{Bus Snooping} hacen posible las operaciones paralelas en entornos multiprocesador, proveiendo un ambiente adecuado para programar aplicaciones con ejecución verdaderamente paralela al brindar una capa de abstracción suficientemente flexible para aprovechar ésta técnica.
 
 \subsection{Programación Multi-Hilo}
-En la práctica, existen distintas maneras de conseguir paralelísmo a la hora de programar un sistema. Los dos enfoques tradicionales es pensar en esquemas \textbf{multiproceso} (denominados procesos pesados) y \textbf{multihilo} (denominados procesos ligeros), diferenciados principamente porque los primeros disponen de espacios de memoria disjunto entre ellos, no así los segundos. La programación multihilo es muy usada en aplicaciones por ser un enfoque probado y de fácil adopción por el soporte que brindan los sistemas operativos modernos a través de librerias que incorporan llamadas a sistema para tales fines. Posiblemente la más popular de las mismas en entornos UNIX es \textbf{PThreads}.
+En la práctica, existen distintas maneras de conseguir paralelísmo a la hora de programar un sistema. Los dos enfoques tradicionales es pensar en esquemas \textbf{multiproceso} (denominados procesos pesados) y \textbf{multihilo} (denominados procesos ligeros), diferenciados principamente porque los primeros disponen de espacios de memoria disjunto entre ellos, no así los segundos. La programación multihilo es muy usada en aplicaciones por ser un enfoque probado y de fácil adopción por el soporte que brindan los sistemas operativos modernos a través de librerias que incorporan llamadas a sistema para tales fines, una la más populares en entornos UNIX es \textbf{PThreads}.
 
 PThreads (o \emph{POSIX Threads} de su nombre completo) es una interfaz prácticamente estándar de programación hoy entre sistemas UNIX, resultado del trabajo de diseñadores de sistemas operativos que a finales de los 80 se abocaron al desarrollo de sistemas escalables para las nuevas arquitecturas de multiprocesadores [CITA A PTHREADS]. Ésta interfaz provee funciones para gatillar y controlar hilos de ejecución creados a partir de un proceso padre. Los hilos se caracterízan por disponer de un espacio de memoria propio a cada uno con información privada (Con valores como el puntero de instrucciones, el \emph{Stack} de memoria, etc.) además de compartir entre ellos otros elementos como  por ejemplo el espacio de direccionamiento, señales del sistema ó descriptores de archivos, característica que permite cierta comunicación entre ellos. Son una forma liviana de proveer paralelísmo, pues su símil multirpoceso (provista por la llamada a sistema \verb=fork()=) es más pesada y lenta. Aún siendo procesos denominados ''ligeros'' y de incorporar ciertas dificultades a la hora de concebir el diseño de una aplicación, el uso de threads a la hora de programar permite postular a un importante beneficio como lo es la escalabilidad en sistemas multiprocesador, ello al permitir que los distintos hilos se ejecuten en distintos procesadores físicos logrando ganacias efectivas en los tiempos netos de ejecución al distribuir la carga en distintos núcleos de procesamiento.
 
@@ -268,7 +268,42 @@ Para las variedades recien mencionadas hay que sumar la capacidad de configuraci
 Más allá de la configuración puntual de la que se dote a un socket, la estructura interna de éste elemento es estándar y tiene especificaciones importantes de comentar para comprender su funcionamiento y posibles limitaciones.
 
 \subsubsection{Estructura Interna}
-Los socket de Linux están definidos como una estructura en el núcleo del sistema en \verb=include/linux/net.h=... SIGUE PENDIENTE!!!
+Los socket de Linux están definidos como una estructura en el núcleo del sistema en \verb=include/linux/net.h= (ver figura \ref{fig:socketAnathomy}). [HABLAR DE LAs dos esttructuras]. Los sockets contienen en su interior otra estructuras usadas para el tránsito de los paquetes que por ellos circulan. Cada socket posee 3 colas de tránsito que se usan para los procesos de encolamiento y desencolamiento de paquetes al socket mismo:
+\begin{description}
+\item[Receive\_queue] Cola de almacenamiento para los paquetes recién arribados al socket.
+\item[Transmission\_queue] Cola de almacenamiento de los paquetes previo al envío de los mismos por la conexión definida por el socket.
+\item[Backlog\_queue] Cola de almacenamiento de paquetes usada para colectar paquetes recibidos cuando la \textbf{Recieve\_queue} está bloqueada (ocupada).
+\end{description}
+
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.25]{imagenes/fcfm}
+	\caption{Diagrama de la estructura interna de un Internet socket de Linux.}
+	\label{fig:socketAnathomy}
+\end{figure}
+
+En términos de sus protecciones, los Internet sockets emplean spinlocks como herramientas de sincronización en el acceso a las estructuras internas que participan en los procesos de encolamiento y desencolamiento de paquetes (Ver figura \ref{fig:socketAnathomy2}). Específicamente, se reconocen dos capas de protección: Una primera capa, dada por un spinlock general en el acceso al socket, y una segunda protección dada por limitaciones en el acceso a las colas de tránsito los paquetes. Cada una de las 3 colas antes mencionadas posee su propio spinlock de protección frente a modificaciones concurrentes en pos de garantizar la integridad y coherencia de las operaciones sobre la misma.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.25]{imagenes/fcfm}
+	\caption{Diagrama de niveles de protección presentes en un Internet socket de Linux.}
+	\label{fig:socketAnathomy}
+\end{figure}
+
+Por otro lado, el tránsito de un paquete que circula camino a un host puede ser descrito en una secuencia de pasos lógicos en que se interviene el mismo desde su arribo por una interfaz de red al llegar al socket:
+\begin{enumerate}
+\item Bloquear el socket usando el spinlock general de la estructura. De ésta manera se limitan las interrupciones para evitar concurrentemente encolamiento de otros paquetes.
+\item Verificar si el lock está siendo usado por alguna aplicación de nivel usuario, en cuyo caso, se realiza el encolamiento del paquete directamente en la \textbf{Backlog\_queue}. Luego, para cada paquete:
+	\begin{enumerate}
+	\item Es procesado de acuerdo a las reglas de \emph{Netfilters}
+	\item Son actualizadas las estadísticas del sistema, como \emph{Memory Accounting}.
+	\item Se realiza el ingreso a la \textbf{Receive\_queue} (Esperando hasta la disponibilidad de su spinlock).
+	\item Se hace una llamada al \emph{Scheduller} del sistema, para retomar procesos dormidos que hayan solicitado paquetes a éste socket.
+	\end{enumerate}
+\item Finalmente, se libera el spinlock general, continuando el proceso de recepción de los paquetes siguientes.
+\end{enumerate}
 
 \section{Presentación del Problema}
 Como ya se mencionó, el escenario advertido para los próximos años prevé un inmenso tráfico a Internet que podría llevar la cantidad de procesamiento del servicio DNS a varios órdenes de magnitud por encima de la carga actual. Es más, el panorama futuro postula que los dispositivos más avanzados serían muchísimo más versátiles en su operación pudiendo hacer un uso más agresivo y demandante de la red, realidad que se traduciría en más conexiones.

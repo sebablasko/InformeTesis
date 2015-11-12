@@ -42,18 +42,18 @@ Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{Mayo
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.5]{imagenes/perfArchitecture.png}
+	\includegraphics[scale=.45]{imagenes/perfArchitecture.png}
 	\caption{Arquitectura de operación del framework provisto por \emph{Perf}.}
 	\label{fig:perfFramework}
 \end{figure}
 
-Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso, pues su funcionamiento se basa en la supervisión de un determinado proceso o tarea de la cual construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}. PAra ello, se pueden emplear las utilidades \verb=perf-record= y \verb=perf-stat= las que trabajan supervisando un determinado proceso y proveiendo paginas de datos al espacio del kernel que son rellenadas con información del sistema de dicho proceso y son retornadas al proceso responsable construyendo un informe a modo de output (Ver figura \ref{fig:perfRecord}). Posteriormente, se pueden realizar operaciones de análisis más exhaustivo sobre dichos archivos de resultados.
+Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso, pues su funcionamiento se basa en la supervisión de un determinado proceso o tarea de la cual construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}. Para ello, se pueden emplear las utilidades \verb=perf-record= y \verb=perf-stat= las que trabajan supervisando un determinado proceso y proveiendo paginas de datos al espacio del kernel que son rellenadas con información del sistema de dicho proceso y son retornadas al proceso responsable construyendo un informe a modo de output\footnote{La asignación del espacio de páginas a rellenar se hace por medio de la utilidad \verb=mmap= de Linux, que provee direcciones virtuales en un proceso para almacenar información.} (Ver figura \ref{fig:perfRecord}). Posteriormente, se pueden realizar operaciones de análisis más exhaustivo sobre dichos archivos de resultados.
 
 El potencial de ésta herramienta la perfila como una utilidad indispensable para el estudio en cuestión. En primer lugar por su capacidad de análisis de ejecución de código que permite obtener información cuantificada de las llamadas a sistema y de la dinámica del árbol de llamados\footnote{Acá explicar brevemente que es un árbol de llamados} que permite reconocer la naturaleza de las funciones involucradas en el caso de estudio. En segunda instancia Perf es una estupenda herramienta para la recolección de datos de hardware al aprovechar el uso de la \emph{Performance Monitoring Unit (PMU)} del hardware del sistema, una característica que será revisada en detalle en secciones posteriores.
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.5]{imagenes/perfRecord.png}
+	\includegraphics[scale=.45]{imagenes/perfRecord.png}
 	\caption{Esquema de captura de datos de un programa usando el comando \emph{perf-record}.}
 	\label{fig:perfRecord}
 \end{figure}
@@ -122,7 +122,7 @@ Al año 2008, el fabricante de procesadores Intel® lanzó al mercado una nueva 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.5]{imagenes/quickpath2.png}
-	\caption{Diseño organizacional de los componentes de sistema en una arquitectura \emph{QuickPath} de Intel.}
+	\caption{Diseño organizacional de los componentes de sistema en una arquitectura estándar \emph{QuickPath} de Intel.}
 	\label{fig:quickpath}
 \end{figure}
 
@@ -146,7 +146,7 @@ Siguiendo el caso de prueba evaluado a lo largo de la investigación, se inspecc
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.65]{imagenes/arch24Cores.png}
+	\includegraphics[scale=.7]{imagenes/arch24Cores.png}
 	\caption{Esquema de arquitectura interna del esquipo servidor multicore sobre el que se realizan las pruebas de performance counters.}
 	\label{fig:hwspecs}
 \end{figure}
@@ -173,7 +173,7 @@ Para la especificación de la captura de eventos, lo primero es prestar especial
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.8]{imagenes/QuickPathChannels.png}
-	\caption{Esquema de arquitectura interna del equipo XXXX en las vías de comunicación del procesador que da cuenta de los principales puntos de alta comunicación en el escenario de cache bouncing por contención de valores.}
+	\caption{Esquema de arquitectura interna del equipo servidor multicore estudiado, ilustrando las vías de comunicación del procesador que da cuenta de los principales puntos de alta comunicación en el escenario de \textit{cache bouncing} por contención de valores.}
 	\label{fig:hwcomm}
 \end{figure}
 
@@ -192,7 +192,7 @@ Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bi
 
 [[[Hablar un poco de dicha busqueda y del manual]]]]
 
-Finalmente, siguiendo los 4 criterios de puntos problemáticos a estudiar se construyó una selección de eventos a considerar resumida en la tabla \ref{tabla:eventos}. Los eventos están divididos en dos grupos: \textbf{QPI/GQ/Cache} para eventos relacionados con movimiento o traslación de datos entre distintas estructuras de hardware, y \textbf{LinkLayer} para eventos referidos a protocolos de consistencia y sincronización que son pertinenetes a la capa de corrección en el esquema de capas del \emph{Quickpath}.
+Finalmente, siguiendo los 4 criterios de puntos problemáticos a estudiar se construyó una selección de eventos a considerar resumida en la tabla \ref{table:eventos}. Los eventos están divididos en dos grupos: \textbf{QPI/GQ/Cache} para eventos relacionados con movimiento o traslación de datos entre distintas estructuras de hardware, y \textbf{LinkLayer} para eventos referidos a protocolos de consistencia y sincronización que son pertinenetes a la capa de corrección en el esquema de capas del \emph{Quickpath}.
 
 \begin{table}[h!]
 \centering
@@ -224,7 +224,7 @@ Finalmente, de los output de Perf, se pueden estudiar los resultados finales de 
 
 \begin{table}[]
 \centering
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l|p{0.58\linewidth}|}
 \hline
 Nivel de Inspección                 & Registro & Descripción                                                \\ \hline
 \multirow{8}{*}{Uso de QPI}         & r500104  & Cycles GQ data is imported from Quickpath interface        \\ \cline{2-3} 
