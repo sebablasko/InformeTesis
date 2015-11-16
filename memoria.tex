@@ -18,6 +18,31 @@
 \usepackage{minted}
 \usepackage{multirow}
 \colorlet{LightGray}{gray!5!}
+\renewcommand{\lstlistingname}{Código}
+\definecolor{mygray}{rgb}{0.95,0.95,0.95}
+\definecolor{mygray2}{rgb}{0.99,0.99,0.79}
+
+%Defino un par de estilos
+\lstdefinestyle{CInputStyle}{
+  language=C,
+  basicstyle=\small\sffamily,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=tb,
+  columns=fullflexible,
+  backgroundcolor=\color{mygray},
+  linewidth=0.9\linewidth,
+  xleftmargin=0.05\linewidth
+}
+
+\lstdefinestyle{BashInputStyle}{
+  language=bash,
+  basicstyle=\small\sffamily,
+  frame=tb,
+  columns=fullflexible,
+  backgroundcolor=\color{mygray2}
+}
 
 \begin{document}
 

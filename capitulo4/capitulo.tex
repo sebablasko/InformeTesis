@@ -128,12 +128,8 @@ El esquema ilustrado en la figura \ref{fig:netfilterArchitecture} da cuenta del 
 
 El framework en cuestión está diseñado para poder aprovechar sus funcionalidades facilmente a partir de un módulo adicionado al kernel. Para ello, basta incluir las directivas de encabezados del framework en el módulo implementado (\verb=#include <linux/netfilter.h>=) e implementar los mecanísmos de registro del \emph{hook} en el sistema, especificando sus opciones como: \textbf{prioridad}, \textbf{familia} y \textbf{punto de interrupción}. Para ésta tarea, se emplean valores constantes provistos por el mismo framework. Además de lo anterior, en el módulo se ha de implementar la función a aplicar sobre cada paquete intervenido, para lo cual es necesario seguir la convención que especifíca el mismo framework, esto es, implementar un prototipo de función que propone el framework que se ilustra en el segmento de código siguiente:
 
-\definecolor{mygray}{rgb}{0.95,0.95,0.95}
-\lstset{language=C,
-		frame=single,
-		backgroundcolor=\color{mygray}
-		}
-\begin{lstlisting}[language=C, frame=single, backgroundcolor=\color{mygray}, captionpos=b, caption=ESO]
+
+\begin{lstlisting}[style=CInputStyle, captionpos=b, caption=ESO]
 static unsigned int hook_func(
             		unsigned int hooknum,
             		struct sk_buff *skb, 
@@ -190,8 +186,8 @@ Al momento de realizar la instalación se debe proveer la configuración que reg
 
 En la práctica, los puertos de redirección quedan determinados a partir del valor de \verb=start_redirect_port= y hasta \verb=start_redirect_port + number_redirect_ports=.
 
-\begin{lstlisting}[language=Bash,	breaklines=true,frame=single,backgroundcolor=\color{mygray},caption=Ejemplo de instalación de la solución, captionpos=b]
-sudo insmod UDPRedistributeModule.ko verbose=2 hook_port=13131 start_redirect_port=1820 number_redirect_ports=4 port_sched={1,2}
+\begin{lstlisting}[style=BashInputStyle,	breaklines=true, caption=Ejemplo de instalación de la solución, captionpos=b]
+    # sudo insmod UDPRedistributeModule.ko verbose=2 hook_port=13131 start_redirect_port=1820 number_redirect_ports=4 port_sched={1,2}
 \end{lstlisting}
 
 
