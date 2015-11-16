@@ -70,13 +70,33 @@ El provecho que se puede sacar de ésta herramienta es usar su capacidad para cu
 Nos topamos con que las tendencias de tiempos son similares a las de los tiempos de esas llamadas, luego, hay una correlacion de esta estructura inhenrente al socket es la que causa el cuello de botella: indicio, el socket entero está siendo contenido por el spinlock de su estructura.
 
 \subsubsection{Perf}
+Gráfico de resultados de perf
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.5]{imagenes/fcfm}
+	\caption{Resultados experimentales de los porcentajes de ejecución de las llamadas a sistema recolectadas por \emph{Perf}.}
+	\label{fig:resPerf}
+\end{figure}
+
+Para reconocer mejor la dinámica de consumo de tiempos en las funciones inspeccionadas en el caso de estudio, se usaron los reportes generados por Perf para construir un nuevo tipo de visualización de llamadas a sistema: Un \emph{Call-Graph-Chart} (Ver imagen \ref{fig:rescallGraph}), de manera de poder reconocer los bloques de funciones más repetidos en la ejecución del caso de prueba. Para ésta visualziación se aporvechó el script \emph{gprof2dot}\footnote{\url{https://github.com/jrfonseca/gprof2dot}}.
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.5]{imagenes/fcfm}
+	\caption{Visualización de call-graph identificando las llamadas a sistema y sus pesos en el caso de prueba.}
+	\label{fig:rescallGraph}
+\end{figure}
+
 \subsubsection{FTrace}
+Gráfico de resultados de FTrace
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.5]{imagenes/fcfm}
+	\caption{Resultados experimentales de los tiempos de ejecución de las llamadas a sistema recolectadas por \emph{FTrace} para la adquisición del lock.}
+	\label{fig:resFtrace}
+\end{figure}
 
 \subsection{Análisis y Discusión de Resultados}
 Aka un análisis general de los resultados en términis de gráficos obtenidos
-
-\subsubsection{Call-Graph}
-Una visualización de call-graph, quizá no como subseccion
 
 \subsubsection{TraceDisplay}
 Para poder obtener una interpretación adicional del fenómeno reconocido, se construyó una herramienta de visualziación de las llamadas a sistema para funciones de sincronización que permitiese reconocer las porciones de tiempo que tomasen en cada procesador dichas funciones. Para ello, la herramienta denominada \emph{TraceDisplay} recibe un log generado con \emph{FTrace} que incluya las llamadas de sistema yá filtradas, y construye un mapa de tiempo coloreado donde se pueden apreciar las porciones de tiempo que consume cada llamada y desde cual CPU se originan. El resultado se puede apreciar en la imagen \ref{fig:traceDisplay} donde se ilustra el caso de analizar [[AKA FALTA EXPLICAR EL CASO EVALUADO]].
@@ -102,16 +122,16 @@ A raíz del estudio de operación de primitivas de sincronización del sistema s
 A raíz de lo anterior, se reconoce en el spinlock de protección del socket como un punto de cuello de botella al momento de emplear accesos concurrentes a una estructura socket. Ello al actuar como un punto de bloqueo que termina serializando el acceso al consumo de datos y que, lejos de reducir los tiempos paralelizando el acceso, los aumenta al serialziarlos y deber coordinar los hilos para ello.
 
 \section{Estudio de Canales de Comunicación de Hardware}
-La segunda hipótesis para explicar la mala performance del caso de estudio presentado se centra en una componente de hardware más que de software. Cómo ya se mencionó, la capacidad multiprocesador de que se dispone en equipos modernos no es un recurso facil de aprovechar, de hecho requiere una sofisticada operación y diseño tanto de las aplicaciones que solicitarán recursos, como del sistema operativo que ha de administrarlos. Como se repasó en secciones anteriores, la capacidad de paralelísmo viene dada gracias a un conjunto de protocolos y algoritmos de muy bajo nivel que coordinan y mantienen en estado coherente las distintas componentes de datos para los diferentes procesadores \cite{paper:MESI, paper:snoop}, sin embargo, por muy sofisticados que dichos mecanismos sean, las nuevas tecnologías de hardware que prometen velocidades de trasnferencia y acceso nunca antes imaginiadas podrían significar un problema para éstas componentes, sobrepasandolos de cierta forma.
+La segunda hipótesis para explicar la mala performance del caso de estudio presentado se centra en una componente de hardware más que de software. Cómo ya se mencionó, la capacidad multiprocesador de que se dispone en equipos modernos no es un recurso fácil de aprovechar, de hecho requiere una sofisticada operación y diseño tanto de las aplicaciones que solicitarán recursos, como del sistema operativo que ha de administrarlos. Como se repasó en secciones anteriores, la capacidad de paralelísmo viene dada gracias a un conjunto de protocolos y algoritmos de muy bajo nivel que coordinan y mantienen en estado coherente las distintas componentes de datos para los diferentes procesadores \cite{paper:MESI, paper:snoop}, sin embargo, por muy sofisticados que dichos mecanismos sean, las nuevas tecnologías de hardware que prometen velocidades de trasnferencia y acceso nunca antes imaginiadas podrían significar un problema para éstas componentes, sobrepasándolos de cierta forma.
 
-Es precisamente en ésta línea que se establece la segunda hipótesis. En éste caso, se adjudican las responsabilidades por el mal rendimiento presentado a un problema de contención de recursos (nuevamente al spinlock de los sockets), pero ésta vez relacionado a la persistencia en el acceso al mismo y a la disponibilidad que se da del mismo a través de los mecanismos antes mencionados. En las arquitecturas modernas, los protocolos \emph{MESI} y de \emph{SNOOP} son cruciales en la operación de ejecuciones paralelas para garantizar integridad en los datos, pero las arquitecturas modernas proponen nuevas distribuciones de los componentes internos de hardware, dotando de canales de mayor velocidad de transmisión y reasignando los recursos físicos. Ésta hipótesis plantea la posibilidad de que el degradamiento del caso de estudio sea generado por un fenómeno de \emph{Caché Bouncing}.
+Es precisamente en ésta línea que se establece la segunda hipótesis. En éste caso, se adjudican las responsabilidades por el mal rendimiento presentado a un problema de contención de recursos (nuevamente al spinlock de los sockets), pero ésta vez relacionado a la persistencia en el acceso al mismo y a la disponibilidad que se da del mismo a través de los mecanismos antes mencionados. En las arquitecturas modernas, los protocolos \emph{MESI} y de \emph{SNOOP} son cruciales en la operación de ejecuciones paralelas para garantizar integridad en los datos, pero las arquitecturas modernas proponen nuevas distribuciones de los componentes internos de hardware, dotando de canales de comunicación de mayor velocidad de transmisión y reasignando los recursos físicos. Ésta hipótesis plantea la posibilidad de que el degradamiento del caso de estudio sea generado por un fenómeno de \emph{Caché Bouncing}.
 
-\begin{defn}[ver \cite{paper:cachebouncing}] \textbf{Caché Bouncing} corresponde a un fenómeno producido en entornos multiprocesador, cuando distintas CPU realizan modificaciones a una linea de caché especifica que está siendo referenciada por varios procesadores. La modificación de la linea modificada se trasnfiere de caché en caché según los protocolos de consistencia del sistema. Éste fenómeno impone una significativa carga en el bus de memoria y los canales de comunicación afectados.
+\begin{defn}[ver \cite{paper:cachebouncing}] \textbf{Caché Bouncing} corresponde a un fenómeno producido en entornos multiprocesador, cuando distintas CPU realizan modificaciones a una linea de caché especifica que está siendo referenciada por varios procesadores. La modificación de la linea modificada se trasnfiere de caché en caché según los protocolos de consistencia del sistema. Éste fenómeno impone una significativa carga en el bus de memoria y los canales de comunicación afectados pudiendo degenerar en una degradación generalizada del sistema.
 \end{defn}
 
-En ésta línea, el fenómeno de \emph{Cache Bouncing} se podría manifestar dada la arquitectura del sistema, la que al contemplar bancos de memoria diversos, algunos compartidos y otros exclusivos para los núcleos de procesamiento, podría estar manifestandose como resultado de las modificaciones concurrentes de los distintos procesadores sobre la estructura socket compartida. Lo anterior combinado a la operación de los protocolos de consistencia y correctitud para las lineas de caché del sistema postulan evidencia que hace perfectamente posible el que se esté generando un overhead que termine sobrecargando los tiempos totales.
+En ésta línea, el fenómeno de \emph{Cache Bouncing} se podría manifestar dada la arquitectura del sistema, la que al contemplar bancos de memoria diversos, algunos compartidos y otros exclusivos para los núcleos de procesamiento, podría estar manifestandose como resultado de las modificaciones concurrentes de los distintos procesadores sobre la estructura socket compartida, y más precisamente sobre el spinlock del socket. Lo anterior combinado a la operación de los protocolos de consistencia y correctitud para las lineas de caché del sistema postulan evidencia que hace perfectamente posible el que se esté generando un overhead de comunicación que termine sobrecargando los tiempos totales de ejecución del caso de estudio.
 
-Para validar la hipótesis anterior es preciso un cabal entendimiento de la arquitectura de hardware objeto de estudio, a fin de poder localizar puntos de contención, junto con una comprensión importante de la \emph{Performance Monitoring Unit} que provee el fabricante, lograr configurarla y aprovecharla para la recolección de datos finales. En las siguientes secciones se realiza un estudio de la arquitectura descrita en la figura \ref{fig:pc3} del equipo sobre el que se realizan las pruebas experimentales reales. Posteriormente se realiza un análisis experimental de las tendencias presentes en una tarea de acceso concurrente como la descrita en el caso de estudio de ésta investigación con el fin de corroborar o descartar las sospechas ya mencionadas del efecto de contención y \emph{caché bouncing} por eventos de perfomance de hardware.
+Para validar la hipótesis anterior es preciso un cabal entendimiento de la arquitectura de hardware objetivo, a fin de poder localizar puntos de contención junto con una comprensión importante de la \emph{Performance Monitoring Unit} que provee el fabricante, lograr configurarla y aprovecharla para la recolección de datos finales. En las siguientes secciones se realiza un estudio de la arquitectura descrita en la figura \ref{fig:pc3} del equipo sobre el que se realizan las pruebas experimentales reales. Posteriormente se realiza un análisis experimental de las tendencias presentes en una tarea de acceso concurrente como la descrita en el caso de estudio de ésta investigación con el fin de corroborar o descartar las sospechas ya mencionadas del efecto de contención y \emph{caché bouncing} por eventos de perfomance de hardware.
 
 \subsection{Características de Arquitecturas de Hardware Modernas}
 Cómo ya se mencionó en secciones anteriores los fabricantes de partes y piezas de computadoras están constantemente desarrollando importantes avances, de la mano con el desarrollo técnico de piezas que brinda mejores componentes de hardware cada día. La linea de desarrollo de infraestructura de hardware principal de los computadores no está excenta de dicha evolución. En secciones anteriores se presentó como las arquitecturas han evolucionado desde el primer esquema \emph{SMP} propuesto con la distribución \emph{FSB}, pasando luego por nuevas configuraciones como \emph{DIB} y \emph{DHSI}, entre otras. Sin embargo, el desarrollo ha sido constante y hoy las arquitecturas han degenerado en esquemas bastante más complejos en pos de aprovechar al máximo la capacidad de los procesadores en la línea del paralelísmo.
@@ -282,7 +302,7 @@ Para poder comprender mejor la tendencia de comportamiento en el experimento ent
 	\centering
 	\hspace*{\fill}
 	\subfigure[]{
-		\includegraphics[width=.45\textwidth]{imagenes/corrgram1.png}
+		\includegraphics[width=.45\textwidth]{imagenes/fcfm}
 		\label{fig:corrgram:a}
 	}\hfill
 	\subfigure[]{
@@ -313,9 +333,12 @@ La tercera hipótesis de investigación plantea como responsable del mal rendimi
 
 Una alternativa que se ha estudiado para solventar éste problema es la técnica de \emph{Processor Affinity} que consiste en la asociación de tareas o procesos en CPUs especificas, de manera de controlar la ubicación de memoria y zona real de ejecución del código en la máquina. En otras palabras, se remueve la utilidad del mismo scheduler del sistema operativo para coordinar la mejor operación en la asignación de los hilos de ejecución a las distintas CPU disponible, reemplazándolo por un criterio de diseño humano, construido concientes de la tarea que se desea realizar. Es una técnica muy ambiciosa en el sentido de que bien empleada puede proveer muy buenos resultados en el sistema \cite{paper:cacheaffinity}, sin embargo, es muy facil errar al interpretar el diseño de operación que se desea coordinar, llevando a una mala implementación en la asignación de recursos que termina degradando fuertemente el desempeño del sistema completo.
 
+\begin{defn}[ver AKA AUN NO SE] \textbf{Processor Affinity} Y una bonita defiición de la wea
+\end{defn}
+
 En ésta tercer estudio se plantea la utilización de la técnica de \emph{Processor Affinity} en pos de conseguir un mejor rendimiento del caso de estudio presentado, por medio de la reasignación de los hilos de ejecución entre los distintos cores lógicos del sistema. Para evaluar ello, se plantean distintos esquemas de asignación de recursos basados en distintos argumentos arquitecturales del escenario de prueba y se evalúan comparativamente los resultados.
 
-\subsection{Processor Affinity}
+
 \subsection{Esquemas de Distribución}
 Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoques de aprovechamiento del principio de localidad de memoria. En total se diseñaron 6 esquemas para evaluar combinaciones dinámicas de cores lógicos reconocidos por el sistema operativo en búsqueda de mejores rendimientos. Los esquemas se detallan a continuación:
 \begin{description}
@@ -329,7 +352,16 @@ Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoqu
 
 \subsection{Resultados Experimentales}
 
+Aka muestro los resultados de todos los experimentos
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.7]{imagenes/fcfm}
+	\caption{Resultados experimentales de los affinitys.}
+	\label{fig:resAffinity}
+\end{figure}
+
 \subsection{Análisis y Discusión de Resultados}
+Aka hablar de como es un fiasco la utilización de processor affinity, seguramente porque el scheduller del sistema es mucho más inteligente en la asociación de tareas y threads a los distintos cores. Además la versión con processor affinity es rigida en la localidad del proceso con respecto al procesador lo cual hace que al tener sobrecarga de memoria, los niveles de caché no cooperen con la tarea general, y no brinden beneficio a la prueba final.
 
 \subsection{Conclusiones}
 A raíz del estudio de distribución de carga se pueden rescatar varios aspectos interesantes:
