@@ -22,8 +22,8 @@ Tomando en consideración los requerimientos descritos en la sección anterior, 
 
 	\begin{figure}[!h]
 		\centering
-		\includegraphics[scale=.2]{imagenes/fcfm}
-		\caption{Diagrama esquemático de la operación de la solución propuesta (incluye los puntos conceptuales de interés).}
+		\includegraphics[scale=.55]{imagenes/udpredistributemoduleDiagram.png}
+		\caption{Diagrama esquemático de la operación de la solución propuesta.}
 		\label{fig:modeloUDPRedistribuyeModule}
 	\end{figure}
 
@@ -109,8 +109,8 @@ El framework provee una arquitectura de seguimiento de los distintos paquetes pa
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.5]{imagenes/netfilterArchitecture}
-	\caption{Esquema de la arquitectura de interrupción disponible para la intervención de paquetes provisto por el Netfilters Framework. REVISAR EN \url{http://amsekharkernel.blogspot.cl/2012/01/what-is-netfilter-in-linux.html} La asociacion con los momentos de cada wea va por \url{https://www.digitalocean.com/community/tutorials/a-deep-dive-into-iptables-and-netfilter-architecture} y finalmente, el mejor \url{https://danielmiessler.com/images/DM_NF.PNG}}
+	\includegraphics[scale=.65]{imagenes/netfilterArchitecture}
+	\caption{Esquema de la arquitectura de interrupción disponible para la intervención de paquetes provisto por el Netfilters Framework.}
 	\label{fig:netfilterArchitecture}
 \end{figure}
 
@@ -232,8 +232,8 @@ Gracias a su buen diseño, suplir el requerimiento anterior es sencillo con nues
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.2]{imagenes/fcfm}
-	\caption{Acá hablar de multiplexar un socket, un canal que permite mucha comunicacion usando multiples colores.}
+	\includegraphics[scale=.5]{imagenes/socketMultiplexed.png}
+	\caption{Capacidad de multiplexar un único puerto lógico del sistema, permitiendo comunicación diversa en una única interfaz de red.}
 	\label{fig:multiplexarPuerto}
 \end{figure}
 
@@ -243,7 +243,7 @@ Tan flexible es éste enfoque que permite soportar una diversidad de servicios (
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.2]{imagenes/fcfm}
-	\caption{Mostrar ejemplo de como multiplexar un puerto con varias aplicaciones.}
+	\includegraphics[scale=.6]{imagenes/udpredistributeapplications.png}
+	\caption{Ejemplo de como multiplexar un puerto con varias aplicaciones diferentes. Es el módulo el encargado de la resolución de la entrega de paquetes según sus características internas.}
 	\label{fig:multiplexarPuertoEjemplo}
 \end{figure}

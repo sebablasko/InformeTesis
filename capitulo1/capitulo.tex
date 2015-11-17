@@ -275,11 +275,10 @@ Los socket de Linux están definidos como una estructura en el núcleo del siste
 \item[Backlog\_queue] Cola de almacenamiento de paquetes usada para colectar paquetes recibidos cuando la \textbf{Recieve\_queue} está bloqueada (ocupada).
 \end{description}
 
-
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=0.25]{imagenes/fcfm}
-	\caption{Diagrama de la estructura interna de un Internet socket de Linux.}
+	\includegraphics[scale=0.6]{imagenes/socketStructsDependecy.png}
+	\caption{Diagrama de dependencias de la estructura interna de un Internet socket de Linux.}
 	\label{fig:socketAnathomy}
 \end{figure}
 
@@ -287,7 +286,7 @@ En términos de sus protecciones, los Internet sockets emplean spinlocks como he
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=0.25]{imagenes/fcfm}
+	\includegraphics[scale=0.6]{imagenes/spinlocksSocket.png}
 	\caption{Diagrama de niveles de protección presentes en un Internet socket de Linux.}
 	\label{fig:socketAnathomy2}
 \end{figure}
