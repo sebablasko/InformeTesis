@@ -349,12 +349,12 @@ El comportamiento no escalable al usar threads es una característica que podrí
 \begin{description}
 \item[Laptop Quad Core] Laptop doméstico. Equipado con una CPU Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz con tecnología \emph{hyperthreading} de Intel(R) y 6 GB de memoria. Un esquemático del sistema disponible en la figura \ref{fig:pc2}.
 \item[PC Dual Socket] Computador de escritorio. Equipado con dos CPU Intel(R) Xeon(TM) CPU @ 2.80GHz, cada uno con tecnología \emph{hyperthreading} de Intel(R) y 2 GB de memoria interna. Imágen ilustrativa disponible en la figura \ref{fig:pc3}.
-\item[Servidor 24 Core] Equipo servidor multiprocesador. Equipado con dos CPU Intel(R) Xeon(R) CPU X5660 @ 2.80GHz, cada uno con tecnología \emph{hyperthreading} de Intel(R) y 24 GB de memoria, distribuidos en dos nodos NUMA de procesamiento, organizado en base a la \emph{Intel QuickPath Architecture}. Diagrama del sistema en imagen \ref{fig:pc1}.
+\item[Servidor 24 Cores] Equipo servidor multiprocesador. Equipado con dos CPU Intel(R) Xeon(R) CPU X5660 @ 2.80GHz, cada uno con tecnología \emph{hyperthreading} de Intel(R) y 24 GB de memoria, distribuidos en dos nodos NUMA de procesamiento, organizado en base a la \emph{Intel QuickPath Architecture}. Diagrama del sistema en imagen \ref{fig:pc1}.
 \end{description}
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[scale=0.3]{imagenes/fcfm}
+	\includegraphics[scale=0.5]{resultados/transferenciaUDP1-crop.pdf}
 	\caption{Grafico comparativo del rendimiento de prueba UDP entre distintas arquitecturas de hardware. Los valores mostrados son representativos de 60 repeticiones de la prueba de transferencia UDP.}
 	\label{fig:tests_arch}
 \end{figure}
@@ -384,7 +384,15 @@ De los resultados experimentales de la figura \ref{fig:tests_arch} se pueden res
 \item El primero, que el efecto de consumo concurrente es distinto entre los 3 escenarios estudiados, dejando en evidencia que las diferentes configuraciones de hardware en cada caso entregan diferente desempeño a la hora de aprovechar ejecuciones paralelas y de enfrentar escenarios de concurrencia.
 \item El segundo, que el caso de mayor interés, ilustrado en la arquitectura del servidor multiprocesador presenta una situación de baja de desempeño a medida que se congestiona (o satura) más fuertemente el consumo de la interfaz de red, representada por el socket UDP. La tendencia es similar a la reportada por estudios anteriores que cuestionan la aplicabilidad de técnicas de paralelísmo en éste tipo de arquitecturas por no demostrar un mejor desempeño evidente \cite{post:facebook, paper:toshiba, tesis:diegoDCC}.
 \end{itemize}
-Las primeras conclusioones preliminares del estudio, apoyan la idea de continuar indagando la operación del caso de estudio en la arquitectura del servidor multiprocesador, que viene siendo el escenario típico para la operación DNS, que es el caso que nos inspira en ésta investigación.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.5]{resultados/transferenciaUDP2-crop.pdf}
+	\caption{ZOOM.}
+	\label{fig:tests_arch}
+\end{figure}
+
+Las conclusiones preliminares del estudio, apoyan la idea de continuar indagando la operación del caso de estudio en la arquitectura del servidor multiprocesador, que viene siendo el escenario típico para la operación DNS, que es el caso que nos inspira en ésta investigación.
 
 \subsubsection{Validación en Distintas Versiones de Kernel de Linux}
 
@@ -422,11 +430,11 @@ Para la evaluación, se instalaron las versiones destacadas de la linea de tiemp
 	\centering
 	\hspace*{\fill}
 	\subfigure[]{
-		\includegraphics[width=.47\textwidth]{resultados/kernel1}
+		\includegraphics[width=.47\textwidth]{resultados/kernel1-crop.pdf}
 		\label{fig:tests_kernel1}
 	}\hfill
 	\subfigure[]{
-		\includegraphics[width=.47\textwidth]{resultados/kernel2}
+		\includegraphics[width=.47\textwidth]{resultados/kernel2-crop.pdf}
 		\label{fig:tests_kernel2}
 	}
 	\caption{Graficos comparativos del rendimiento de prueba UDP entre distintas versiones del Kernel. Los valores mostrados son representativos de 60 repeticiones de la prueba de transferencia UDP.}

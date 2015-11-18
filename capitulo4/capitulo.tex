@@ -209,7 +209,47 @@ Todo.... probar en un script la cantidad de paquetes perdidos en una conexión p
 
 \section{Rendimiento de la solución en la práctica}
 
-\section{Comparación de la solución con ReusePort}
+acá mostrar como opera en la práctica, mostrar el caso de cada esquema de distribución. y hablar de tiempos maximos y minimos.
+
+\begin{figure}[h!]
+	\centering
+	\hspace*{\fill}
+	\subfigure[]{
+		\includegraphics[width=.47\textwidth]{resultados/modulomin-crop.pdf}
+		\label{fig:mimodulomin}
+	}\hfill
+	\subfigure[]{
+		\includegraphics[width=.47\textwidth]{resultados/modulomax-crop.pdf}
+		\label{fig:mimoduloneto}
+	}
+	\caption{Gráfico con tiempos de consumo del módulo solución \textbf{UDPRedistributeModule} para el nuevo caso de estudio.}
+	\label{fig:resultadoMiModuloMinMax}
+	\hspace*{\fill}
+\end{figure}
+
+\section{Comparación de rendimiento de la solución}
+
+Primero se menciona que se compara en distintos entornos com threads y reuseport. se revisan los tiempos netos.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.6]{resultados/modulovstodos1-crop.pdf}
+	\caption{Comparación de tiempos netos de consumo para el nuevo caso de estudio de todas las opciones de consumo estudiadas.}
+	\label{fig:resultadoMiModulovsTodos}
+\end{figure}
+
+Luego hablar de la varaicion entre los tiempos mínimos, mostrar una ecuacion que explique como se calculará la variacion entre tiempos con respecto al tiempo total, y darle con el grafico. Se define a dicho valor el tiempo delta.
+
+\begin{equation}
+Tiempo Delta = \frac{\left(Tº Neto - Tº Mínimo\right)}{Tº Neto} * 100
+\end{equation}
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.6]{resultados/tiempodelta-crop.pdf}
+	\caption{Comparativa de tiempos .}
+	\label{fig:tiemposdelta}
+\end{figure}
 
 \section{Aciertos de la solución}
 
