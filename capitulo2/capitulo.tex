@@ -243,15 +243,15 @@ Siguiendo el caso de prueba evaluado a lo largo de la investigación, se inspecc
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.7]{imagenes/arch24Cores.png}
-	\caption{Esquema de arquitectura interna del esquipo servidor multicore sobre el que se realizan las pruebas de performance counters.}
+	\caption{Esquema de arquitectura interna del esquipo servidor multicore sobre el que se realizan las pruebas de \emph{performance counters}.}
 	\label{fig:hwspecs}
 \end{figure}
 
-Al inspeccionar el sistema donde se evalúan las pruebas en detalle, se da cuenta de que para el modelo de procesador presente se dispone de 5 unidades de PMU disponibles, separables en 3 grupos (Ver código \ref{code:pmuavailable}):
+Para inspeccionar el sistema donde se evalúan las pruebas en detalle en busca de componentes de monitoreo disponibles se utilizó la utilidad \emph{libpfm4}\footnote{\url{http://www.bnikolic.co.uk/blog/hpc-prof-events.html}} que corresponde a una herramienta confeccionada para recuperar información sobre los códigos de inspección de eventos de performance counters de un sistema y de las PMU disponibles en el mismo. De ello, se da cuenta de que para el modelo de procesador presente se dispone de 5 unidades de PMU disponibles, separables en 3 grupos (Ver código \ref{code:pmuavailable}):
 \begin{description}
-\item[PMU Genéricas] Incluyen a \verb=perf= y  \verb=perf_raw=. Disponen de las especificaciones estándar de perfomrance counters de la línea del software \emph{Perf}, lo cual las hace poco exactas en los valores descritos por cada evento y no necesariamente fieles a su descripción pues dependen en gran parte de que el fabricante sea riguroso en su implementación.
-\item[PMU x86] PMU generacional de Intel para la línea x86 de Intel que incluye a \verb=ix86arch=. Dispone de eventos comunes a dicha linea de procesadores por lo que no da soporte especifico para la arquitectura \emph{quickPath} y del comportamiento multiprocesador.
-\item[PMU westmere] PMU especificas de la línea Westmere [AKA UNA CITA] que soporta la base del desarrollo de la \emph{Intel QuickPath Architecture}, incluyendo a \verb=wsm_dp= y \verb=wsm_unc=. Es el nivel más exacto de PMU que provee el fabricante con los eventos más especificos y documentados del sistema.
+\item[PMU Genéricas] Incluyen a \verb=perf= y  \verb=perf_raw=. Disponen de las especificaciones estándar de \emph{performance counters} de la línea del software \emph{Perf}, lo cual las hace poco exactas en los valores descritos por cada evento y no necesariamente fieles a su especificación pues dependen en gran parte de que el fabricante sea riguroso en su implementación.
+\item[PMU x86] PMU generacional de Intel para la línea x86 de Intel que incluye a \verb=ix86arch=. Dispone de eventos comunes a dicha línea de procesadores por lo que no da soporte específico para la arquitectura \emph{QuickPath} ni del funcionamiento multiprocesador.
+\item[PMU westmere] PMU específicas de la línea Westmere [AKA UNA CITA] que soporta la base del desarrollo de la \emph{Intel QuickPath Architecture}, incluyendo a \verb=wsm_dp= y \verb=wsm_unc=. Es el nivel más exacto de PMU que provee el fabricante con los eventos más especificos y documentados del sistema, por lo que es la PMU más importante a la hora de colectar eventos.
 \end{description}
 
 \begin{lstlisting}[style=BashInputStyle, label={code:pmuavailable}, caption={Listado de \emph{PMUs} disponibles en el sistema, recuperado con la herramienta \emph{libpfm4}.}, captionpos=b]
@@ -264,7 +264,7 @@ Al inspeccionar el sistema donde se evalúan las pruebas en detalle, se da cuent
 \end{lstlisting}
 
 \subsubsection{Metodología de captura de eventos}
-Para la especificación de la captura de eventos, lo primero es prestar especial atención a la arquitectura interna en la comunicación interprocesador del sistema. En la figura \ref{fig:hwcomm} se da cuenta de los canales de comunicación que dispone el sistema estudiado.
+Para la especificación de la captura de eventos, lo primero es prestar especial atención a la arquitectura interna en la comunicación interprocesador del sistema. En la figura \ref{fig:hwcomm} se da cuenta de los canales de comunicación que dispone el sistema estudiado, haciendo un acercamiento a cada unidad lógica de procesamiento, núcleo de cada nodo NUMA.
 
 \begin{figure}[!h]
 	\centering
@@ -273,7 +273,7 @@ Para la especificación de la captura de eventos, lo primero es prestar especial
 	\label{fig:hwcomm}
 \end{figure}
 
-La figura \ref{fig:hwcomm} da cuenta de los puntos en que se pueden suceder escenarios de congestión dados ya sea por un alto nivel de uso de los protocolos de coordinación de memoria o por un alto tráfico de comunicación entre CPUs. Dichos canales de comunicación podemos resumirlos en las siguientes funciones dedicadas de la arquitectura estudiada, que a su vez están asociadas a ciertos Performance Counters del sistema:
+La figura \ref{fig:hwcomm} da cuenta de los distintos puntos en que se pueden suceder escenarios de congestión dados ya sea por un alto nivel de uso de los protocolos de coordinación de memoria o por un alto tráfico de comunicación entre CPUs. Dichos canales de comunicación podemos resumirlos en las siguientes funciones dedicadas de la arquitectura estudiada, que a su vez están asociadas a ciertos \emph{performance counters} del sistema:
 
 \begin{itemize}
 \item Uso de los canales \emph{Intel QuickPath QPI}
@@ -282,8 +282,7 @@ La figura \ref{fig:hwcomm} da cuenta de los puntos en que se pueden suceder esce
 \item Transiciones del protocolo \emph{MESI(F)}
 \end{itemize}
 
-
-Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bigbigevents} en búsqueda de documentación acerca de eventos disponible en el sistema que se relacionaran a las operaciones antes descritas. De dicha documentación, combinado con la utilidad \emph{libpfm4}\footnote{Corresponde a una utilidad confeccionada para recuperar información sobre los código de inspección de eventos de performance counters de un sistema.}\footnote{\url{http://www.bnikolic.co.uk/blog/hpc-prof-events.html}} para la recolección de eventos disponibles en el sistema se colectaron un total de 143 eventos, cada uno con hasta 6 variantes de configuración, dando en total casi 500 posibles eventos a estudiar. En este escenario es preciso acotar los eventos a considerar de acuerdo a los 4 criterios antes descritos.
+Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bigbigevents} en búsqueda de documentación acerca de eventos disponible en el sistema que se relacionaran a las operaciones antes descritas. De dicha documentación, combinado con la utilidad \emph{libpfm4} para la recolección de eventos disponibles se confeccionó la utilidad \emph{libpfm4PerformanceEventParser}\footnote{\url{https://github.com/sebablasko/libpfm4PerformanceEventParser}} capaz de generar reportes de eventos soportados por todo el sistema a estudiar. En éste caso, se colectaron un total de 143 eventos cada uno con hasta 6 variantes de configuración, dando en total casi 500 posibles eventos a estudiar. En este escenario es preciso acotar los eventos a considerar, de acuerdo a los 4 criterios antes descritos.
 
 
 [[[Hablar un poco de dicha busqueda y del manual]]]]
