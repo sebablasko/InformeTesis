@@ -67,11 +67,35 @@ El provecho que se puede sacar de ésta herramienta es usar su capacidad para cu
 
 \subsection{Metodología de Experimentación}
 
+Dado que la naturaleza de éste estudio se relaciona con el comportamiento de funciones del sistema que administran las primitivas de acceso y sincronización del Interet socket, se realizarán las configuraciones pertinentes para cada herramienta a fin de contemplar dichos puntos de análisis. En el caso de Perf, la recolección de datos clásica se realizará con la herramienta \verb=perf-record=, y se realiza un post-procesamiento sobre el archivo de reporte generado, para colectar los datos estadísticos asociados a las distintas funciones de manejo de spinlock antes mencionadas\footnote{Correspondiente a la ejecución del proyecto \url{https://github.com/sebablasko/Test_MultiThreadStressTransmision} con privilegios de administrador.}.
+
+Por otro lado, para el estudio con FTrace la configuración resulta un poco más compleja. Dado que es una herramienta de traceo que opera inspeccionando las llamadas de funciones de sistema, la activación de FTrace sobrecarga el funcionamiento del sistema general. Por ello, FTrace se debe activar y desactivar manualmente para analizar sólo los instantes de operación de la prueba de interés. Además, dado el amplio espectro de funciones disponibles para inspeccionar con el framework, deben emplear las funciones de filtrado de funciones a tracear que provee el mismo framework. En pos de capturar funciones en línea con la diniámica del spinlock del Internet socket, se configuró FTrace para capturar estadísticas de todas aquellas funciones definidas anteriormente.
+
+\begin{lstlisting}[style=BashInputStyle, label={code:ftrace}, caption={Configuración de filtros de FTrace sobre funciones a estudiar.}, captionpos=b]
+[sebastian@labs-vhost ~]$ echo *spin* > /sys/kernel/debug/tracing/set_ftrace_filter 
+[sebastian@labs-vhost ~]$ cat /sys/kernel/debug/tracing/set_ftrace_filter 
+mutex_spin_on_owner
+spin_msec
+_spin_trylock
+_spin_lock_irqsave
+_spin_lock_irq
+_spin_lock
+_spin_unlock_irqrestore
+_spin_lock_bh
+_spin_trylock_bh
+_spin_unlock_bh
+bit_spin_lock
+kvm_vcpu_on_spin
+\end{lstlisting}
+
+Por otra parte, el encendido y apagado del framework mismo se configuró como parte del programa de prueba\footnote{\url{https://github.com/sebablasko/Test_UDPTrace/}}. En el mismo se configuró la opción \verb=set_ftrace_pid= para explicitar la inspección de FTrace sólo para el script de prueba, además del uso de la utilidad \verb=trace_marker= para instrumentar porciones de código de la prueba (como creación de threads, y término de consumo de datos) que permitiese una mayor facilidad al momento de estudiar los logs de ejecución recuperados.
+
 \subsection{Resultados}
 Nos topamos con que las tendencias de tiempos son similares a las de los tiempos de esas llamadas, luego, hay una correlacion de esta estructura inhenrente al socket es la que causa el cuello de botella: indicio, el socket entero está siendo contenido por el spinlock de su estructura.
 
 \subsubsection{Perf}
 Gráfico de resultados de perf
+
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.5]{imagenes/fcfm}
@@ -84,17 +108,44 @@ Para reconocer mejor la dinámica de consumo de tiempos en las funciones inspecc
 	\centering
 	\includegraphics[scale=.5]{imagenes/fcfm}
 	\caption{Visualización de call-graph identificando las llamadas a sistema y sus pesos en el caso de prueba.}
-	\label{fig:rescallGraph}
+	\label{fig:detalleFtrace}
 \end{figure}
 
 \subsubsection{FTrace}
 Gráfico de resultados de FTrace
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.5]{imagenes/fcfm}
-	\caption{Resultados experimentales de los tiempos de ejecución de las llamadas a sistema recolectadas por \emph{FTrace} para la adquisición del lock.}
-	\label{fig:resFtrace}
+	\includegraphics[scale=.5]{resultados/detalleFtrace-crop.pdf}
+	\caption{Resultados experimentales de los tiempos de ejecución de las llamadas a sistema recolectadas por \emph{FTrace} para la adquisición y liberación del lock.}
+	\label{fig:}
 \end{figure}
+
+Ahora hablar de los tiempos totales de bloqueo
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.5]{resultados/sumaFtrace-crop.pdf}
+	\caption{Tiempos totales de bloqueo sobre el lock por las distintas llamadas de sistema capturadas por \emph{Ftrace} en el caso de estudio juntos con una curva de aproximación de tendencia.}
+	\label{fig:sumaFtrace}
+\end{figure}
+
+Finalmente, si se revisan las tendencias separando las distintas operaciones de bloqueo y liberación del lock
+\begin{figure}[h!]
+	\centering
+	\hspace*{\fill}
+	\subfigure[Funciones de Bloqueo]{
+		\includegraphics[width=.47\textwidth]{resultados/bloqueantesftrace-crop.pdf}
+		\label{fig:ftracebloquea}
+	}\hfill
+	\subfigure[Funciones de Liberación]{
+		\includegraphics[width=.47\textwidth]{resultados/liberadorasFtrace-crop.pdf}
+		\label{fig:ftracelibera}
+	}
+	\caption{Graficos con tendencias de tiempos del lock capturados con \emph{Ftrace} a lo largo del caso de estudio.}
+	\label{fig:Ftracebloquealibera}
+	\hspace*{\fill}
+\end{figure}
+
+
 
 \subsection{Análisis y Discusión de Resultados}
 Aka un análisis general de los resultados en términis de gráficos obtenidos
