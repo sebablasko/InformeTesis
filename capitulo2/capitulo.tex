@@ -282,12 +282,12 @@ La figura \ref{fig:hwcomm} da cuenta de los distintos puntos en que se pueden su
 \item Transiciones del protocolo \emph{MESI(F)}
 \end{itemize}
 
-Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bigbigevents} en búsqueda de documentación acerca de eventos disponible en el sistema que se relacionaran a las operaciones antes descritas. De dicha documentación, combinado con la utilidad \emph{libpfm4} para la recolección de eventos disponibles se confeccionó la utilidad \emph{libpfm4PerformanceEventParser}\footnote{\url{https://github.com/sebablasko/libpfm4PerformanceEventParser}} capaz de generar reportes de eventos soportados por todo el sistema a estudiar. En éste caso, se colectaron un total de 143 eventos cada uno con hasta 6 variantes de configuración, dando en total casi 500 posibles eventos a estudiar. En este escenario es preciso acotar los eventos a considerar, de acuerdo a los 4 criterios antes descritos.
+Con ello en mente, se consultó el manual oficial del fabricante \cite{manual:bigbigevents} en búsqueda de documentación acerca de eventos disponible en el sistema que se relacionaran a las operaciones antes descritas. De dicha documentación, combinado con la utilidad \emph{libpfm4} para la recolección de eventos disponibles se colectaron un total de 143 eventos cada uno con hasta 6 variantes de configuración, dando en total casi 500 posibles eventos a estudiar. En este escenario es preciso acotar los eventos a considerar, de acuerdo a los 4 criterios antes descritos.
 
 
 [[[Hablar un poco de dicha busqueda y del manual]]]]
 
-Finalmente, siguiendo los 4 criterios de puntos problemáticos a estudiar se construyó una selección de eventos a considerar resumida en la tabla \ref{table:eventos}. Los eventos están divididos en dos grupos: \textbf{QPI/GQ/Cache} para eventos relacionados con movimiento o traslación de datos entre distintas estructuras de hardware, y \textbf{LinkLayer} para eventos referidos a protocolos de consistencia y sincronización que son pertinenetes a la capa de corrección en el esquema de capas del \emph{Quickpath}.
+Finalmente, siguiendo los 4 criterios de puntos problemáticos a estudiar se construyó una selección de eventos a considerar resumida en la tabla \ref{table:eventos}. Los eventos están divididos en dos grupos: \textbf{QPI/GQ/Cache} para eventos relacionados con movimiento o traslación de datos entre distintas unidades de hardware, y \textbf{LinkLayer} para eventos referidos a protocolos de consistencia y sincronización que son pertinentes a la capa de corrección en el esquema de capas del \emph{Quickpath}.
 
 \begin{table}[h!]
 \centering
@@ -307,15 +307,16 @@ Finalmente, siguiendo los 4 criterios de puntos problemáticos a estudiar se con
 \label{table:eventos}
 \end{table}
 
-Con los eventos a colectar más claros, se confeccionó una utilidad para la obtención de los códigos de registros de cada evento de interés. Utilidad que operando en conjunto con \emph{libpfm4} es capaz de parsear datos del sistema para generar una colección de eventos (ver Tabla \ref{table:codigoseventos}) en formato \verb=JSON=\footnote{\url{https://github.com/sebablasko/libpfm4PerformanceEventParser}}. según los cuales se debería tener una correcta representación del nivel de saturación y uso de los componentes.
+Con los eventos a colectar más claros, el siguiente paso consiste en conseguir los códigos de registro para la adquisición de cada evento. Un código de registro sigue una nomenclatura dada por el fabricante de la PMU y no guarda relación semántica con el valor que reporta, pero es la única referencia para indicar al software de recolección de datos el evento de interés a estudiar. Para ello, se confeccionó la herramienta \emph{libpfm4PerformanceEventParser}\footnote{\url{https://github.com/sebablasko/libpfm4PerformanceEventParser}} para la obtención de los códigos de registros de cada evento de interés, la cual trabajando en conjunto con \emph{libpfm4} es capaz de parsear datos del sistema para generar una colección de códigos de registro asociados a eventos de hardware en formato \verb=JSON=, según los cuales se debería tener una correcta representación del nivel de saturación y uso de los componentes.
 
-Con el \verb=JSON= generado, se pueden hacer mediciones de forma sencilla usando la herramienta \verb=stat= de \emph{Perf} para generar un reporte de la cantidad de veces que se registre actividad en el evento estudiado, especificado en la misma herramienta.
+Con el \verb=JSON= generado, se pueden hacer mediciones de forma sencilla usando la herramienta \verb=stat= de \emph{Perf} para generar un reporte de la cantidad de veces que se registre actividad en el evento estudiado, especificado en la misma herramienta. En primera instancia, los eventos sobre los que se prestan especial atención son los relacionados a los criterios de selección antes explícitos, agrupados en la tabla \ref{table:eventos}, y cuya traducción a códigos de registro viene dada por la tabla \ref{table:codigoseventos}.
+
 
 \begin{lstlisting}[style=BashInputStyle, breaklines=true, captionpos=b, caption={Ejemplo de uso de Perf para colectar datos de una colección de eventos sobre un script llamado programa. En éste caso se configura para colectar datos de 2 eventos y dejar el reporte de salida en un archivo resultado.txt}]
 	# perf stat -e r53003c,r5300c0 -o resultado.txt -- ./programa
 \end{lstlisting}
 
-Finalmente, de los output de Perf, se pueden estudiar los resultados finales de la comunicación efectiva generada a lo largo de la prueba.
+Finalmente, de los output de Perf se pueden estudiar los resultados finales de la comunicación efectiva generada a lo largo de la prueba.
 
 \begin{table}[]
 \centering
@@ -357,26 +358,28 @@ Nivel de Inspección                 & Registro & Descripción                  
 \label{table:codigoseventos}
 \end{table}
 
-Para poder comprender mejor las tendencias de comportamiento de los distintos eventos en cada instancia de prueba con una determinada configuración de threads, se evaluaron 3 escenarios de consumo para visualizar sus resultados\footnote{AKA URL AL REPO QUE TIENE ESTA PRUEBA DE PERFCOUNTERS}:
+\subsection{Metodología de Experimentación}
+Para poder comprender mejor las tendencias de comportamiento de los distintos eventos en cada instancia de prueba con una determinada configuración de threads, se confeccionó un experimento donde se evaluaron 3 escenarios de consumo para comparar sus resultados\footnote{\url{https://github.com/sebablasko/Test_PerformanceCounters}}:
+
 \begin{enumerate}
-\item Lectura concurrente desde un dispositivo virtual como \verb=dev_null=.
-\item Lectura exclusiva desde un socket UDP.
-\item Lectura concurrente desde un socket UDP.
+\item Lectura concurrente desde un dispositivo virtual como \verb=dev_null=. Para ilustrar el caso de menor sobrecarga al ser un dispositivo libre de barreras de bloqueo aún con acceso concurrente.
+\item Lectura exclusiva desde un socket UDP. En éste caso se consume la cuota definida en el caso de estudio por sockets con acceso exclusivo, distribuyendo la carga entre ellos con sólo 1 thread por socket. 
+\item Lectura concurrente desde un socket UDP. Precisamente el caso de estudio evaluado a lo largo de toda la investigación.
 \end{enumerate}
 
-De esta manera, se busca tener un punto de comparación de qué fenómeno se manifiesta en escenarios de lectura concurrente sobre un socket que no se manifiesta en otros escenarios.
+De esta manera, se busca tener un punto de comparación de qué fenómeno se manifiesta en escenarios de lectura concurrente sobre un socket, y que no se manifiesta en otros escenarios. Para la recolección de datos se optó por emplear nuevamente el software \emph{Perf} por su simple interfaz de manejo con la PMU del sistema. Al igual que en el caso de estudio original, se evalúan configuraciones de 1, 2, 4, 8, 16, 24, 36, 48, 64 y 128 threads, tras 60 repeticiones del proceso de captura para validez estadística. 
 
-\subsection{Metodología de Experimentación}
-Hablar de que se empleará el caso de estudiode la siguiente manera blablabla, haciendo enfasis en que la captura de eventos se hace a través del software perf y que se evalúan distintas configuraciones de threads, repitiendo el experimento una cantidad X de veces.
 \begin{equation}
 T_i = \left\{ T_{i,1},T_{i,2},T_{i,3}, \dots ,T_{i,59}, T_{i,60}\right\} 
 \end{equation}
 
-Finalmente, se construye con cada evento un set de registros que guardan un valor promedio para una evaluación de ciertos threads.
+Finalmente, se construye con cada evento un set de registros que guardan un valor promedio para una evaluación de una determinada cantidad de threads.
 
 \begin{equation}
-Event_j = \left(\overline{T_{1}}, \overline{T_{2}}, \overline{T_{4}}, \overline{T_{6}}, \overline{T_{8}}, \overline{T_{16}}, \overline{T_{24}}, \overline{T_{36}}, \overline{T_{48}}, \overline{T_{60}}\right)
+Evento_j = \left(\overline{T_{1}}, \overline{T_{2}}, \overline{T_{4}}, \overline{T_{6}}, \overline{T_{8}}, \overline{T_{16}}, \overline{T_{24}}, \overline{T_{36}}, \overline{T_{48}}, \overline{T_{60}}\right)
 \end{equation}
+
+De ésta manera, se pueden hacer análisis más simples sobre las variables aleatorias $Evento_j$ que permita una simple comparación entre cada una de los 3 escenarios de evaluación estipulados.
 
 \subsection{Resultados}
 AKA mostrar que se reconocen dos tendencias entre los grupos de eventos (sobre el caso de udp concurrente).
