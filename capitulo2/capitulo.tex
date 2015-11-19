@@ -406,12 +406,13 @@ En ésta tercer estudio se plantea la utilización de la técnica de \emph{Proce
 \subsection{Esquemas de Distribución}
 Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoques de aprovechamiento del principio de localidad de memoria. En total se diseñaron 6 esquemas para evaluar combinaciones dinámicas de cores lógicos reconocidos por el sistema operativo en búsqueda de mejores rendimientos. Los esquemas se detallan a continuación:
 \begin{description}
-\item[SO] Asignación dinámica por scheduller del sistema operativo. En éste caso, la elección la hace el sistema de acuerdo a complejos argumentos de prioridad de proceso, carga de cpu, etc. Sirve como punto base de comparación con respecto a los demás esquemas.
+\item[Sin Processor Affinity] Asignación dinámica por scheduller del sistema operativo. En éste caso, la elección la hace el sistema de acuerdo a complejos argumentos de prioridad de proceso, carga de cpu, etc. Sirve como punto base de comparación con respecto a los demás esquemas.
+\item[DummyAffinity] Asignación directa de hilos a ejecución en el core 0 del sistema. Todos los hilos se delegan al mismo core. Bajo éste esquema se presume que se puede aprovechar mejor la localidad de memoria al disponer en el banco de memoria más próximo al núclo de ejecución todas las referencias necesirias, disminuyendo el efecto de sobrecarga de los protocolos de coherencia y coordinación de cache.
 \item[EquitativeAffinity] Asignación secuencial equitativa entre los cores lógicos del sistema, siguiendo la numeración que el sistema operativo dispone de los núcleos mismos. Supone que la distribución completamente justa y equitativa entre cores entrega un mejor rendimiento general.
 \item[PairAffinity] Asignación secuencial de hilos a cores de numeración par. Búsca descartar explorar un escenario donde los cores duplicados por efecto de la tecnología \emph{hyperthreading} de Intel pudiera no aprovechar cores reales, y así generar un mejor desempeño final.
-\item[DummyAffinity] Asignación directa de hilos a ejecución en el core 0 del sistema. Todos los hilos se delegan al mismo core. Bajo éste esquema se presume que se puede aprovechar mejor la localidad de memoria al disponer en el banco de memoria más próximo al núclo de ejecución todas las referencias necesirias, disminuyendo el efecto de sobrecarga de los protocolos de coherencia y coordinación de cache.
-\item[NumaOddAffinity] Asignación de los hilos a cores del segundo conjunto NUMA disponible en el sistema. Sigue la idea de aprovechar toda una unidad lógica de procesamiento según la arquitectura \emph{Quickpath}, persiguiendo mejores tiempos al tener mejor acceso a memoria desde éstos cores.
-\item[NumaEvenAffinity] Asignación de los hilos a cores del primer conjunto NUMA disponible en el sistema. Similar al argumento de \textbf{NumaOddAffinity}, pero usando el otro nodo NUMA disponible.
+\item[ImpairAffinity] Asignación secuencial de hilos a cores de numeración impar. Similar al anterior variando los cores elegidos.
+\item[NumaPairAffinity] Asignación de los hilos a cores del segundo conjunto NUMA disponible en el sistema. Sigue la idea de aprovechar toda una unidad lógica de procesamiento según la arquitectura \emph{Quickpath}, persiguiendo mejores tiempos al tener mejor acceso a memoria desde éstos cores.
+\item[SimpleCoreAffinity] Asignación de los hilos a los primetos dos cores lógicos del sistema correspondientes al primer core real duplicado por efecto \emph{HyperThreading}.
 \end{description}
 
 \subsection{Metodología de Experimentación}
@@ -421,8 +422,8 @@ Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoqu
 Aka muestro los resultados de todos los experimentos
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.7]{imagenes/fcfm}
-	\caption{Resultados experimentales de los affinitys.}
+	\includegraphics[scale=.6]{resultados/processoraffinity-crop.pdf}
+	\caption{Resultados experimentales de los distintos esquemas de afinidad.}
 	\label{fig:resAffinity}
 \end{figure}
 
