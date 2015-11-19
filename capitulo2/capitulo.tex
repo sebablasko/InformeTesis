@@ -91,45 +91,60 @@ kvm_vcpu_on_spin
 
 Por otra parte, el encendido y apagado del framework mismo se configuró como parte del script de experimentación en el programa de la prueba\footnote{\url{https://github.com/sebablasko/Test_UDPTrace/}}. En el mismo, se configuró la opción \verb=set_ftrace_pid= para explicitar la inspección de FTrace sólo sobre el programa de la prueba, además del uso de la utilidad \verb=trace_marker= para instrumentar porciones de código de la prueba (como creación de threads, y término de consumo de datos) que permitiese una mayor facilidad al momento de estudiar los logs de ejecución recuperados.
 
+
 \subsection{Resultados}
-Nos topamos con que las tendencias de tiempos son similares a las de los tiempos de esas llamadas, luego, hay una correlacion de esta estructura inhenrente al socket es la que causa el cuello de botella: indicio, el socket entero está siendo contenido por el spinlock de su estructura.
+A continuación se ilustran los resultados experimentales obtenidos correspondientes a los datos colectados por Perf y FTrace. A modo de validación estadística, los resultados de las pruebas contemplan el promedio de un rango de 60 repeticiones en cada configuración dada por el caso de estudio.
 
 \subsubsection{Perf}
-Gráfico de resultados de perf
-
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.5]{resultados/perfdetalle-crop.pdf}
+	\includegraphics[scale=.6]{resultados/perfdetalle-crop.pdf}
 	\caption{Resultados experimentales de los porcentajes de ejecución de las llamadas a sistema recolectadas por \emph{Perf}.}
 	\label{fig:resPerf}
 \end{figure}
 
-Para reconocer mejor la dinámica de consumo de tiempos en las funciones inspeccionadas en el caso de estudio, se usaron los reportes generados por Perf para construir un nuevo tipo de visualización de llamadas a sistema: Un \emph{Call-Graph-Chart} (Ver imagen \ref{fig:rescallGraph}), de manera de poder reconocer los bloques de funciones más repetidos en la ejecución del caso de prueba. Para ésta visualziación se aporvechó el script \emph{gprof2dot}\footnote{\url{https://github.com/jrfonseca/gprof2dot}}.
+\subsubsection{FTrace}
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.6]{resultados/detalleFtrace-crop.pdf}
+	\caption{Resultados experimentales de los tiempos de ejecución de las llamadas a sistema recolectadas por \emph{FTrace} para la adquisición y liberación del \emph{lock}.}
+	\label{fig:detalleftrace}
+\end{figure}
+
+
+\subsection{Análisis y Discusión de Resultados}
+A primera vista, los resultados corroboran una tendencia creciente de las operaciones (tanto en porcentaje como en tiempo neto de ejecución) de las operaciones de bloqueo sobre spinlock en las pruebas desarrolladas.
+
+En el caso de los resultados de la prueba de Perf disponibles en la imagen \ref{fig:resPerf}, se puede apreciar un comportamiento dominante en el porcentaje de llamado de funciones de una de las funciones por sobre las demás: \textbf{_spin_lock_bh}, llamada que en condiciones de concurrencia puede aumentar su porcentaje de presencia en la ejecución desde un 22\% a casi un 35\%. Otro punto interesante es que, a medida a medida que el escenario se vuelve más competitivo para los threads, los porcentajes rescatados por ésta prueba para llamadas de bloqueo aumentan hasta aproximadamente los 4 threads, desde donde se estabiliza, manteniéndose sobre el 40\% sólo en éste apartado.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=.6]{imagenes/fcfm}
+	\caption{Gráfico de suma de porcentajes de llamadas de bloqueo del \emph{lock} de spinlock.}
+	\label{fig:sumaperf}
+\end{figure}
+
+Para reconocer mejor la dinámica de consumo de tiempos en las funciones inspeccionadas en el caso de estudio, se usaron los reportes generados por Perf para construir un nuevo tipo de visualización de llamadas a sistema: Un \emph{Call-Graph-Chart} (Ver imagen \ref{fig:rescallGraph}), de manera de poder reconocer los bloques de funciones más repetidos en la ejecución del caso de prueba. Para ésta visualización se aprovechó el script \emph{gprof2dot}\footnote{\url{https://github.com/jrfonseca/gprof2dot}}. En éste caso, resulta evidente cómo el grafo de llamadas de sistema se complejiza drásticamente al incorporar más threads, de la mano con el aumento en los porcentajes de permanencia en llamadas de sincronización.
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.5]{imagenes/fcfm}
 	\caption{Visualización de call-graph identificando las llamadas a sistema y sus pesos en el caso de prueba.}
 	\label{fig:detalleFtrace}
 \end{figure}
+Lo anterior postula una primera relación entre el número de threads en el acceso concurrente al socket con respecto al porcentaje y dinámica de llamados a funciones de bloqueo del spinlock. Sin embargo, los porcentajes de llamadas no son del todo relevantes si no se saben los tiempos efectivos que significan en la prueba. Para ello, se repasan los resultados de Ftrace.
 
-\subsubsection{FTrace}
-Gráfico de resultados de FTrace
-\begin{figure}[!h]
-	\centering
-	\includegraphics[scale=.5]{resultados/detalleFtrace-crop.pdf}
-	\caption{Resultados experimentales de los tiempos de ejecución de las llamadas a sistema recolectadas por \emph{FTrace} para la adquisición y liberación del lock.}
-	\label{fig:}
-\end{figure}
+Los resultados generales obtenidos con el estudio de FTrace disponibles en la figura \ref{fig: detalleftrace} dan cuenta de un fenómeno aún más interesante. Al igual que con los datos colectados con Perf, se ilustra una estrecha relación entre los tiempos de operación de las funciones relacionadas a spinlock a medida que se van incorporando threads, sin embargo, en éste caso, la tendencia resulta siempre creciente, plasmando cómo a medida que se van usando más threads, el sistema operativo pasa más tiempo en tareas de coordinación en su acceso.
 
-Ahora hablar de los tiempos totales de bloqueo
+Por otro lado, al realizar una colección de datos con FTrace a modo de recuperar el total de tiempo que se pasa en operaciones de tipo de bloqueo de spinlock se obtiene el resultado ilustrado en la imagen \ref{fig: sumaFtrace}. Una característica interesante de éste resultado es que, la tendencia de tiempos producida tiene un ajuste de naturaleza logarítmica, con un índice de determinación superior al 96\%. Éste resultado es muy significativo, pues revela que los tiempos reales de acción de las funciones de bloqueo de spinlock siguen una tendencia de la misma naturaleza a los tiempos netos de operación del caso de estudio, estipulando una relación estrecha entre ambos y postulando como principal responsable de los tiempos finales a las funciones de coordinación en el acceso al spinlock.
+
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.5]{resultados/sumaFtrace-crop.pdf}
-	\caption{Tiempos totales de bloqueo sobre el lock por las distintas llamadas de sistema capturadas por \emph{Ftrace} en el caso de estudio juntos con una curva de aproximación de tendencia.}
+	\caption{Tiempos totales de bloqueo sobre el \emph{lock} por las distintas llamadas de sistema capturadas por \emph{Ftrace} en el caso de estudio juntos con una curva de aproximación de tendencia.}
 	\label{fig:sumaFtrace}
 \end{figure}
+Más aún, si se repasan las tendencias de cada una de las principales llamadas de bloqueo y de liberación de spinlock (ver figura \ref{fig: Ftracebloquealibera}) se puede ver como las tendencias de naturaleza logarítmica prevalecen al aumentar el número de threads en el consumo de datos. Sin perjuicio de lo anterior, otro dato interesante es que las operaciones de liberación (Fig. \ref{fig: ftracelibera}) son muchísimo más cortas que las de bloqueo (Fig. \ref{fig: ftracebloquea }) revelando el escenario de competencia al que se ve enfrentado el spinlock ante la concurrencia en el acceso.
 
-Finalmente, si se revisan las tendencias separando las distintas operaciones de bloqueo y liberación del lock
 \begin{figure}[h!]
 	\centering
 	\hspace*{\fill}
@@ -146,13 +161,8 @@ Finalmente, si se revisan las tendencias separando las distintas operaciones de 
 	\hspace*{\fill}
 \end{figure}
 
-
-
-\subsection{Análisis y Discusión de Resultados}
-Aka un análisis general de los resultados en términis de gráficos obtenidos
-
 \subsubsection{TraceDisplay}
-Para poder obtener una interpretación adicional del fenómeno reconocido, se construyó una herramienta de visualziación de las llamadas a sistema para funciones de sincronización que permitiese reconocer las porciones de tiempo que tomasen en cada procesador dichas funciones. Para ello, la herramienta denominada \emph{TraceDisplay} recibe un log generado con \emph{FTrace} que incluya las llamadas de sistema yá filtradas, y construye un mapa de tiempo coloreado donde se pueden apreciar las porciones de tiempo que consume cada llamada y desde cual CPU se originan. El resultado se puede apreciar en la imagen \ref{fig:traceDisplay} donde se ilustra el caso de analizar [[AKA FALTA EXPLICAR EL CASO EVALUADO]].
+Para poder obtener una interpretación adicional del fenómeno reconocido, se construyó una herramienta de visualización de las llamadas a sistema para funciones de sincronización que permitiese reconocer las porciones de tiempo que tomasen en cada procesador dichas funciones. Para ello, la herramienta denominada \emph{TraceDisplay} recibe un log generado con \emph{FTrace} que incluya las llamadas de sistema ya filtradas, y construye un mapa de tiempo coloreado donde se pueden apreciar las porciones de tiempo que consume cada llamada y desde cual CPU se originan. El resultado se puede apreciar en la imagen \ref{fig:traceDisplay} donde se ilustra el caso de analizar los logs generados por FTrace en un escenario de acceso de 4 threads en el caso de estudio.
 
 Éste subproducto de la investigación principal junto con su documentación de uso está publicado\footnote{Disponible en \url{https://github.com/sebablasko/TraceDisplay}} y disponible para su uso.
 
@@ -163,16 +173,19 @@ Para poder obtener una interpretación adicional del fenómeno reconocido, se co
 	\label{fig:traceDisplay}
 \end{figure}
 
-Resultados como el mostrado en la figura \ref{fig:traceDisplay} ilustran como, en la práctica, las operaciones de bloqueo se terminan ejecutando serializadamente, aún cuando son distintos los CPU que los originen. Esto producto de que es una misma estructura la que se está compartiendo y así, se puede deducir un sobrecosto producido por dicha serialziación en el acceso.
+Resultados como el mostrado en la figura \ref{fig:traceDisplay} ilustran como en la práctica, las operaciones de bloqueo se terminan ejecutando secuencialmente, aun cuando son distintos los CPU que los originen. Esto producto de que es una misma estructura la que se está compartiendo la cual no tiene un soporte adecuado para permitir modificaciones concurrentes de orígenes distintos, generando así un sobrecosto producido por dicha serialización en el acceso.
+
 
 \subsection{Conclusiones}
 A raíz del estudio de operación de primitivas de sincronización del sistema se pueden rescatar varios aspectos interesantes:
 \begin{itemize}
-\item La tendencia en los costos de tiempo son crecientes a medida que se agregan hilos que consumen el mismo socket. Ello tanto en porcentaje de llamadas de sistema, como también en tiempos netos en esas llamdas.
-\item Se identifican distintas estructuras bloqueantes para sincronización activas a lo largo del caso de estudio, sin embargo se destacan estructuras de tipo spinlock como las más reiteradas en el rastro de llamadas a sistema. Spinlock propio del mecanísmo de protección de la estructura socket accesada.
-\item Se destaca una tendencia de naturaleza logaritmica en el crecmimiento de tiempos que toman las llamadas bloqueantes sobre el spinlock del socket, ajustada con un coeficiente de determinación superior al 90\%.
+\item La tendencia en los costos de tiempo son crecientes a medida que se agregan hilos que consumen el mismo socket. Ello tanto en porcentaje de llamadas de sistema, como también en tiempos netos en dichas llamadas.
+\item Se destacan estructuras de tipo spinlock como las más reiteradas en el rastro de llamadas a sistema para la aplicación de mecanísmos de protección en el caso de estudio. En particular, la llamada a sistema \textbf{_spin_lock_bh} es la más significativa en la operación de los mecanismos de acceso y toma del \emph{lock} que protege al Internet socket.
+\item Se reconoce una significativa diferencia entre los tiempos y porcentajes de llamadas a sistema de tipo bloqueante por sobre los de tipo liberador del \emph{lock}, escenario que da cuenta de la situación de competencia que empeora a medida que se incluyen más threads en la prueba.
+\item Se destaca una tendencia de naturaleza logarítmica en el crecimiento de tiempos que toman las llamadas bloqueantes sobre el spinlock del socket, ajustada con un coeficiente de determinación superior al 96\% y que sigue la misma tendencia de los tiempos netos reconocidos en el caso de estudio.
 \end{itemize}
-A raíz de lo anterior, se reconoce en el spinlock de protección del socket como un punto de cuello de botella al momento de emplear accesos concurrentes a una estructura socket. Ello al actuar como un punto de bloqueo que termina serializando el acceso al consumo de datos y que, lejos de reducir los tiempos paralelizando el acceso, los aumenta al serialziarlos y deber coordinar los hilos para ello.
+A raíz de lo anterior, se reconoce en el spinlock de protección del socket como un punto de cuello de botella al momento de emplear accesos concurrentes a una estructura socket. Ello al actuar como un punto de bloqueo que termina serializando el acceso al consumo de datos y que, lejos de reducir los tiempos paralelizando el acceso, los aumenta, producto de la serialización y de la responsabilidad de coordinar los hilos, propios de éste escenario.
+
 
 \section{Estudio de Canales de Comunicación de Hardware}
 La segunda hipótesis para explicar la mala performance del caso de estudio presentado se centra en una componente de hardware más que de software. Cómo ya se mencionó, la capacidad multiprocesador de que se dispone en equipos modernos no es un recurso fácil de aprovechar, de hecho requiere una sofisticada operación y diseño tanto de las aplicaciones que solicitarán recursos, como del sistema operativo que ha de administrarlos. Como se repasó en secciones anteriores, la capacidad de paralelísmo viene dada gracias a un conjunto de protocolos y algoritmos de muy bajo nivel que coordinan y mantienen en estado coherente las distintas componentes de datos para los diferentes procesadores \cite{paper:MESI, paper:snoop}, sin embargo, por muy sofisticados que dichos mecanismos sean, las nuevas tecnologías de hardware que prometen velocidades de trasnferencia y acceso nunca antes imaginiadas podrían significar un problema para éstas componentes, sobrepasándolos de cierta forma.
