@@ -687,6 +687,9 @@ Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoqu
 \end{description}
 
 \subsection{Metodología de Experimentación}
+Para evaluar los distintos esquemas de afinidad ya postulados, se modificó el caso de estudio para incorporar la asociación de hilos de ejecución para con los distintos cores del sistema. Para ello se aprovechó la flexibilidad de la librería \emph{PThreads}, responsable de brindar los hilos de ejecución en nuestro caso, para usar ciertas llamadas a sistema que nos otorgasen el control de la localidad de ejecución buscada. En concreto, se empleó la función \verb=pthread_attr_setaffinity_np()= que permite especificar precisamente la asociación de un hilo para con el core de ejecución deseado. 
+
+La prueba anterior se recopiló en un nuevo experimento\footnote{\url{https://github.com/sebablasko/Test_DifferentAffinityThreadsBySocket}} que, para efectos de validez estadística, se ejecutó un total de 60 veces, y se rescataron los valores promedios de dichas ejecuciones.
 
 \subsection{Resultados}
 
@@ -698,13 +701,21 @@ Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoqu
 \end{figure}
 
 \subsection{Análisis y Discusión de Resultados}
-Aka hablar de como es un fiasco la utilización de processor affinity, seguramente porque el scheduller del sistema es mucho más inteligente en la asociación de tareas y threads a los distintos cores. Además la versión con processor affinity es rigida en la localidad del proceso con respecto al procesador lo cual hace que al tener sobrecarga de memoria, los niveles de caché no cooperen con la tarea general, y no brinden beneficio a la prueba final.
+Los resultados experimentales ilustrados en la imagen \ref{fig:resAffinity} son diversos y poco alentadores. En efecto, ningún esquema de distribución evaluado consiguió reducir verdaderamente el tiempo de ejecución al usar una configuración trivial de un único thread, sin embargo, los resultados obtenidos reflejan distintas tendencias en los tiempos resultantes del experimento.
+
+Una primera tendencia evidenciada en los resultados viene dado por los esquemas \textbf{DummyAffinity} y \textbf{SimpleCoreAffinity}, donde los tiempos se mantuvieron estables a lo largo de la evaluación de las distintas configuraciones de threads. Si recordamos, ambos esquemas son rígidos en la posibilidad de locación de los hilos en la CPU, el primero los asigna todos al core #0 mientras que el segundo los asigna todos entre el core #0 y el core #12, numeración que da el sistema operativo a los núcleos duplicados por efecto de la tecnología \emph{HyperThreading}. De ésta manera, ambos esquemas tienen en común que ejecutan la totalidad de los hilos en un mismo núcleo real de procesamiento. Ahora bien, ninguno de los dos consigue ganancias efectivas de tiempo con respecto al uso de un único thread, ello se explica pues, dado que los distintos hilos son asignados todos a un mismo core, la ejecución de los mismos termina degenrando a una ejecución secuencial, es decir, por medio de la afinidad de proceso hemos eliminado la capacidad de paralelismo al llevar el experimento a un escenario monocore. Esto explica también el por qué los tiempos son tan uniformes sin importar la cantidad de hilos que se usen.
+
+Una segunda tendencia reconocible es la ilustrada por el esquema \textbf{EquitativeAffinity}. Resultante como el de peor desempeño, éste esquema que se caracterizaba por la distribución justa de los hilos entre los cores registra siempre los peores tiempos de la prueba. Ésta tendencia se explica por la naturaleza de la arquitectura que se está usando. Como se mencionó antes, la distribución del sistema corresponde a dos nodos NUMA de procesamiento. La aplicación del esquema equitativo vulnera derechamente tanto los beneficios que provee el esquema NUMA como el principio mismo de localidad en acceso a la memoria, ello pues en la práctica, termina distribuyendo los distintos hilos en las componentes más alejadas (topológicamente) de la arquitectura disponible.
+
+Finalmente, una tercera tendencia es la de crecimiento producido por el conjunto de los demás esquemas de afinidad. La similitud entre \textbf{PairAffinity} e \textbf{ImpairAffinity} era previsible pues el modelo de distribución era equivalente para ambos. La misma naturaleza sigue el esquema \textbf{NumaPairAffinity} que, a pesar de aprovechar la distribución de componentes para la localización de hilos, no consiguió mejores tiempos que los ya representados. Ahora bien, hay que destacar que en términos prácticos, éste último grupo de esquemas de distribución tuvo un rendimiento muy similar al del mismísimo scheduller del sistema operativo, más aún, con la técnica de \emph{processor affinity}, la ejecución del programa es rígida en la localidad del proceso con respecto al procesador seleccionado, lo cual produce que en ciertas situaciones --como al tener sobrecarga de memoria-- los niveles de caché no cooperen con la tarea general, y no brinden mayor beneficio a la prueba final, una garantía que si dispone el scheduller del sistema operativo, por lo tanto su desempeño no debe ser menospreciado y sólo da cuenta de que lamentablemente, el problema de rendimiento parece ser producto de un defecto de diseño inherente a la estructura que se está compartiendo, defecto que no permite optar a mejores tiempos sin importar la estrategia de paralelismo usada.
+
 
 \subsection{Conclusiones}
 A raíz del estudio de distribución de carga se pueden rescatar varios aspectos interesantes:
 \begin{itemize}
-\item Las técnicas de processor affinity degradaron aún más el rendimiento de consumo en el caso de estudio, con respecto al caso base de comparación.
-\item Los distintos esquemas, a pesar de mostrar variaciones en cada caso, no lograron mejorar con respecto a los tiempos que brindó la administración del mismo sistema operativo.
-\item Se vuelve a encontrar en el mismo socket una estructura que se vuelve un punto de contención, calificando al mismo como no apto para soportar accesos concurrentes, ello dado su diseño y mecanísmos de protección implementados (aka. el spinlock interno).
+\item Las técnicas de \emph{processor affinity} empleadas no consiguieron beneficio alguno en el rendimiento de consumo del caso de estudio, ello a pesar de evaluar distintos esquemas en pos de sacar provecho de la arquitectura evaluada.
+\item Los distintos esquemas, a pesar de ser rígidos en la ejecución de hilos sobre ciertos cores, fueron competitivos con respecto a la capacidad dinámica del scheduller del sistema operativo en los tiempos producidos en el experimento.
+\item Se determina que es el mismo socket –o alguna componente inherente de sincronización como su spinlock-- una estructura que se vuelve un punto de contención al emplear hilos paralelos, calificando al mismo como no apto para soportar accesos concurrentes, ello dado su diseño y mecanismos de protección implementados.
 \end{itemize}
+
 
