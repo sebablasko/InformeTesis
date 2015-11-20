@@ -71,7 +71,7 @@ Dado que la naturaleza de éste estudio se relaciona con el comportamiento de fu
 
 Por otro lado, para el estudio con FTrace la configuración resulta un poco más compleja. Dado que es una herramienta de traceo dinámico que opera inspeccionando las llamadas de funciones de sistema, la activación de FTrace sobrecarga el funcionamiento del sistema general. Por ello, FTrace se debe activar y desactivar manualmente para analizar sólo los instantes de operación de la prueba de interés. Además, dado el amplio espectro de funciones disponibles para inspeccionar con el framework, se deben emplear las utilidades de filtrado de funciones a inspeccionar que provee el mismo framework, ello en pos de capturar funciones en línea con la dinámica del spinlock del Internet socket.
 
-
+\vspace{1pc}
 \begin{lstlisting}[style=BashInputStyle, label={code:ftrace}, caption={Configuración de filtros de FTrace sobre funciones a estudiar.}, captionpos=b]
 [sebastian@labs-vhost ~]$ echo *spin* > /sys/kernel/debug/tracing/set_ftrace_filter 
 [sebastian@labs-vhost ~]$ cat /sys/kernel/debug/tracing/set_ftrace_filter 
@@ -205,7 +205,7 @@ Para validar la hipótesis anterior es preciso un cabal entendimiento de la arqu
 Cómo ya se mencionó en secciones anteriores, los fabricantes de partes y piezas de computadoras están constantemente desarrollando importantes avances, de la mano con el desarrollo técnico de piezas que brinda mejores componentes de hardware cada día, y la línea de desarrollo de infraestructura de hardware principal de los computadores no está exenta de dicha evolución. En secciones anteriores se presentó como las arquitecturas han evolucionado desde el primer esquema \emph{SMP} propuesto con la distribución \emph{FSB}, pasando luego por nuevas configuraciones como \emph{DIB} y \emph{DHSI}, entre otras. Sin embargo, el desarrollo ha sido constante y hoy las arquitecturas han degenerado en esquemas bastante más complejos en pos de aprovechar al máximo la capacidad de los procesadores en la línea del paralelismo.
 
 \subsubsection{Arquitectura Intel QuickPath}
-El año 2008, el fabricante de procesadores Intel®\footnote{\url{http://www.intel.com/}} lanzó al mercado una nueva tecnología denominada \emph{Intel QuickPath Architecture} \cite{paper:quickpath} la que postuló un nuevo esquema organizacional de los componentes internos de la placa principal de las computadoras, así como también un nuevo esquema de conectividad entre los componentes de la misma, prometiendo entre otras cosas, un sistema más confiable, eficiente, rápido y escalable, que podría aprovechar mejor la capacidad de los múltiples procesadores de su misma línea. Rápidamente \emph{QuickPath} se posicionó en el mercado para competir con la tecnología \emph{HyperTransport} desarrollada por \emph{AMD}\footnote{AMD es el principal competidor de Intel en la industria de la manufactura de microprocesadores. \url{http://www.gestiopolis.com/intel-vs-amd-guerra-procesador/}}, abriendo paso definitivamente a una era, dejando atrás el enfoque \emph{FSB}.
+El año 2008, el fabricante de procesadores Intel®\footnote{\url{http://www.intel.com/}} lanzó al mercado una nueva tecnología denominada \emph{Intel QuickPath Architecture} \cite{paper:quickpath} la que postuló un nuevo esquema organizacional de los componentes internos de la placa principal de las computadoras, así como también un nuevo esquema de conectividad entre los componentes de la misma, prometiendo entre otras cosas, un sistema más confiable, eficiente, rápido y escalable, que podría aprovechar mejor la capacidad de los múltiples procesadores de su misma línea. Rápidamente \emph{QuickPath} se posicionó en el mercado para competir con la tecnología \emph{HyperTransport} desarrollada por \emph{AMD}\footnote{Principal competidor de Intel en la industria de la manufactura de microprocesadores.}, abriendo paso definitivamente a una era, dejando atrás el enfoque \emph{FSB}.
 
 \begin{figure}[!h]
 	\centering
@@ -254,6 +254,7 @@ Para inspeccionar el sistema donde se evalúan las pruebas en detalle en busca d
 \item[PMU westmere] PMU específicas de la línea Westmere [AKA UNA CITA] que soporta la base del desarrollo de la \emph{Intel QuickPath Architecture}, incluyendo a \verb=wsm_dp= y \verb=wsm_unc=. Es el nivel más exacto de PMU que provee el fabricante con los eventos más especificos y documentados del sistema, por lo que es la PMU más importante a la hora de colectar eventos.
 \end{description}
 
+\vspace{1pc}
 \begin{lstlisting}[style=BashInputStyle, label={code:pmuavailable}, caption={Listado de \emph{PMUs} disponibles en el sistema, recuperado con la herramienta \emph{libpfm4}.}, captionpos=b]
 	Detected PMU models:
 [18, ix86arch, "Intel X86 architectural PMU", 6 events, 1 max encoding, 7 counters, core PMU]
@@ -309,14 +310,201 @@ Finalmente, siguiendo los 4 criterios de puntos problemáticos a estudiar se con
 
 Con los eventos a colectar más claros, el siguiente paso consiste en conseguir los códigos de registro para la adquisición de cada evento. Un código de registro sigue una nomenclatura dada por el fabricante de la PMU y no guarda relación semántica con el valor que reporta, pero es la única referencia para indicar al software de recolección de datos el evento de interés a estudiar. Para ello, se confeccionó la herramienta \emph{libpfm4PerformanceEventParser}\footnote{\url{https://github.com/sebablasko/libpfm4PerformanceEventParser}} para la obtención de los códigos de registros de cada evento de interés, la cual trabajando en conjunto con \emph{libpfm4} es capaz de parsear datos del sistema para generar una colección de códigos de registro asociados a eventos de hardware en formato \verb=JSON=, según los cuales se debería tener una correcta representación del nivel de saturación y uso de los componentes.
 
-Con el \verb=JSON= generado, se pueden hacer mediciones de forma sencilla usando la herramienta \verb=stat= de \emph{Perf} para generar un reporte de la cantidad de veces que se registre actividad en el evento estudiado, especificado en la misma herramienta. En primera instancia, los eventos sobre los que se prestan especial atención son los relacionados a los criterios de selección antes explícitos, agrupados en la tabla \ref{table:eventos}, y cuya traducción a códigos de registro viene dada por la tabla \ref{table:codigoseventos}.
+Con el \verb=JSON= generado, se pueden hacer mediciones de forma sencilla usando la herramienta \verb=stat= de \emph{Perf} para generar un reporte de la cantidad de veces que se registre actividad en el evento estudiado, especificado en la misma herramienta.
 
-
+\vspace{1pc}
 \begin{lstlisting}[style=BashInputStyle, breaklines=true, captionpos=b, caption={Ejemplo de uso de Perf para colectar datos de una colección de eventos sobre un script llamado programa. En éste caso se configura para colectar datos de 2 eventos y dejar el reporte de salida en un archivo resultado.txt}]
 	# perf stat -e r53003c,r5300c0 -o resultado.txt -- ./programa
 \end{lstlisting}
 
 Finalmente, de los output de Perf se pueden estudiar los resultados finales de la comunicación efectiva generada a lo largo de la prueba.
+
+\subsection{Metodología de Experimentación}
+Para poder comprender mejor las tendencias de comportamiento de los distintos eventos en cada instancia de prueba con una determinada configuración de threads, se confeccionó un experimento donde se evaluaron 3 escenarios de consumo para comparar sus resultados\footnote{\url{https://github.com/sebablasko/Test_PerformanceCounters}}:
+
+\begin{enumerate}
+\item Lectura concurrente desde un dispositivo virtual como \verb=dev_null=. Para ilustrar el caso de menor sobrecarga al ser un dispositivo libre de barreras de bloqueo aún con acceso concurrente.
+\item Lectura exclusiva desde un socket UDP. En éste caso se consume la cuota definida en el caso de estudio por sockets con acceso exclusivo, distribuyendo la carga entre ellos con sólo 1 thread por socket. 
+\item Lectura concurrente desde un socket UDP. Precisamente el caso de estudio evaluado a lo largo de toda la investigación.
+\end{enumerate}
+
+De esta manera, se busca tener un punto de comparación de qué fenómeno se manifiesta en escenarios de lectura concurrente sobre un socket, y que no se manifiesta en otros escenarios. Para la recolección de datos se optó por emplear nuevamente el software \emph{Perf} por su simple interfaz de manejo con la PMU del sistema. Al igual que en el caso de estudio original, se evalúan configuraciones de 1, 2, 4, 8, 16, 24, 36, 48, 64 y 128 threads, tras 60 repeticiones del proceso de captura para validez estadística. 
+
+\begin{equation}
+T_i = \left\{ T_{i,1},T_{i,2},T_{i,3}, \dots ,T_{i,59}, T_{i,60}\right\} 
+\end{equation}
+
+Finalmente, se construye con cada evento un set de registros que guardan un valor promedio para una evaluación de una determinada cantidad de threads.
+
+\begin{equation}
+Evento_j = \left(\overline{T_{1}}, \overline{T_{2}}, \overline{T_{4}}, \overline{T_{6}}, \overline{T_{8}}, \overline{T_{16}}, \overline{T_{24}}, \overline{T_{36}}, \overline{T_{48}}, \overline{T_{60}}\right)
+\end{equation}
+
+De ésta manera, se pueden hacer análisis más simples sobre las variables aleatorias $Evento_j$ que permita una simple comparación entre cada una de los 3 escenarios de evaluación estipulados.
+
+\subsection{Resultados}
+Dada la enorme cantidad de resultados obtenidos en el proceso de inspección de los \emph{performance counters}, se presentan sólo aquellos resultados con comportamiento interesante registrado en el caso de prueba.
+
+Los resultados se han agrupado en 8 categorías para facilitar la asociación de comportamientos y de elementos analizados: Comportamiento de caché de datos de nivel 1, caché de nievl 2, último nivel de caché y banco de memoria, fallo en predicción de procesamiento, solicitudes fuera del core, comunicación por canales de la arquitectura \emph{Quickpath} y finalmente actividad de coordinación por protocolos \emph{SNOOP} y \emph{MESIF}.
+
+\begin{figure}[ph!]
+\centering
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530151.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530251.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530451.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530851.png}
+}
+\caption{Resultados asociados al comportamiento del caché de datos de primer nivel.}
+\label{fig:pcounterL1}
+\end{figure}
+
+\begin{figure}[ph!]
+\centering
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530f28.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530128.png}
+}
+\caption{Resultados asociados al comportamiento del protocolo MESIF.}
+\label{fig:pcounterMESIF}
+\end{figure}
+
+\begin{figure}[ph!]
+\centering
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r537f89.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r5301c5.png}
+}
+\caption{Resultados asociados al fenómeno de fallo en predicción de ejecución del procesador.}
+\label{fig:pcounterMissBranchPrediction}
+\end{figure}
+
+
+\begin{figure}[ph!]
+\centering
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r5301b0.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r5380b0.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530160.png}
+}
+\caption{Resultados asociados al comportamiento de fallo en solicitud de datos de un core.}
+\label{fig:pcounterOFFCore}
+\end{figure}
+
+\begin{figure}[ph!]
+\centering
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r53aa24.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r53e027.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530f26.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r5302f1.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530127.png}
+}
+\caption{Resultados asociados al comportamiento del caché de segundo nivel.}
+\label{fig:pcounterL2}
+\end{figure}
+
+
+\begin{figure}[ph!]
+\centering
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r50010b.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r50012e.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r50022e.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500109.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500308.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r530205.png}
+}
+\caption{Resultados asociados al comportamiento del último nivel de caché y memoria principal.}
+\label{fig:pcounterLLC}
+\end{figure}
+
+
+\begin{figure}[ph!]
+\centering
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500104.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500105.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500204.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500205.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500240.png}
+}
+\caption{Resultados asociados al comportamiento los canales y estructuras de comunicación del Intel® \emph{QuickPath}.}
+\label{fig:pcounterQPI}
+\end{figure}
+
+
+\begin{figure}[ph!]
+\centering
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r5301b4.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r5302b4.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500106.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500107.png}
+}
+\subfigure[]{
+	\includegraphics[width=.47\textwidth]{resultados/pcounters/r500206.png}
+}
+\caption{Resultados asociados al comportamiento del mecanísmo de control \emph{SNOOP}.}
+\label{fig:pcounterSNOOP}
+\end{figure}
+
+\newpage
+
+\subsection{Análisis y Discusión de Resultados}
+
+A raíz de los resultados presentados en la sección previa, se destacan varios aspectos a discutir.
+
+\subsubsection{Correlación de Eventos}
+Para poder comprender mejor la tendencia de comportamiento en el experimento entre los distintos eventos capturados se repasaron posibles mecanismos de visualziación que permitieran una simple comparación entre dichas mediciones. Se optó por emplear una visualziación mediante el uso de una matriz de correlación\footnote{\url{https://en.wikipedia.org/wiki/Correlation_and_dependence#Correlation_matrices}}, de manera de poder detectar facilmente conjuntos de eventos relacionados, ello combinando algúna estratégia de clusterización en el proceso de visualizar los datos. Ésta técnica es muy práctica y se ha empleado en otros escenarios sobre el mismo kernel en otras investigaciones con buenos resultados \cite{paper:clusteringKernel}.
+
+Los eventos sobre los que se prestan especial atención son los relacionados a los criterios de selección antes explícitos, agrupados en la tabla \ref{table:eventos}, y cuya traducción a códigos de registro viene dada por la tabla \ref{table:codigoseventos}.
 
 \begin{table}[]
 \centering
@@ -358,36 +546,6 @@ Nivel de Inspección                 & Registro & Descripción                  
 \label{table:codigoseventos}
 \end{table}
 
-\subsection{Metodología de Experimentación}
-Para poder comprender mejor las tendencias de comportamiento de los distintos eventos en cada instancia de prueba con una determinada configuración de threads, se confeccionó un experimento donde se evaluaron 3 escenarios de consumo para comparar sus resultados\footnote{\url{https://github.com/sebablasko/Test_PerformanceCounters}}:
-
-\begin{enumerate}
-\item Lectura concurrente desde un dispositivo virtual como \verb=dev_null=. Para ilustrar el caso de menor sobrecarga al ser un dispositivo libre de barreras de bloqueo aún con acceso concurrente.
-\item Lectura exclusiva desde un socket UDP. En éste caso se consume la cuota definida en el caso de estudio por sockets con acceso exclusivo, distribuyendo la carga entre ellos con sólo 1 thread por socket. 
-\item Lectura concurrente desde un socket UDP. Precisamente el caso de estudio evaluado a lo largo de toda la investigación.
-\end{enumerate}
-
-De esta manera, se busca tener un punto de comparación de qué fenómeno se manifiesta en escenarios de lectura concurrente sobre un socket, y que no se manifiesta en otros escenarios. Para la recolección de datos se optó por emplear nuevamente el software \emph{Perf} por su simple interfaz de manejo con la PMU del sistema. Al igual que en el caso de estudio original, se evalúan configuraciones de 1, 2, 4, 8, 16, 24, 36, 48, 64 y 128 threads, tras 60 repeticiones del proceso de captura para validez estadística. 
-
-\begin{equation}
-T_i = \left\{ T_{i,1},T_{i,2},T_{i,3}, \dots ,T_{i,59}, T_{i,60}\right\} 
-\end{equation}
-
-Finalmente, se construye con cada evento un set de registros que guardan un valor promedio para una evaluación de una determinada cantidad de threads.
-
-\begin{equation}
-Evento_j = \left(\overline{T_{1}}, \overline{T_{2}}, \overline{T_{4}}, \overline{T_{6}}, \overline{T_{8}}, \overline{T_{16}}, \overline{T_{24}}, \overline{T_{36}}, \overline{T_{48}}, \overline{T_{60}}\right)
-\end{equation}
-
-De ésta manera, se pueden hacer análisis más simples sobre las variables aleatorias $Evento_j$ que permita una simple comparación entre cada una de los 3 escenarios de evaluación estipulados.
-
-\subsection{Resultados}
-AKA mostrar que se reconocen dos tendencias entre los grupos de eventos (sobre el caso de udp concurrente).
-
-
-\subsubsection{Correlación de Eventos}
-Para poder comprender mejor la tendencia de comportamiento en el experimento entre los distintos eventos capturados se repasaron posibles mecanismos de visualziación que permitieran una simple comparación entre dichas mediciones. Se optó por emplear una visualziación mediante el uso de una matriz de correlación\footnote{\url{https://en.wikipedia.org/wiki/Correlation_and_dependence#Correlation_matrices}}, de manera de poder detectar facilmente conjuntos de eventos relacionados, ello combinando algúna estratégia de clusterización en el proceso de visualizar los datos. Ésta técnica es muy práctica y se ha empleado en otros escenarios sobre el mismo kernel en otras investigaciones con buenos resultados \cite{paper:clusteringKernel}.
-
 \begin{figure}[h!]
 	\centering
 	\hspace*{\fill}
@@ -404,9 +562,8 @@ Para poder comprender mejor la tendencia de comportamiento en el experimento ent
 	\hspace*{\fill}
 \end{figure}
 
-Para ésta tarea, se empleó el software de visualización \emph{statgraphics}\footnote{\url{http://www.statgraphics.com/}} en su edición trial. El software tiene la capacidad de generar una visualización estupénda aprovechando un ordenamiento por medio del primer vector propio de la matriz de correlación misma, de manera de generar un efecto clusterizador sobre los datos, agrupando aquellos con alta correlación.
 
-\subsection{Análisis y Discusión de Resultados}
+Para ésta tarea, se empleó el software de visualización \emph{statgraphics}\footnote{\url{http://www.statgraphics.com/}} en su edición trial. El software tiene la capacidad de generar una visualización estupénda aprovechando un ordenamiento por medio del primer vector propio de la matriz de correlación misma, de manera de generar un efecto clusterizador sobre los datos, agrupando aquellos con alta correlación.
 
 \subsection{Conclusiones}
 A raíz del estudio de canales de comunicación de hardware del sistema se pueden rescatar varios aspectos interesantes:
@@ -445,7 +602,6 @@ Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoqu
 
 \subsection{Resultados}
 
-Aka muestro los resultados de todos los experimentos
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.6]{resultados/processoraffinity-crop.pdf}

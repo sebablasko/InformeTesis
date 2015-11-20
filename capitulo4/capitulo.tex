@@ -128,7 +128,7 @@ El esquema ilustrado en la figura \ref{fig:netfilterArchitecture} da cuenta del 
 
 El framework en cuestión está diseñado para poder aprovechar sus funcionalidades facilmente a partir de un módulo adicionado al kernel. Para ello, basta incluir las directivas de encabezados del framework en el módulo implementado (\verb=#include <linux/netfilter.h>=) e implementar los mecanísmos de registro del \emph{hook} en el sistema, especificando sus opciones como: \textbf{prioridad}, \textbf{familia} y \textbf{punto de interrupción}. Para ésta tarea, se emplean valores constantes provistos por el mismo framework. Además de lo anterior, en el módulo se ha de implementar la función a aplicar sobre cada paquete intervenido, para lo cual es necesario seguir la convención que especifíca el mismo framework, esto es, implementar un prototipo de función que propone el framework que se ilustra en el segmento de código siguiente:
 
-
+\vspace{1pc}
 \begin{lstlisting}[style=CInputStyle, captionpos=b, caption=ESO]
 static unsigned int hook_func(
             		unsigned int hooknum,
@@ -186,20 +186,14 @@ Al momento de realizar la instalación se debe proveer la configuración que reg
 
 En la práctica, los puertos de redirección quedan determinados a partir del valor de \verb=start_redirect_port= y hasta \verb=start_redirect_port + number_redirect_ports=.
 
+\vspace{1pc}
 \begin{lstlisting}[style=BashInputStyle,	breaklines=true, caption=Ejemplo de instalación de la solución, captionpos=b]
     # sudo insmod UDPRedistributeModule.ko verbose=2 hook_port=13131 start_redirect_port=1820 number_redirect_ports=4 port_sched={1,2}
 \end{lstlisting}
 
 
 \subsection{Utilización}
-Una vez instalada, la solución queda plenamente operativa en el sistema llevando un registro de sus operaciones dependiendo del nivel de verbosidad definido al instante de la instalación. Es importante resaltar que es responsabilidad del usuario tomar posesión del conjunto de puertos de redirección definido en la solución, usándolos para los fines que él mismo desee. Un ejemplo de lo anterior puede verse en la figura \ref{fig:usageUDPModule}.
-
-\begin{figure}[!h]
-	\centering
-	\includegraphics[scale=.3]{imagenes/fcfm}
-	\caption{Ejemplo de uso de la solución UDPRedistributeModule. En éste caso, se está atendiendo los paquetes recibidos de una misma interfaz lógica del sistema con distintas aplciaciones que consumen dichos paquetes.}
-	\label{fig:usageUDPModule}
-\end{figure}
+Una vez instalada, la solución queda plenamente operativa en el sistema llevando un registro de sus operaciones dependiendo del nivel de verbosidad definido al instante de la instalación. Es importante resaltar que es responsabilidad del usuario tomar posesión del conjunto de puertos de redirección definido en la solución, usándolos para los fines que él mismo desee.
 
 \subsection{Eliminación}
 La remoción de la solución desde el sistema es muy simple y se basa en que la misma es sólo un módulo del kernel, por lo tanto basta aplicar el comando \verb=rmmod= del sistema acompañado del nombre del módulo. Para una completa limpieza del módulo, es recomendable tambien limpiar los registros generados al momento de la compilación del módulo, para lo cual se puede ejecutar la directiva \verb=make clean= del archivo \verb=Makefile= provisto en la solución.
