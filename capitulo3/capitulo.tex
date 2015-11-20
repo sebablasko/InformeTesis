@@ -35,12 +35,12 @@ Como se mencionó, para usar ésta opción se debe modificar la estructura socke
 La adopción de ésta funcionalidad ha sido incorporada a distinto software con requerimientos común de alta disponibilidad de atención de consultas con buenos resultados. Ejemplos de lo anterior son productos como \emph{nginx}\footnote{\url{https://www.nginx.com/blog/socket-sharding-nginx-release-1-9-1/}} o \emph{Apache Web Server} \cite{paper:apache} que han incorporado ésta característica en versiones recientes con buenos resultados.
 
 \section{Rendimiento en la Práctica}
-Para evaluar el rendimiento práctico de la opción reuseport se modificó sutilmente el caso de estudio evaluado a lo largo de la investigación para hacerlo compatible con éste enfoque de trabajo. Recordémos que reuseport se basa en la acción de múltiples sockets consumiendo datos, ya no sólo uno, por lo que hay ciertas salvedades que estipular. Al igual que en el escenario original, el objetivo es calcular el tiempo de consumo de 1 millón de paquetes desde un socket UDP en escenario de saturación. La diferencia en éste caso radica en que, en pos de aprovechar las promesas de reuseport, se cambia el consumo concurrente desde el mismo socket usando múltiples hilos por un consumo de múltiple hilos que consume cada uno a un socket distinto, alocado en la misma interzaf lógica del sistema del socket saturado usando la opción reuseport. De ésta manera, el consumo por socket ahora es exclusivo para cada thread, eliminando el punto de contención detectado en la prueba original.
+Para evaluar el rendimiento práctico de la opción reuseport se modificó sutilmente el caso de estudio evaluado a lo largo de la investigación para hacerlo compatible con éste enfoque de trabajo. Recordémos que reuseport se basa en la acción de múltiples sockets consumiendo datos, ya no sólo uno, por lo que hay ciertas salvedades que estipular. Al igual que en el escenario original, el objetivo es calcular el tiempo de consumo de 1 millón de paquetes desde un socket UDP en escenario de saturación. La diferencia en éste caso radica en que, en pos de aprovechar las promesas de reuseport, se cambia el consumo concurrente desde el mismo socket usando múltiples hilos por un consumo de múltiple hilos que consume cada uno a un socket distinto, alocado en la misma interzaf lógica del sistema del socket saturado usando la opción reuseport. De ésta manera, el consumo por socket ahora es exclusivo para cada thread, eliminando el punto de contención detectado en la prueba original. a éste nuevo enfoque de evaluación que incluye una distribución de la cuota de trabajo se le denominó: \textbf{Nuevo caso de estudio}.
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.3]{imagenes/fcfm}
-	\caption{Nuevo esquema de la prueba UDP en escenarios donde se aproveche Reuseport.}
+	\includegraphics[scale=.5]{imagenes/nuevocaso.png}
+	\caption{Nuevo esquema de la prueba UDP en escenarios donde se aproveche Reuseport correspondiente al nuevo caso de estudio.}
 	\label{fig:casoPruebaReuseport}
 \end{figure}
 
