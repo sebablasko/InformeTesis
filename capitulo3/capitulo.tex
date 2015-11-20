@@ -60,9 +60,6 @@ Un esquemático de ésta prueba puede apreciarse en la figura \ref{fig:casoPrueb
 	\label{fig:resultadosReuseport}
 \end{figure}
 
-\subsection{Diferencias entre arquitecturas}
-[[[[[[Aun pendiente sobre si va esto]]]]]]]]]
-
 \section{Evaluación de Optimizaciones Adicionales}
 Los resultados anteriores evidencian un claro incremento en el rendimiento alcanzable por la prueba ya conocida aprovechando múltiples sockets en el consumo. Sin embargo cabe preguntarse si será posible mejorar aún más esos resultados combinando la opción de reuseport con técnicas de consumo concurrente sobre los sockets. Una hipótesis que apoya ésta idea se basa en que, al emplear la opción reuseport, los sockets tienen una menor cuota de consumo cada uno, por lo tanto, un acceso concurrente en ese escenario de bajo consumo podría impactar en una reducción de tiempos finales al generar una nula sobrecarga en cada caso.
 
