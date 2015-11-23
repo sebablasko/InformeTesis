@@ -686,6 +686,34 @@ Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoqu
 \item[SimpleCoreAffinity] Asignación de los hilos a los primetos dos cores lógicos del sistema, correspondientes al primer core real duplicado por efecto \emph{HyperThreading}.
 \end{description}
 
+
+\begin{table}[]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{1}{|c|}{\textbf{Esquema}} & \multicolumn{1}{c|}{\textbf{Fórmula de numeración de afinidad}}                                  \\ \hline
+DummyAffinity                          & 
+
+0
+                                                                                            \\ \hline
+EquitativeAffinity                     & $(i++) \pmod {totalCPUs} $                                                                                 \\ \hline
+PairAffinity                           & $(2*i) \pmod {totalCPUs} $                                                                                 \\ \hline
+ImpairAffinity                         & $(2*i+1) \pmod {totalCPUs} $                                                                               \\ \hline
+NumaPairAffinity                       & 
+$
+    = 
+\begin{cases}
+    i \pmod {totalCPUs} ,& \text{if } i \pmod 2 = 0\\
+    \left((i-1) + \frac{totalCPUs}{2}\right) \pmod {totalCPUs},              & \text{else}
+\end{cases}
+$ \\ \hline
+SimpleCoreAffinity                     & $\frac{(i \pmod 2) * totalCPUs}{2}$                                                                               \\ \hline
+\end{tabular}
+\caption{Numeración de afinidad a cada hilo en ejecución, donde $i$ representa el i-ésimo hilo.}
+\label{my-label}
+\end{table}
+
+
 \subsection{Metodología de Experimentación}
 Para evaluar los distintos esquemas de afinidad ya postulados, se modificó el caso de estudio para incorporar la asociación de hilos de ejecución para con los distintos cores del sistema. Para ello se aprovechó la flexibilidad de la librería \emph{PThreads}, responsable de brindar los hilos de ejecución en nuestro caso, para usar ciertas llamadas a sistema que nos otorgasen el control de la localidad de ejecución buscada. En concreto, se empleó la función \verb=pthread_attr_setaffinity_np()= que permite especificar precisamente la asociación de un hilo para con el core de ejecución deseado. 
 
