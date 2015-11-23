@@ -235,7 +235,7 @@ Por otro lado, los tiempos netos de transferencia registran un decrecimiento con
 
 \section{Comparación de Rendimiento}
 
-avisar de los tiempos netos registrados en cada caso. destacar que, tal como reuseport, la solución implementada en cualquiera de sus dos esquemas de dsitribución brinda una ganancia efectiva con respecti al uso de threads y la postula como una alternativa a usar. más allá de que las variaciones entre los 3 ganadores existan, los 3 dan garantias de mejroes tiempos en el nuevo caso de estudio.
+Tal y como se adelantó, la solución (en cualquiera de sus dos mecanismos de distribución), al igual que reuseport, genera ganancias de tiempo para completar el consumo del millón de paquetes a medida que se emplean más sockets con respecto al escenario original del uso multi-hilo para consumo concurrente. De la misma forma, se aprecia como el mejor desempeño es dado generalmente (salvo excepciones como el escenario de 2 sockets) por la alternativa reuseport, seguido por nuestra solución en esquema secuencial, y posteriormente el esquema aleatorio, con una diferencia entre tiempos que se amortiza a medida que se van adicionando más sockets.
 
 \begin{figure}[!h]
 	\centering
@@ -244,7 +244,7 @@ avisar de los tiempos netos registrados en cada caso. destacar que, tal como reu
 	\label{fig:resultadoMiModulovsTodos}
 \end{figure}
 
-No obstante el resultado anterior, si rememoramos los resultados registrados por cada mecanísmo, notamos que existe un valor que diferencia notablemente a reuseport con respecto a nuestra solución (en cualquiera de sus dos sabores). Dicha diferencia viene dada por la variación que presenta cada mecanísmo entre los tiempos minimos y tiempos netos que registra. Para ilustrar mejor lo anterior, definimos el \textbf{tiempo de coordinación} como el tiempo transcurrido entre el tiempo neto y el tiempo mínimo registrado en la prueba. De la misma manera, definimos un proporcional porcentual del tiempo de coordinación con respecto al tiempo neto de la prueba como \textbf{indice de coordinación} con el simbolo $\eta$, de acuerdo a la siguiente ecuación:
+No obstante el resultado anterior, si rememoramos los resultados registrados por cada mecanísmo notamos que existe un valor que diferencia notablemente a reuseport con respecto a nuestra solución (en cualquiera de sus dos sabores). Dicha diferencia viene dada por la variación que presenta cada mecanísmo entre los tiempos minimos y tiempos netos que registra. Para ilustrar mejor lo anterior definimos el \textbf{tiempo de coordinación} como el tiempo transcurrido entre el tiempo neto y el tiempo mínimo registrado en la prueba. De la misma manera, definimos un proporcional porcentual del tiempo de coordinación con respecto al tiempo neto de la prueba como \textbf{indice de coordinación} con el simbolo $\eta$, de acuerdo a la siguiente ecuación:
 
 \begin{equation}
 \eta = \frac{\left(Tº Neto - Tº Mínimo\right)}{Tº Neto}
@@ -263,6 +263,10 @@ A continuación se presentan los resultados del indice de coordinación para los
 	\label{fig:tiemposdelta}
 \end{figure}
 
+De los resultados de la figura \ref{fig:tiemposdelta} se extrae un importante resultado asociado a la equitatividad de trabajo en cada escenario. En la práctica, los tiempos de reuseport vienen dados siempre por el rendimiento de consumo del último socket que consuma su cuota para completar el consumo neto, lo cual genera una gran disparidad en el ritmo de trabajo de los distintos sockets coordinados en un mismo puerto. El resultado sugiere que al usar reuseport, el consumo de paquetes no es exactamente equitativo entre los sockets asociados al mismo puerto, más aún, garantiza un menor tiempo con decrecimiento proporcional al número de sockets trabajando, pero no da garantías sobre el tiempo neto, que como se evidenció en ésta prueba, es aquel que termina determinando el tiempo real de trasferencia de la prueba.
+
+Contrario a lo anterior, el resultado del índice de coordinación para nuestra solución es bastante alentador. Con un valor $\eta$ cercano a cero, los esquemas de distribución implementados en el módulo desarrollado garantizan un tiempo de trabajo similar para todos los sockets usados en el experimento. De hecho, es con el esquema de distribución secuencial \emph{SequentialSched} que el valor de $\eta$ es prácticamente 0, con lo que el tiempo de trabajo de cada socket asociado es idéntico para con los demás en ésta prueba.
+
 
 \section{Aciertos de la solución}
 
@@ -274,7 +278,9 @@ Un segundo punto a destacar de la solución es su \textbf{equitatividad de tiemp
 
 Otro aspecto a destacar de nuestra solución es que logra buenos rendimientos preservando los \textbf{principios de diseño del modelo OSI}. Ésta característica era fundamental de proveer pues da garantías de facil adopción de la solución en entornos con aplicaciones ya operativas sin mayores modificaciones de los mismos.
 
-El último y más importante acierto a reconocer de neustra solución consiste en su \textbf{configurabilidad} y \textbf{extensibilidad}. El primero pues, cómo se explicó en secciones anteriores, la solución admite distintos parámetros de configuración que permiten, sin cambios del código fuente, proveer distintos modos de funcionamiento según el requerimiento de consumo y distribución que se busque. El segundo dado por la implementación misma de la solución, ello pues al ser un módulo del kernel, es facilmente modificable para añadir nuevo código fuente que permita modificar los esquemas de distribución, etapas de interceptación de paquetes, funcionamiento del framework de \emph{Netfilters}, etc.
+Otro importante acierto a reconocer de neustra solución consiste en su \textbf{configurabilidad} y \textbf{extensibilidad}. El primero pues, cómo se explicó en secciones anteriores, la solución admite distintos parámetros de configuración que permiten, sin cambios del código fuente, proveer distintos modos de funcionamiento según el requerimiento de consumo y distribución que se busque. El segundo dado por la implementación misma de la solución, ello pues al ser un módulo del kernel, es facilmente modificable para añadir nuevo código fuente que permita modificar los esquemas de distribución, etapas de interceptación de paquetes, funcionamiento del framework de \emph{Netfilters}, etc.
+
+Finalmente, una característica diferenciadora de nuestra solución con respecto a alternativas disponibles como reuseport viene dada por el denominado \textbf{índice de coordinación}. Cómo se ilustro en el experimento de la sección previa, la solución implementada consigue un valor de $\eta$ cercano a 0, garantizando así una solución justa en los tiempos de trabajo entre los sockets involucrados en la redistribución de paquetes. Éste resultado es relevante pues, para la gran cantidad de aplicaciones relacionadas al consumo constante de datos y de distribución de trabajo –como en el escenario original de distribución de carga DNS estudiado--, una distribución justa y equitativa en el consumo de paquetes es crucial para dar verdaderas optimizaciones reales.
 
 \section{Proyecciones}
 La solución planteada en la presente investigación cumple correctamente para los fines con que se postuló originalmente, basada en su satisfacción de los requerimientos especificados en la seccion previa. Sin embargo, el mismo modelo de operación que se planteó en ésta solución puede ser aprovechado y extendido para ser usado en otros escenarios o contextos.
