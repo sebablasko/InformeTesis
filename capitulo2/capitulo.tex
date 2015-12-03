@@ -8,18 +8,18 @@ En el presente capítulo se estudian las tres líneas planteadas como potenciale
 
 La primera hipótesis a estudiar plantea que el bajo rendimiento de la operación de la interfaz de red --Ilustrada en nuestro caso de estudio por medio de los Internet sockets UDP de Linux-- en escenarios de concurrencia, es causado por un mal desempeño de las estructuras que proveen los mecanismos de sincronización para dichos escenarios. Cómo se mencionó en el capítulo anterior, la capacidad multiprocesador de las computadoras modernas provee un mayor poder de cómputo que se postula a ser aprovechado por medio del uso de técnicas de programación paralela, con el cuidado de que en esos contextos de trabajo, los sistemas operativos deben estar preparados para atender situaciones de conflicto en el acceso a los recursos compartidos. Para éste propósito, los sistemas operativos proveen de mecanismos de sincronización ya repasados en secciones anteriores que para estructuras de bajo nivel --cómo los sockets de Internet-- emplean el uso de mecanismos de sincronización de bajo nivel como lo son los spinlocks, que protegen ciertas porciones críticas de la estructura, tal y como se repasó previamente.
 
-En éste caso, la primera hipótesis del problema describe que el causante del mal rendimiento al incorporar concurrencia en las lecturas a un socket es generado derechamente por dichas estructuras de protección en el acceso simultaneo, situación que causaría el fenómeno denominado \emph{Contención de Recurso} sobre la estructura compartida, o sobre alguna de las componentes constitutivas de la misma.
+En éste caso, la primera hipótesis del problema describe que el responsable del mal rendimiento al incorporar concurrencia en las lecturas a un socket es generado por dichas estructuras de protección en el acceso simultaneo, situación que causaría el fenómeno denominado \emph{Contención de Recurso} sobre la estructura compartida, o sobre alguna de las componentes constitutivas de la misma.
 
 \begin{defn}[ver \cite{paper:resourceContention}] \textbf{Contención de Recurso} corresponde a un estado de conflicto en el acceso a un recurso compartido entre distintas componentes de un sistema, producido por una situación de competencia en el acceso al mismo que puede degenerar en escenarios problemáticos como situaciones de bloqueo, conflictos por situaciones de carrera y degradación generalizada de performance, entre otros.
 \end{defn}
 
-Para ratificar el planteamiento anterior, se estudió la dinámica de llamadas de sistema presentes al momento de la ejecución experimental del caso del caso de estudio postulado en el capítulo anterior, ello siguiendo otros modelos de recopilación de datos ya evaluados en otros trabajos exitosos en la misma línea \cite{slides:hpPerf} a modo de poder modelar la operación de las primitivas de sincronización a medida que se van agregando hilos de procesamiento en el consumo de una misma estructura socket compartida. De la misma forma, es interesante analizar cómo el socket compartido actúa como un potencial punto de contención, o como alguna de las estructuras internas de limitación en su acceso (como sería el spinlock del socket mismo) tienen responsabilidad en el rendimiento presentado.
+Para ratificar el planteamiento anterior, se estudió la dinámica de llamadas de sistema presentes al momento de la ejecución experimental del caso de estudio postulado en el capítulo anterior, ello siguiendo otros modelos de recopilación de datos ya evaluados en otros trabajos exitosos en la misma línea \cite{slides:hpPerf} a modo de poder modelar la operación de las primitivas de sincronización a medida que se van agregando hilos de procesamiento en el consumo de una misma estructura socket compartida. De la misma forma, es interesante analizar cómo el socket compartido actúa como un potencial punto de contención, o como alguna de las estructuras internas de limitación en su acceso (como sería el spinlock del socket mismo) tienen responsabilidad en el rendimiento presentado.
 
 \subsection{Estudio de Llamadas de sistema}
 
-La operación de las primitivas de sincronización que actúan en los procesos de bajo nivel del sistema operativo tienen la característica de estar determinadas por el uso de llamadas a funciones del sistema, ello pues es el mismo sistema operativo (o mejor dicho el núcleo del sistema) aquel que provee una interfaz simple para la invocar de dicha operación. Cómo son llamadas a funciones, es posible cuantificar cuándo y cómo se realizan las mismas pudiendo modelar el proceso completo por medio de éste mecanismo.
+La operación de las primitivas de sincronización que actúan en los procesos de bajo nivel del sistema operativo tienen la característica de estar determinadas por el uso de llamadas a funciones del sistema, ello pues es el mismo sistema operativo (o mejor dicho el núcleo del sistema) aquel que provee una interfaz simple para la invocar de dicha operación. Como son llamadas a funciones, es posible cuantificar cuándo y cómo se realizan las mismas pudiendo modelar el proceso completo por medio de éste mecanismo.
 
-Cómo en nuestro caso de estudio interesa inspeccionar el comportamiento de primitivas de sincronización de bajo nivel como son los spinlocks, se debe contemplar la API con que trabaja el sistema para controlar éstas estructuras. Esto pues a pesar de que la estructura spinlock está definida unívocamente definida a nivel del núcleo de Linux, existen distintas funciones que proveen variantes en el funcionamiento de los spinlocks para operar en condiciones especiales, y dichos escenarios son presentables a lo largo de la ejecución del caso de prueba del estudio pudiendo impactar el rendimiento final. El objetivo de éste estudio concierne un análisis cuantitativo de la cantidad de llamadas a sistema que sean bloqueantes sobre estructuras bloqueantes de tipo spinlock y del tiempo que el sistema gasta en dichas condiciones.
+Como en nuestro caso de estudio interesa inspeccionar el comportamiento de los spinlocks, se debe contemplar la API con que trabaja el sistema para controlar éstas estructuras. Existen distintas funciones que proveen variantes en el funcionamiento de los spinlocks para operar en condiciones especiales, y dichos escenarios son presentables a lo largo de la ejecución del caso de prueba del estudio pudiendo impactar el rendimiento final. El objetivo de este estudio concierne un análisis cuantitativo de la cantidad de llamadas a sistema que sean bloqueantes sobre estructuras spinlock y del tiempo que el sistema gasta en dichas condiciones.
 
 En Linux los spinlocks se representan con estructuras \verb=spinlock_t= (incluidas en el archivo \verb= <linux/spinlock.h>=) que básicamente consisten en un campo de \emph{lock} con un valor 1 (si está libre) o 0 (si está ocupado). Existen diversas funciones de atención que aplican distintos tipos de bloqueo \cite{book:spinlocks}:
 
@@ -29,16 +29,16 @@ En Linux los spinlocks se representan con estructuras \verb=spinlock_t= (incluid
 \item[void spin\_lock\_irq(spinlock\_t *lock);] Bloqueo que deshabilita interrupciones del procesador local antes de adquirir el spinlock. Se debe cuidar de reactivar las interrupciones luego de liberado el \emph{lock}.
 \item[void spin\_lock\_irqsave(spinlock\_t *lock, unsigned long flags);] Similar a la operación de \verb=spin_lock_irq=, pero con la diferencia de que almacena el estado de interrupción previo en el valor \verb=flags=, de manera de que puede restablecerlo fácilmente luego de liberar el \emph{lock}.
 \item[void spin\_lock\_bh(spinlock\_t *lock)] Similar a \verb=spin_lock_irq= con la diferencia de que sólo deshabilita las interrupciones de software, manteniendo habilitadas las interrupciones por hardware del sistema.
-\item[int spin\_trylock(spinlock\_t *lock);] Para operaciones no bloqueantes para el uso de spinlocks. Retorna cero en caso de fallo al obtener el lock. No deshabilita interrupciones.
-\item[bool mutex\_spin\_on\_owner(struct mutex *lock, struct task\_struct *owner)] Bloqueo que opera sobre una estructura de exclusión mutua (\emph{mutex}) que utiliza el enfoque de \emph{Read-Copy-Update} (RCU), en donde los lectores son no bloqueantes. Ésta estructura tiene una sobrecarga menor que las anteriores; Sin embargo, las actualizaciones son más costosas ya que las versiones anteriores de la estructura de datos se deben guardar con el fin de dar cabida a los lectores ya existentes que se sincronizan a través de las barreras del \emph{mutex}. Utilizando el enfoque de la RCU el bloqueo con esta estructura \emph{mutex} asegura que la operación \emph{Test-and-Set} se ejecute en la misma CPU del propietario del \emph{lock}, lo que reduce la cantidad de comunicación de memoria caché (y por consiguiente, el efecto de contención).
+\item[int spin\_trylock(spinlock\_t *lock);] Intenta obtener el lock en un único intento, evitando entrar en ciclos muertos de espera, y retornar un valor inmediatamente sobre éxito o fracaso en dicha labor. La función retorna un valor distinto de cero si en su primer intento adquiere el spinlock, o 0 sino. Además, se puede usar en todos los contextos de la función \verb=spin_lock= con el cuidado de administrar el contexto de interrupciones producidas durante la ejecución e intento de adquisición del lock.
+%\item[bool mutex\_spin\_on\_owner(struct mutex *lock, struct task\_struct *owner)] Bloqueo que opera sobre una estructura de exclusión mutua (\emph{mutex}) que utiliza el enfoque de \emph{Read-Copy-Update} (RCU), en donde los lectores son no bloqueantes. Ésta estructura tiene una sobrecarga menor que las anteriores; Sin embargo, las actualizaciones son más costosas ya que las versiones anteriores de la estructura de datos se deben guardar con el fin de dar cabida a los lectores ya existentes que se sincronizan a través de las barreras del \emph{mutex}. Utilizando el enfoque de la RCU el bloqueo con esta estructura \emph{mutex} asegura que la operación \emph{Test-and-Set} se ejecute en la misma CPU del propietario del \emph{lock}, lo que reduce la cantidad de comunicación de memoria caché (y por consiguiente, el efecto de contención).
 \end{description}
 
 Asociadas a las anteriores llamadas de sistema están las variantes \verb=*unlock*= que permiten liberar el elemento de bloqueo (seteando el valor del \emph{lock} de regreso a 1) para recuperar así su disponibilidad para otros procesos.
 
-Para poder rescatar las llamadas a sistema existen distintas herramientas de software de bajo nivel, creados por los mismos desarrolladores del núcleo de Linux que permiten realizar la tarea que nos proponemos en éste caso.
+Para poder rescatar información relacionada a dichas llamadas a sistema existen distintas herramientas de software, las cuales, implementadas por los mismos desarrolladores del kernel de Linux, son capaces de inspeccionar la operación de bajo nivel del sistema para registrar la dinámica de todas las llamadas que sean de interés. En particular, se pueden usar para analizar la dinámica de llamadas bloqueantes antes descritas.
 
 \subsubsection{Perf}
-Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{\url{https://perf.wiki.kernel.org/}}} es una herramienta de análisis de performance para entornos Linux. Corresponde a un subsistema del mismo kernel de Linux que provee un completo framework para el estudio de performance del sistema y de programas por medio de la captura de una amplia variedad de fuentes de datos. Perf es capaz de colectar datos por operatividad de software (contadores de software, \emph{tracepoints}, estadísticas de ejecución de funciones, paso a assembler, etc.) y también colectar información de control de hardware (manejo de PMU, lectura de \emph{performance counters}, etc.), características que lo postulan como uno de los sistemas más completos para las tareas de profilling de aplicaciones y sistemas y que lo hacen una herramienta indispensable para el actual estudio.
+Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{\url{https://perf.wiki.kernel.org/}}} es una herramienta de análisis de performance para entornos Linux. Corresponde a un subsistema del mismo kernel de Linux que provee un completo framework para el estudio de performance del sistema y de programas por medio de la captura de una amplia variedad de fuentes de datos. Perf es capaz de colectar datos por operatividad de software (contadores de software, \emph{tracepoints}, estadísticas de ejecución de funciones, paso a assembler, etc.) y también de colectar información de control de hardware (manejo de PMU, lectura de \emph{performance counters}, etc.) abarcando los principales registros de control que mantiene el sistema en su operación.
 
 \begin{figure}[!h]
 	\centering
@@ -49,11 +49,11 @@ Perf \cite{slides:perfTools} o también llamado \emph{Perf\_events\footnote{\url
 
 Además de su gran capacidad para colectar datos, Perf es una herramienta de sencillo uso. Su funcionamiento se basa en la supervisión de un determinado proceso o tarea de la cual se construye un archivo con la información que se haya seleccionado a colectar \cite{article:perf}. Para ello, se pueden emplear las utilidades \verb=perf-record= y \verb=perf-stat= del framework las que trabajan supervisando un determinado proceso y proveyendo páginas de datos al espacio del kernel de Linux las cuales son escritas con información del sistema de dicho proceso, y son retornadas al espacio de usuario construyendo un informe a modo de output\footnote{La asignación del espacio de páginas a rellenar se hace por medio de la utilidad \verb=mmap= de Linux, que provee direcciones virtuales en un proceso para almacenar información.} (Ver figura \ref{fig:perfRecord}). Ésta característica es muy práctica pues sobre los reportes generados se pueden realizar operaciones de análisis más exhaustivos.
 
-El potencial de ésta herramienta la perfila como una utilidad indispensable para el estudio en cuestión. En primer lugar por su capacidad de análisis de ejecución de código que permite obtener información cuantificada de las llamadas a sistema y de la dinámica del árbol de llamados\footnote{\emph{Call graph} en inglés, corresponde a un grafo dirigido que representa la relación de llamados entre las subrutinas constitutivas de un proceso principal.} que permite reconocer la naturaleza de las funciones involucradas en el caso de estudio. En segunda instancia Perf es una estupenda herramienta para la recolección de datos de hardware al aprovechar el uso de la \emph{Performance Monitoring Unit (PMU)} del hardware del sistema, una característica que será revisada en detalle en secciones posteriores.
+El potencial de ésta herramienta la perfila como una utilidad indispensable para el estudio en cuestión. En primer lugar por su capacidad de análisis de ejecución de código que permite obtener información cuantificada de las llamadas a sistema y de la dinámica del árbol de llamados\footnote{\emph{Call graph}, correspondiente a un grafo dirigido que representa la relación de llamados entre las subrutinas constitutivas de un proceso principal.} que permite reconocer la naturaleza de las funciones involucradas en el caso de estudio. En segunda instancia Perf es una estupenda herramienta para la recolección de datos de hardware al aprovechar el uso de la \emph{Performance Monitoring Unit (PMU)} del hardware del sistema, una característica que será revisada en detalle en secciones posteriores.
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.45]{imagenes/perfRecord.png}
+	\includegraphics[scale=.52]{imagenes/perfRecord.png}
 	\caption{Esquema de captura de datos de un programa usando el comando \emph{perf-record}.}
 	\label{fig:perfRecord}
 \end{figure}
@@ -67,7 +67,7 @@ El provecho que se puede sacar de ésta herramienta es usar su capacidad para cu
 
 \subsection{Metodología de Experimentación}
 
-Dado que la naturaleza de éste estudio se relaciona con el comportamiento de funciones del sistema que administran las primitivas de acceso y sincronización de los Internet socket de Linux, se realizarán las configuraciones pertinentes para cada herramienta a fin de contemplar dichos puntos de análisis. En el caso de Perf, la recolección de datos se realizará con la herramienta \verb=perf-record= y se realiza un post-procesamiento sobre los archivos de reporte generado a fin de colectar los estadísticos asociados a las distintas funciones de manejo de spinlock antes mencionadas\footnote{Éste experimento correspondiente a la ejecución del proyecto \url{https://github.com/sebablasko/Test_MultiThreadStressTransmision} con privilegios de administrador.}.
+Dado que la naturaleza de este estudio se relaciona con el comportamiento de funciones del sistema que administran las primitivas de acceso y sincronización, se realizarán las configuraciones pertinentes para cada herramienta a fin de contemplar dichos puntos de análisis. En el caso de Perf, la recolección de datos se realiza con la herramienta \verb=perf-record=, contemplando un post-procesamiento sobre los archivos de reporte generados a fin de colectar estadísticos asociados a las distintas funciones de manejo de spinlock antes mencionadas\footnote{Experimento \url{https://github.com/sebablasko/Test_MultiThreadStressTransmision} con privilegios de administrador.}.
 
 Por otro lado, para el estudio con FTrace la configuración resulta un poco más compleja. Dado que es una herramienta de traceo dinámico que opera inspeccionando las llamadas de funciones de sistema, la activación de FTrace sobrecarga el funcionamiento del sistema general. Por ello, FTrace se debe activar y desactivar manualmente para analizar sólo los instantes de operación de la prueba de interés. Además, dado el amplio espectro de funciones disponibles para inspeccionar con el framework, se deben emplear las utilidades de filtrado de funciones a inspeccionar que provee el mismo framework, ello en pos de capturar funciones en línea con la dinámica del spinlock del Internet socket.
 
@@ -89,13 +89,12 @@ bit_spin_lock
 kvm_vcpu_on_spin
 \end{lstlisting}
 
-Por otra parte, el encendido y apagado del framework mismo se configuró como parte del script de experimentación en el programa de la prueba\footnote{\url{https://github.com/sebablasko/Test_UDPTrace/}}. En el mismo, se configuró la opción \verb=set_ftrace_pid= para explicitar la inspección de FTrace sólo sobre el programa de la prueba, además del uso de la utilidad \verb=trace_marker= para instrumentar porciones de código de la prueba (como creación de threads, y término de consumo de datos) que permitiese una mayor facilidad al momento de estudiar los logs de ejecución recuperados.
+Por otra parte, el encendido y apagado del framework se configuró como parte del script de experimentación en el programa de la prueba\footnote{\url{https://github.com/sebablasko/Test_UDPTrace/}}. En el mismo, se configuró la opción \verb=set_ftrace_pid= para explicitar la inspección de FTrace sólo sobre el programa de la prueba, además del uso de la utilidad \verb=trace_marker= para instrumentar porciones de código de la prueba (como creación de threads, y término de consumo de datos) que permitiese una mayor facilidad al momento de estudiar los logs de ejecución recuperados.
 
 
 \subsection{Resultados}
 A continuación se ilustran los resultados experimentales obtenidos correspondientes a los datos colectados por Perf y FTrace. A modo de validación estadística, los resultados de las pruebas contemplan el promedio de un rango de 60 repeticiones en cada configuración dada por el caso de estudio.
 
-\subsubsection{Perf}
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.6]{resultados/perfdetalle-crop.pdf}
@@ -103,7 +102,6 @@ A continuación se ilustran los resultados experimentales obtenidos correspondie
 	\label{fig:resPerf}
 \end{figure}
 
-\subsubsection{FTrace}
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.6]{resultados/detalleFtrace-crop.pdf}
@@ -328,7 +326,7 @@ Para poder comprender mejor las tendencias de comportamiento de los distintos ev
 \item Lectura concurrente desde un socket UDP. Precisamente el caso de estudio evaluado a lo largo de toda la investigación.
 \end{enumerate}
 
-De esta manera, se busca tener un punto de comparación de qué fenómeno se manifiesta en escenarios de lectura concurrente sobre un socket, y que no se manifiesta en otros escenarios. Para la recolección de datos se optó por emplear nuevamente el software \emph{Perf} por su simple interfaz de manejo con la PMU del sistema. Al igual que en el caso de estudio original, se evalúan configuraciones de 1, 2, 4, 8, 16, 24, 36, 48, 64 y 128 threads, tras 60 repeticiones del proceso de captura para validez estadística. 
+De esta manera, se busca tener un punto de comparación de qué fenómeno se manifiesta en escenarios de lectura concurrente sobre un socket, y que no se manifiesta en otros escenarios. Para la recolección de datos se empleó nuevamente el software \emph{Perf} para la administración de la PMU del sistema. Al igual que en el caso de estudio original, se evalúan configuraciones de 1, 2, 4, 8, 16, 24, 36, 48, 64 y 128 threads, tras 60 repeticiones del proceso de captura para validez estadística. 
 
 \begin{equation}
 T_i = \left\{ T_{i,1},T_{i,2},T_{i,3}, \dots ,T_{i,59}, T_{i,60}\right\} 
@@ -345,7 +343,7 @@ De ésta manera, se pueden hacer análisis más simples sobre las variables alea
 \subsection{Resultados}
 Dada la enorme cantidad de resultados obtenidos en el proceso de inspección de los \emph{performance counters}, se presentan sólo aquellos resultados con comportamiento interesante registrado en el caso de prueba.
 
-Los resultados se han agrupado en 8 categorías para facilitar la asociación de comportamientos y de elementos analizados: Comportamiento de caché de datos de nivel 1, caché de nievl 2, último nivel de caché y banco de memoria, fallo en predicción de procesamiento, solicitudes fuera del core, comunicación por canales de la arquitectura \emph{Quickpath} y finalmente actividad de coordinación por protocolos \emph{SNOOP} y \emph{MESIF}.
+Los resultados se han agrupado en 8 categorías para facilitar la asociación de comportamientos y de elementos analizados: Comportamiento de caché de datos de nivel 1, caché de nivel 2, último nivel de caché y banco de memoria, fallo en predicción de procesamiento, solicitudes fuera del core, comunicación por canales de la arquitectura \emph{Quickpath} y finalmente actividad de coordinación por protocolos \emph{SNOOP} y \emph{MESIF}.
 
 \begin{figure}[ph!]
 \centering
@@ -647,9 +645,9 @@ Nivel de Inspección                 & Registro & Descripción                  
 \end{figure}
 
 
-Para ésta tarea, se empleó el software de visualización \emph{statgraphics}\footnote{\url{http://www.statgraphics.com/}}. El software tiene la capacidad de generar una visualización estupénda aprovechando un ordenamiento por medio del primer vector propio de la matriz de correlación misma, de manera de generar un efecto clusterizador sobre los datos, agrupando aquellos con alta correlación.
+Para ésta tarea, se empleó el software de visualización \emph{statgraphics}\footnote{\url{http://www.statgraphics.com/}}. El software tiene la capacidad de generar una visualización aprovechando un ordenamiento por medio del primer vector propio de la matriz de correlación construida, de manera de generar un efecto clusterizador sobre los datos, agrupando aquellos con alta correlación.
 
-Como se puede apreciar en su resultado, la vasta mayoría de los eventos estudiados en la matriz de correlación presentan un enorme grado de similitud en sus tendencias (Próximos a 1), lo que combinado con los resultados anteriores de las curvas de registro colectadas con el estudio de \emph{performance counters} da que el grueso de los registros de eventos colectados sigue la misma tendencia de crecimiento del tiempo registrado por el caso de estudio, lo que contribuye nueva evidencia de que el conjunto de mecanismos de comunicación verificables por ésta vía está comprometida por efecto del acceso concurrente a una estructura única.
+Como se puede apreciar en su resultado, la mayoría de los eventos estudiados en la matriz de correlación presentan un enorme grado de similitud en sus tendencias (Próximos a 1), lo que combinado con los resultados anteriores de las curvas de registro colectadas con el estudio de \emph{performance counters} da que el grueso de los registros de eventos colectados sigue la misma tendencia de crecimiento del tiempo registrado por el caso de estudio, lo que contribuye nueva evidencia de que el conjunto de mecanismos de comunicación verificables por ésta vía está comprometida por efecto del acceso concurrente a una estructura única.
 
 \subsection{Conclusiones}
 A raíz del estudio de canales de comunicación de hardware del sistema se pueden rescatar varios aspectos interesantes:
@@ -665,7 +663,7 @@ A raíz del estudio de canales de comunicación de hardware del sistema se puede
 \section{Estudio de Distribución de Carga}
 La tercera hipótesis de investigación plantea como responsable del mal rendimiento presentado en el caso de estudio al sistema de gestión y administración de tareas en el sistema operativo. En escenarios multicore como el estudiado, es normal que el sistema operativo realice como procedimiento de rutina la migración de procesos y la re-locación de recursos y datos para evitar la saturación de las componentes del mismo. Un caso práctico de ello es cuando un núcleo de procesamiento está sobre exigido y el sistema operativo redistribuye los procesos que están ejecutándose en dicho núcleo entre los otros procesadores disponibles del sistema con el costo que ello significa. Ésta práctica es conocida como \textbf{distribución de carga}, y a pesar de que existen varios mecanismos de aprovechamiento de dicho esquema como una estrategia de balanceo de carga en arquitecturas como la estudiada \cite{paper:NUMA}, en ciertos escenarios puede degradar el desempeño general del sistema.
 
-Ésta hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia sobre arquitecturas como la estudiada, basándose en que mientras un proceso está en plena ejecución, al incorporar más y más tareas en el mismo núcleo de procesamiento agregando nuevos hilos de ejecución, sería el sistema operativo quien comenzaría la reasignación automática de dichos hilos entre los distintos procesadores cayendo en problemas como perdida de referencias de memoria en niveles de caché primario, yendo así en contra del principio de localidad de acceso a la memoria. En su peor escenario, ésta teoría lleva al ya mencionado problema de \emph{caché bouncing} que corresponde al fenómeno de sobre corrección de los datos a nivel de líneas de cache de un procesador, producido por constantes cambios de contexto del \emph{scheduller} que genera migración de procesos. Un problema que ya se mencionó en el estudio de la sección previa.
+Esta hipótesis plantea que dicho proceso de reasignación de recursos sería perjudicial en escenarios de concurrencia sobre arquitecturas como la estudiada, basándose en que mientras un proceso está en plena ejecución, al incorporar más y más tareas en el mismo núcleo de procesamiento agregando nuevos hilos de ejecución, sería el sistema operativo quien comenzaría la reasignación automática de dichos hilos entre los distintos procesadores cayendo en problemas como perdida de referencias de memoria en niveles de caché primario, yendo así en contra del principio de localidad de acceso a la memoria. En su peor escenario, ésta teoría lleva al ya mencionado problema de \emph{caché bouncing} que corresponde al fenómeno de sobre corrección de los datos a nivel de líneas de cache de un procesador, producido por constantes cambios de contexto del \emph{scheduller} que genera migración de procesos. Un problema que ya se mencionó en el estudio de la sección previa.
 
 Una alternativa que se ha estudiado para solventar éste problema es la técnica de \emph{Processor Affinity} que consiste en la asociación de tareas o procesos en CPUs específicas, de manera de controlar la ubicación de memoria y zona real de ejecución del código en la máquina.
 \begin{defn}[ver \cite{article:processoraffinity}] \textbf{Processor Affinity} es una estrategia de trabajo que consiste en la asociación de ciertos procesos o hilos de trabajo con determinados núcleos de procesamiento lógicos de un sistema. Dicha asociación restringe la capacidad de ejecución del hilo o proceso exclusivamente a su núcleo de procesamiento asignado.
@@ -686,30 +684,29 @@ Se diseñaron variados esquemas de asignación a fin de evaluar distintos enfoqu
 \item[SimpleCoreAffinity] Asignación de los hilos a los primetos dos cores lógicos del sistema, correspondientes al primer core real duplicado por efecto \emph{HyperThreading}.
 \end{description}
 
-
 \begin{table}[]
 \centering
 \begin{tabular}{|l|l|}
 \hline
-\multicolumn{1}{|c|}{\textbf{Esquema}} & \multicolumn{1}{c|}{\textbf{Fórmula de numeración de afinidad}}                                  \\ \hline
+\multicolumn{1}{|c|}{\textbf{Esquema}} & \multicolumn{1}{c|}{\textbf{Fórmula de numeración de afinidad por hilos}}                                  \\ \hline
 DummyAffinity                          & 
 
-0
+$\displaystyle 0$
                                                                                             \\ \hline
-EquitativeAffinity                     & $(i++) \pmod {totalCPUs} $                                                                                 \\ \hline
-PairAffinity                           & $(2*i) \pmod {totalCPUs} $                                                                                 \\ \hline
-ImpairAffinity                         & $(2*i+1) \pmod {totalCPUs} $                                                                               \\ \hline
+EquitativeAffinity                     & $\displaystyle i+1 \pmod \Phi $                                                                                 \\ \hline
+PairAffinity                           & $\displaystyle 2i \pmod \Phi $                                                                                 \\ \hline
+ImpairAffinity                         & $\displaystyle 2i + 1 \pmod \Phi $                                                                               \\ \hline
+SimpleCoreAffinity                     & $\displaystyle \frac{i \pmod 2}{2} \Phi$                                                                              
+\\ \hline
 NumaPairAffinity                       & 
 $
-    = 
 \begin{cases}
-    i \pmod {totalCPUs} ,& \text{if } i \pmod 2 = 0\\
-    \left((i-1) + \frac{totalCPUs}{2}\right) \pmod {totalCPUs},              & \text{else}
+    \displaystyle i \pmod \Phi & \displaystyle \text{si } i \pmod 2 = 0 \\
+    \displaystyle (i-1) + \frac{\Phi}{2} \pmod \Phi & \displaystyle \text{si } i \pmod 2 \neq 0
 \end{cases}
 $ \\ \hline
-SimpleCoreAffinity                     & $\frac{(i \pmod 2) * totalCPUs}{2}$                                                                               \\ \hline
 \end{tabular}
-\caption{Numeración de afinidad a cada hilo en ejecución, donde $i$ representa el i-ésimo hilo.}
+\caption{Numeración de afinidad a cada hilo en ejecución, donde $i$ representa el i-ésimo hilo. y $\Phi$ corresponde al número de procesadores lógicos reconocidos en el sistema (24 para nuestro caso).}
 \label{my-label}
 \end{table}
 
@@ -729,7 +726,7 @@ La prueba anterior se recopiló en un nuevo experimento\footnote{\url{https://gi
 \end{figure}
 
 \subsection{Análisis y Discusión de Resultados}
-Los resultados experimentales ilustrados en la imagen \ref{fig:resAffinity} son diversos y poco alentadores. En efecto, ningún esquema de distribución evaluado consiguió reducir verdaderamente el tiempo de ejecución al usar una configuración trivial de un único thread, sin embargo, los resultados obtenidos reflejan distintas tendencias en los tiempos resultantes del experimento.
+Los resultados experimentales ilustrados en la imagen \ref{fig:resAffinity} son diversos. En efecto, ningún esquema de distribución evaluado consiguió reducir verdaderamente el tiempo de ejecución con respecto al uso de una configuración trivial de un único thread. Sin embargo los resultados obtenidos reflejan distintas tendencias interesantes en los tiempos resultantes del experimento.
 
 Una primera tendencia evidenciada en los resultados viene dado por los esquemas \textbf{DummyAffinity} y \textbf{SimpleCoreAffinity}, donde los tiempos se mantuvieron estables a lo largo de la evaluación de las distintas configuraciones de threads. Si recordamos, ambos esquemas son rígidos en la posibilidad de locación de los hilos en la CPU, el primero los asigna todos al core \#0 mientras que el segundo los asigna todos entre el core \#0 y el core \#12, numeración que da el sistema operativo a los núcleos duplicados por efecto de la tecnología \emph{HyperThreading}. De ésta manera, ambos esquemas tienen en común que ejecutan la totalidad de los hilos en un mismo núcleo real de procesamiento. Ahora bien, ninguno de los dos consigue ganancias efectivas de tiempo con respecto al uso de un único thread, ello se explica pues, dado que los distintos hilos son asignados todos a un mismo core, la ejecución de los mismos termina degenrando a una ejecución secuencial, es decir, por medio de la afinidad de proceso hemos eliminado la capacidad de paralelismo al llevar el experimento a un escenario monocore. Esto explica también el por qué los tiempos son tan uniformes sin importar la cantidad de hilos que se usen.
 
