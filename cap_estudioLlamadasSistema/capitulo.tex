@@ -66,6 +66,7 @@ Dado que la naturaleza de este estudio se relaciona con el comportamiento de fun
 Por otro lado, para el estudio con FTrace la configuración resulta un poco más compleja. Dado que es una herramienta de traceo dinámico que opera inspeccionando las llamadas de funciones de sistema, la activación de FTrace sobrecarga el funcionamiento del sistema general. Por ello, FTrace se debe activar y desactivar manualmente para analizar sólo los instantes de operación de la prueba de interés. Además, dado el amplio espectro de funciones disponibles para inspeccionar con el framework, se deben emplear las utilidades de filtrado de funciones a inspeccionar que provee el mismo framework, ello en pos de capturar funciones en línea con la dinámica del spinlock del Internet socket.
 
 \vspace{1pc}
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=BashInputStyle, label={code:ftrace}, caption={Configuración de filtros de FTrace sobre funciones a estudiar.}, captionpos=b]
 [sebastian@labs-vhost ~]$ echo *spin* > /sys/kernel/debug/tracing/set_ftrace_filter 
 [sebastian@labs-vhost ~]$ cat /sys/kernel/debug/tracing/set_ftrace_filter 
@@ -82,6 +83,7 @@ _spin_unlock_bh
 bit_spin_lock
 kvm_vcpu_on_spin
 \end{lstlisting}
+\end{minipage}
 
 Por otra parte, el encendido y apagado del framework se configuró como parte del script de experimentación en el programa de la prueba\footnote{\url{https://github.com/sebablasko/Test_UDPTrace/}}. En el mismo, se configuró la opción \verb=set_ftrace_pid= para explicitar la inspección de FTrace sólo sobre el programa de la prueba, además del uso de la utilidad \verb=trace_marker= para instrumentar porciones de código de la prueba (como creación de threads, y término de consumo de datos) que permitiese una mayor facilidad al momento de estudiar los logs de ejecución recuperados.
 

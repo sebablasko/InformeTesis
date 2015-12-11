@@ -48,15 +48,18 @@ $ \\ \hline
 \label{my-label}
 \end{table}
 
+Con los esquemas antes mostrados, se pretende explotar las bondades de la arquitectura NUMA, de los principios de localidad de memoria, y de proximidad de acceso en los datos, a través de una ganancia efectiva en los tiempos de la prueba del caso de estudio.
 
 \section{Metodología de Experimentación}
 Para evaluar los distintos esquemas de afinidad ya postulados, se modificó el caso de estudio para incorporar la asociación de hilos de ejecución para con los distintos cores del sistema. Para ello se aprovechó la flexibilidad de la librería \emph{PThreads}, responsable de brindar los hilos de ejecución en nuestro caso, para usar ciertas llamadas a sistema que nos otorgasen el control de la localidad de ejecución buscada. En concreto, se empleó la función \verb=pthread_attr_setaffinity_np()= que permite especificar precisamente la asociación de un hilo para con el core de ejecución deseado. 
 
-La prueba anterior se recopiló en un nuevo experimento\footnote{\url{https://github.com/sebablasko/Test_DifferentAffinityThreadsBySocket}} que, para efectos de validez estadística, se ejecutó un total de 60 veces, y se rescataron los valores promedios de dichas ejecuciones.
+La prueba anterior se recopiló en un nuevo experimento\footnote{\url{https://github.com/sebablasko/Test_DifferentAffinityThreadsBySocket}} que, para efectos de validez estadística, se ejecutó un total de 60 veces, y se rescataron los valores promedios de dichas ejecuciones, ello siguiendo las mismas lógicas de colección de datos del promedio de las ecuaciones \ref{eq:tupla1} y \ref{eq:promedio}.
+
+\newpage
 
 \section{Resultados}
 
-\begin{figure}[!h]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[scale=.6]{resultados/processoraffinity-crop.pdf}
 	\caption{Resultados experimentales de los distintos esquemas de afinidad.}
