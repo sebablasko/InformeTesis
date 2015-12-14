@@ -51,7 +51,7 @@ Siguiendo el caso de prueba evaluado a lo largo de la investigación, se inspecc
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.7]{imagenes/arch24Cores.png}
+	\includegraphics[scale=.75]{imagenes/arch24Cores.png}
 	\caption{Esquema de arquitectura interna del esquipo servidor multicore sobre el que se realizan las pruebas de \emph{performance counters}.}
 	\label{fig:hwspecs}
 \end{figure}
@@ -74,7 +74,7 @@ Para inspeccionar el sistema donde se evalúan las pruebas en detalle en busca d
 \end{lstlisting}
 
 \subsection{Metodología de captura de eventos}
-Para la especificación de la captura de eventos, lo primero es prestar especial atención a la arquitectura interna en la comunicación interprocesador del sistema. En la figura \ref{fig:hwcomm} se da cuenta de los canales de comunicación que dispone el sistema estudiado, haciendo un acercamiento a cada unidad lógica de procesamiento, núcleo de cada nodo NUMA.
+Para la especificación de la captura de eventos resulta imprescindible prestar especial atención a la arquitectura interna que soporta la comunicación interprocesador del sistema. En la figura \ref{fig:hwcomm} se da cuenta de los canales de comunicación que dispone el sistema estudiado, haciendo un acercamiento a cada unidad lógica de procesamiento, núcleo de cada nodo NUMA.
 
 \begin{figure}[!h]
 	\centering

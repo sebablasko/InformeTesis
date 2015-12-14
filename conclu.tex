@@ -1,4 +1,17 @@
 \begin{conclusion}
-almost done
-agregar ref a publicacion numa y ultimo post de facebook
+
+Como se expuso en el presente trabajo, el inminente crecimiento de las redes de computadoras y el explosivo aumento en el uso de distintos dispositivos que demandan conectividad, hacen que volver la Internet más robusta, disponible y más eficiente sea una prioridad. Entendiendo como parte crucial de dicha labor el trabajo del servicio DNS, postular mejoras que optimicen su operación es un ejercicio plenamente justificado en pos de brindar una mejor performance sobre la red.
+
+A través del \textbf{estudio de llamadas a sistema} se pudo
+
+Con respecto al \textbf{estudio de canales de comunicacion de hardware}, centrado en la dinámica de los performance counters disponibles en el sistema, se
+
+Por otro lado, nuestro \textbf{estudio de distribución de carga} usando processor affinity dio
+
+De esta forma, se pudo corroborar responsabilidades transversales y cruzadas entre las sospechas vigentes del problema estudiado. Trasnversales pues todas las sospechas resultaron ser corroboradas experimentalmente, dando a entender que --En mayor o menor grado-- el diseño de operación de las interfaces de red de Linux no incorpora en su diseño una aplicación que admita concurrencia en el consumo de información, limitando así la capacidad de optimizaciones usando la estratégia de paralelísmo a secas. Y Cruzadas, en el sentido de que los factores responsables de cada sospecha resultan repetirse entre cada caso --siendo principal actor en este sentido el spinlock de protección de la estructura socket--.
+
+Resulta interesante que al día de hoy, el problema estudiado sigue vigente y abierto a nuevas propuestas de soluciones. En esta misma línea, recientemente Facebook, a través de su equipo de desarrollo de kernel ha postulado modificaciones al núcleo de Linux que permitan hacer un uso más flexible en el consumo concurrente de datos desde estructuras protegidas por medio de estructuras denominadas \emph{Blk-mq} \cite{post:facebookFin}, que van en busca de aprovechar consumo distribuidos de colas usando lecturas exclusivas por cada CPU. Un enfoque que aprovecharía de mejor manera las interacciones de hardware del sistema al tener accesos más localizados que lo detectado en nuestro estudio de \emph{Performance Counters} e inspirado sobre la misma idea que nuestro estudio de \emph{Processor Affinity} pero implementado directamente a nivel del kernel. Por otro lado, recientes publicaciones de XXXX muestran como aprovechar arquitecturas NUMA a modo de incrementar el rendimiento de operaciones sobre estructuras compartidas, nuevamente, un enfoque similar al que se repasó en nuestra investigación por medio de \emph{Processor Affinity}.
+
+Finalmente, se postuló una solución basada en un módulo del kernel para Linux que, bajo un escenario de operación fiel al caso de estudio presentado, se presenta plenamente comparable con reuseport --La mejor opción disponible para palear el problema estudiado en cuestión--, y siendo a su vez competitivo en rendimiento con este último, brindando en la práctica un desempeño que es muy similar. Por otro lado, la solución desarrollada cuenta con una característica de balanceo de trabajo que ni el mismo reuseport incorpora, la que brinda una distribución de tiempos de trabajo más equitativa entre los sockets que trabajan conjuntamente, con respecto a reuseport. Por otro lado, el producto final es una solución extensible, modular y modificable, lo que garantiza su fácil adaptación para escenarios de operación especificos e incluso la capacidad de portar la misma a otras plataformas.
+
 \end{conclusion}
