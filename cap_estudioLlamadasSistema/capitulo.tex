@@ -120,11 +120,20 @@ En el caso de los resultados de la prueba de Perf disponibles en la imagen \ref{
 
 Para reconocer mejor la dinámica de consumo de tiempos en las funciones inspeccionadas en el caso de estudio, se usaron los reportes generados por Perf para construir un nuevo tipo de visualización de llamadas a sistema: Un \emph{Call-Graph-Chart} (Ver imagen \ref{fig:callgraph}), de manera de poder reconocer los bloques de funciones más repetidos en la ejecución del caso de prueba. Para ésta visualización se aprovechó el script \emph{gprof2dot}\footnote{\url{https://github.com/jrfonseca/gprof2dot}}. En éste caso, resulta evidente cómo el grafo de llamadas de sistema se complejiza drásticamente al incorporar más threads, de la mano con el aumento en los porcentajes de permanencia en llamadas de sincronización.
 
-\begin{figure}[!h]
+\begin{figure}[]
 	\centering
-	\includegraphics[scale=.5]{imagenes/fcfm}
+	\hspace*{\fill}
+	\subfigure[Evaluando 2 Threads]{
+		\includegraphics[width=.25\textwidth]{resultados/g2prof_2con.png}
+		\label{fig:callgraph2}
+	}\hfill
+	\subfigure[Evaluando 4 Threads]{
+		\includegraphics[width=.45\textwidth]{resultados/g2prof_4con.png}
+		\label{fig:callgraph4}
+	}
 	\caption{Visualización de call-graph identificando las llamadas a sistema y sus pesos en el caso de prueba.}
 	\label{fig:callgraph}
+	\hspace*{\fill}
 \end{figure}
 
 Lo anterior postula una primera relación entre el número de threads en el acceso concurrente al socket con respecto al porcentaje y dinámica de llamados a funciones de bloqueo del spinlock. Sin embargo, los porcentajes de llamadas no son del todo relevantes si no se saben los tiempos efectivos que significan en la prueba. Para ello, se repasan los resultados de Ftrace.
@@ -135,7 +144,7 @@ Por otro lado, al realizar una colección de datos con FTrace a modo de recupera
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[scale=.5]{resultados/sumaFtrace-crop.pdf}
+	\includegraphics[scale=.6]{resultados/sumaFtrace-crop.pdf}
 	\caption{Tiempos totales de bloqueo sobre el \emph{lock} por las distintas llamadas de sistema capturadas por \emph{Ftrace} en el caso de estudio juntos con una curva de aproximación de tendencia.}
 	\label{fig:sumaFtrace}
 \end{figure}

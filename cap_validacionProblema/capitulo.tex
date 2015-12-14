@@ -206,16 +206,23 @@ Como se mencionó en la sección \ref{section:dns}, el escenario advertido para 
 
 En este contexto, el servicio DNS --como pieza estructural de Internet-- debe estar preparado para enfrentar de la mejor manera posible la gran carga de procesamiento antes señalada, sobre todo dado que --por su naturaleza jerárquica-- éste servicio escala rápidamente el tráfico entre servidores. En estricto rigor, el sistema de DNS debe garantizarse eficiente en cualquier escenario.
 
-A modo de preparativo para el escenario anterior, distintas instituciones han trabajado en alternativas para mejorar el procesamiento de las peticiones DNS a fin de optimizar su operación y tiempos de respuesta. Una apuesta para otorgar dicha mejora en performance y en línea con la tendencia actual de multiplicar el poder de procesamiento añadiendo más núcleos, consiste en incorporar paralelismo en el procesamiento de las consultas. Para ello se propone un esquema como el detallado en el diagrama de la ilustración \ref{fig:multi_thread} donde la idea consiste en que una misma maquina DNS pueda atender múltiples solicitudes de manera simultánea a través de una misma interfaz de red (en nuestro caso, un socket UDP). Este enfoque supone como principal mejora el escalamiento del procesamiento de peticiones DNS en un factor proporcional a la cantidad de hilos de ejecución atendiendo la interfaz compartida, ello siempre y cuando existan núcleos reales de procesamiento disponibles para los distintos hilos. 
+A modo de preparativo para el escenario anterior, distintas instituciones han trabajado en alternativas para mejorar el procesamiento de las peticiones DNS a fin de optimizar su operación y tiempos de respuesta. Una apuesta para otorgar dicha mejora en performance y en línea con la tendencia actual de multiplicar el poder de procesamiento añadiendo más núcleos, consiste en incorporar paralelismo en el procesamiento de las consultas. Para ello se propone un esquema como el detallado en el diagrama de la ilustración \ref{fig:multi_thread} donde la idea consiste en que una misma maquina DNS pueda atender múltiples solicitudes de manera simultánea a través de una misma interfaz de red (en nuestro caso, un socket UDP). Este enfoque supone como principal mejora el escalamiento del procesamiento de peticiones DNS en un factor proporcional a la cantidad de hilos de ejecución atendiendo la interfaz compartida, ello siempre y cuando existan núcleos reales de procesamiento disponibles para los distintos hilos. Una proyección estimada se ilustra en la figura \ref{fig:proyeccionTeorica}. La tendencia de tiempos se rige de acuerdo a una logarítmica de acuerdo a la equitativa distribución de trabajos sobre los threads usados. Además se incluye un costo base inapelable correspondiente a los procesos de construcción y coordinación del sistema en los mecanismos de control de la prueba.
 
-\begin{figure}[!h]
+\begin{figure}[]
 	\centering
 	\includegraphics[scale=0.45]{imagenes/conf_multi_thread}
 	\caption{Esquema de procesamiento multi-thread en un servidor con 4 procesadores reales, empleando un hilo por procesador. Escenario que en teoría, supone un mejor desempeño general, más no lo consigue en la práctica.}
 	\label{fig:multi_thread}
 \end{figure}
 
-Inspirados en la consistencia del argumento teórico detrás de la propuesta anterior, varias instituciones han evaluado este enfoque de procesamiento \cite{post:facebook, paper:toshiba}, pero con resultados poco alentadores. La experiencia local, de la mano de NIC Chile es un buen ejemplo del problema detectado. Aprovechando su infraestructura en pos de mejorar sus propios servicios, NIC Chile\footnote{Administrador del Top Level Domain \emph{.CL}} evaluó un diseño multi-hilos en el procesamiento de consultas DNS a sus servidores a fin de lograr una mejora de performance en su procesamiento DNS tal y como el diseño teórico anterior plantea sin sospechar el resultado real. En la práctica, el rendimiento final al incorporar paralelismo no estuvo ni cerca de las proyecciones esperadas y lejos de reducirse, los tiempos de procesamiento aumentaron con respecto al esquema sin multi-hilos, ello aun cuando no existían indicios de sobrecarga en las máquinas. Éste resultado, inconsistente con el argumento teórico ya mencionado, planteó la duda sobre la verdadera capacidad de procesamiento paralela desde instancias de comunicación de red en sistemas multicore y en el sistema Linux per se
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.6]{resultados/proyeccionTeorica-crop.pdf}
+	\caption{Estimación teórica de tiempos resultantes en el consumo de datos sobre una misma interfaz de red al incorporar lecturas paralelas.}
+	\label{fig:proyeccionTeorica}
+\end{figure}
+
+Inspirados en la consistencia del argumento teórico detrás de la propuesta anterior, varias instituciones han evaluado este enfoque de procesamiento \cite{post:facebook, paper:toshiba}, pero con resultados poco alentadores. La experiencia local, de la mano de NIC Chile es un buen ejemplo del problema detectado. Aprovechando su infraestructura en pos de mejorar sus propios servicios, NIC Chile\footnote{Administrador del Top Level Domain \emph{.CL}} evaluó un diseño multi-hilos en el procesamiento de consultas DNS a sus servidores a fin de lograr una mejora de performance en su procesamiento DNS tal y como el diseño teórico anterior plantea sin sospechar el resultado real. En la práctica, el rendimiento final al incorporar paralelismo no estuvo ni cerca de las proyecciones esperadas y lejos de reducirse, los tiempos de procesamiento aumentaron con respecto al esquema sin multi-hilos, ello aun cuando no existían indicios de sobrecarga en las máquinas. Éste resultado, inconsistente con el argumento teórico ya mencionado, planteó la duda sobre la verdadera capacidad de procesamiento paralela desde instancias de comunicación de red en sistemas multicore y en el sistema Linux per se.
 
 
 \subsection{Validación del Problema}
@@ -252,9 +259,16 @@ El comportamiento no escalable al usar threads es una característica que podrí
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[scale=0.5]{resultados/transferenciaUDP1-crop.pdf}
+	\includegraphics[scale=0.6]{resultados/transferenciaUDP1-crop.pdf}
 	\caption{Grafico comparativo del rendimiento de prueba UDP entre distintas arquitecturas de hardware. Los valores mostrados son representativos de 60 repeticiones de la prueba de transferencia UDP.}
 	\label{fig:tests_arch}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.6]{resultados/transferenciaUDP2-crop.pdf}
+	\caption{Grafico de resultados de tiempo de consumo de datos en el caso de estudio presentado sobre la arquitectura del servidor de 24 cores representado por la figura \ref{fig:pc1}. La tendencia de resultados se ajusta a una curva logarítmica con un ajuste superior al 95\%.}
+	\label{fig:tests_arch_detalle24}
 \end{figure}
 
 \begin{figure}
@@ -280,15 +294,8 @@ El comportamiento no escalable al usar threads es una característica que podrí
 De los resultados experimentales de la figura \ref{fig:tests_arch} se pueden rescatar dos aspectos relevantes:
 \begin{itemize}
 \item El primero, que el efecto de consumo concurrente es distinto entre los 3 escenarios estudiados, dejando en evidencia que las diferentes configuraciones de hardware en cada caso entregan diferente desempeño a la hora de aprovechar ejecuciones paralelas y de enfrentar escenarios de concurrencia.
-\item El segundo, que el caso de mayor interés, ilustrado en la arquitectura del servidor multiprocesador presenta una situación de baja de desempeño a medida que se congestiona (o satura) más fuertemente el consumo de la interfaz de red, representada por el socket UDP. La tendencia es similar a la reportada por estudios anteriores que cuestionan la aplicabilidad de técnicas de paralelísmo en éste tipo de arquitecturas por no demostrar un mejor desempeño evidente \cite{post:facebook, paper:toshiba, tesis:diegoDCC}.
+\item El segundo, que el caso de mayor interés, ilustrado en la arquitectura del servidor multiprocesador presenta una situación de baja de desempeño a medida que se congestiona (o satura) más fuertemente el consumo de la interfaz de red, representada por el socket UDP (Ver figura \ref{fig:tests_arch_detalle24}). La tendencia es similar a la reportada por estudios anteriores que cuestionan la aplicabilidad de técnicas de paralelísmo en éste tipo de arquitecturas por no demostrar un mejor desempeño evidente \cite{post:facebook, paper:toshiba, tesis:diegoDCC}.
 \end{itemize}
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[scale=0.5]{resultados/transferenciaUDP2-crop.pdf}
-	\caption{Grafico de resultados de tiempo de consumo de datos en el caso de estudio presentado. La tendencia de resultados se ajusta a una curva logarítmica con un ajuste superior al 95\%.}
-	\label{fig:tests_arch}
-\end{figure}
 
 Las conclusiones preliminares del estudio, apoyan la idea de continuar indagando la operación del caso de estudio en la arquitectura del servidor multiprocesador, que viene siendo el escenario típico para la operación DNS, que es el caso que nos inspira en ésta investigación.
 
