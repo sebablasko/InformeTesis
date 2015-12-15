@@ -60,7 +60,7 @@ Para inspeccionar el sistema donde se evalúan las pruebas en detalle en busca d
 \begin{description}
 \item[PMU Genéricas] Incluyen a \verb=perf= y  \verb=perf_raw=. Disponen de las especificaciones estándar de \emph{performance counters} de la línea del software \emph{Perf}, lo cual las hace poco exactas en los valores descritos por cada evento y no necesariamente fieles a su especificación pues dependen en gran parte de que el fabricante sea riguroso en su implementación.
 \item[PMU x86] PMU generacional de Intel para la línea x86 de Intel que incluye a \verb=ix86arch=. Dispone de eventos comunes a dicha línea de procesadores por lo que no da soporte específico para la arquitectura \emph{QuickPath} ni del funcionamiento multiprocesador.
-\item[PMU westmere] PMU específicas de la línea Westmere [AKA UNA CITA] que soporta la base del desarrollo de la \emph{Intel QuickPath Architecture}, incluyendo a \verb=wsm_dp= y \verb=wsm_unc=. Es el nivel más exacto de PMU que provee el fabricante con los eventos más especificos y documentados del sistema, por lo que es la PMU más importante a la hora de colectar eventos.
+\item[PMU westmere] PMU específicas de la línea \emph{Westmere}\footnote{\url{https://en.wikipedia.org/wiki/Westmere_(microarchitecture)}} que soporta la base del desarrollo de la \emph{Intel QuickPath Architecture}, incluyendo a \verb=wsm_dp= y \verb=wsm_unc=. Es el nivel más exacto de PMU que provee el fabricante con los eventos más especificos y documentados del sistema, por lo que es la PMU más importante a la hora de colectar eventos.
 \end{description}
 
 \vspace{1pc}

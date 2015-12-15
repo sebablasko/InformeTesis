@@ -9,13 +9,14 @@ Reuseport \cite{slides:googleReuseport} es una de las soluciones más usadas par
 	\hspace*{\fill}
 	\subfigure[Puerto tomado por un socket tradicional.]{
 		\includegraphics[width=.45\textwidth]{imagenes/socketNormal.png}
+		\label{fig:normalSocket}
 	}\hfill
 	\subfigure[Compartición de puerto usando reuseport.]{
 		\includegraphics[width=.45\textwidth]{imagenes/socketReuseport.png}
 		\label{fig:soReuseport}
 	}
 	\caption{Comparativo del funcionamiento de asociación sockets-puerto usando sockets tradicionales con respecto a sockets con la opción reuseport.}
-	\label{fig:socketHandshake}
+	\label{fig:socketDiffereces}
 	\hspace*{\fill}
 \end{figure}
 
