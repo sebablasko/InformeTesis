@@ -65,10 +65,10 @@
   \begin{flushright}
     \small
     \begin{tabular}{l}
-      RESUMEN DE LA MEMORIA PARA OPTAR \\
-      AL TÍTULO DE \MakeUppercase\@carrera \\
-      POR: \MakeUppercase\@author \\
-      FECHA: \MakeUppercase\@date\\
+%      RESUMEN DE LA MEMORIA PARA OPTAR \\
+%      AL TÍTULO DE \MakeUppercase\@carrera \\
+      RESUMEN POR: \MakeUppercase\@author \\
+%      FECHA: \MakeUppercase\@date\\
       PROF. GUÍA: SR. \MakeUppercase\@guia \\
     \end{tabular}
   \end{flushright}

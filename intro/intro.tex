@@ -123,7 +123,7 @@ Sin embargo, los resultados al evaluar el enfoque antes propuesto revelan un pre
 
 La pregunta entonces es ¿Por qué el sistema de procesamiento de peticiones DNS no escala al incorporar paralelismo directamente? Una sospecha interesante propone que probablemente el sistema de procesamiento de paquetes para UDP (que es el protocolo involucrado en las peticiones DNS) podría tener imperfecciones a nivel de diseño en el sistema operativo que no garantizarían su óptimo funcionamiento en condiciones de concurrencia, sugiriendo como responsable del problema a un defecto de contención a nivel de estructuras compartidas del sistema operativo. Sin embargo, dicha hipótesis no ha sido comprobada ni desmentida. Por otra parte, determinar la causa del problema anterior significa un tremendo desafío pues implica trabajar a nivel del núcleo del sistema operativo, que combina diversos paradigmas y enfoques de programación incorporados a lo largo de su desarrollo, unido a la dificultad inherente de trabajar analizando un sistema complejo como lo es el kernel mismo.
 
-El presente trabajo plantea precisamente un estudio amplio que reune las principales sospechas de investigación vigentes del problema al momento de su desarrollo, de manera de identificar y analizar las distintas componentes responsables del problema detectado, así como también el estudio de alternativas para palear dicha situación.
+El presente trabajo plantea precisamente un estudio amplio que reune las principales sospechas de investigación vigentes del problema al momento de su desarrollo, de manera de identificar y analizar las distintas componentes responsables del problema detectado, así como también el estudio de alternativas para paliar dicha situación.
 
 
 \end{intro}
