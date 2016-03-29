@@ -31,7 +31,7 @@ El mecanismo de distribución de paquetes que emplea el kernel se basa en una ta
 
 
 \section{Uso en la práctica}
-Como se mencionó, para usar esta opción se debe modificar la estructura socket que primero tome control del puerto local para escucharlo por medio de la llamada \verb=bind()=. Con ello, el puerto puede ser posteriormente re-acoplado por otros sockets sin la necesidad de que estos últimos tengan la característica activada (Ver imagen \ref{fig:soReuseport}).
+Como se mencionó, para usar esta opción se debe modificar la estructura socket que primero tome control del puerto local para escucharlo por medio de la llamada \verb=bind()=. Con ello, el puerto puede ser posteriormente re-acoplado por otros sockets sin la necesidad de que estos últimos tengan la característica activada (Ver figura \ref{fig:soReuseport}).
 
 La adopción de esta funcionalidad ha sido incorporada a distinto software con requerimientos común de alta disponibilidad de atención de consultas con buenos resultados. Ejemplos de lo anterior son productos como \emph{nginx}\footnote{\url{https://www.nginx.com/blog/socket-sharding-nginx-release-1-9-1/}} o \emph{Apache Web Server} \cite{paper:apache} que han incorporado esta característica en versiones recientes con buenos resultados.
 
