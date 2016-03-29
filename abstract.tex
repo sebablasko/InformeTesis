@@ -8,5 +8,6 @@ La presente investigación plantea un estudio experimental del caso de los Socke
 
 Posteriormente, la investigación se traslada a estudiar la técnica denominada \emph{reuseport}, un desarrollo de ingenieros de Google que plantea una solución al problema presentado y que promete mitigar el efecto negativo causado por el uso de multithreading en el contexto estudiado. Así también, se repasan aspectos como el rendimiento de este enfoque, y ciertas debilidades del mismo. 
 
-Finalmente, es producto del presente trabajo el planteamiento e implementación de una solución propia al problema que, inspirado en el diseño de \emph{reuseport} e implementado como un módulo del kernel, provee un mecanismo de distribución de paquetes que permite optar a mejoras de desempeño en el procesamiento de los mismos al permitir el uso de técnicas de procesamiento paralelo clásicas, eliminando el punto de contención original.
+Finalmente, es producto del presente trabajo el planteamiento e implementación de una solución propia al problema que, inspirado en el diseño de \emph{reuseport} e implementado como un módulo del kernel, provee un mecanismo de distribución de paquetes que permite optar a mejoras de desempeño en el procesamiento de los mismos usando técnicas de procesamiento paralelo clásicas. Una solución que --en su configuración estándar-- provee un rendimiento competitivo a \emph{reuseport}, pero que gracias a ser ampliamente configurable permite obtener mejores resultados que \emph{reuseport} en contextos de distribución de paquetes no uniformes. 
+
 %\end{abstract}
