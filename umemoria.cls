@@ -42,7 +42,7 @@
 
 %% Lenguaje
 \addto\captionsspanish{\renewcommand\tablename{Tabla}}
-\addto\captionsspanish{\renewcommand\contentsname{Tabla de Contenidos}}
+\addto\captionsspanish{\renewcommand\contentsname{Tabla de Contenido}}
 \addto\captionsspanish{\renewcommand\listtablename{Índice de Tablas}}
 \addto\captionsspanish{\renewcommand\listfigurename{Índice de Ilustraciones}}
 
@@ -172,7 +172,8 @@
 
     \vfill
     \normalfont
-    Este trabajo ha sido parcialmente financiado por \@auspicio
+    %Este trabajo ha sido parcialmente financiado por \@auspicio
+    ESTE TRABAJO HA SIDO PARCIALMENTE FINANCIADO POR \@auspicio
     \fi
 
     \vfill

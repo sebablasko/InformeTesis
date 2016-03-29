@@ -1,4 +1,5 @@
-\begin{abstract}
+%\begin{abstract}
+\section*{Resumen}
 La proliferación de sistemas con múltiples núcleos de procesamiento ha transformado la aplicación de técnicas de programación paralela en uno de los tópicos más estudiados en los últimos años, ello en pos de mejorar los rendimientos generales de cualquier operación. Una aplicación práctica de dicho enfoque es en el procesamiento de requerimientos DNS, los cuales han evidenciado un gran aumento de la mano del desarrollo de la Internet y la masificación de distintos tipos de dispositivos que demandan conectividad, y que por sus características son un buen candidato a un enfoque de procesamiento paralelo. Sin embargo, distintas investigaciones han revelado que la aplicación de técnicas multithreading per se no son una estrategia que garantice un escalamiento en los resultados.
 
 Distintas empresas de carácter global (como Google, Facebook y Toshiba) así como investigaciones locales (de la mano de NIC Chile) han reconocido la existencia de este problema, reiterando responsabilidades a los Internet Sockets provistos por el kernel de Linux, los cuales al ser expuestos a un consumo concurrente degradan su capacidad de consumo de datos y rendimiento general, aún cuando existe poder de cómputo excedente. Así estas empresas y otros trabajos de investigación han planteado varias hipótesis teóricamente razonables para explicar dicho comportamiento pero sin concretar las mismas en términos experimentales que permitan confirmarlas o desmentirlas. 
@@ -8,4 +9,4 @@ La presente investigación plantea un estudio experimental del caso de los Socke
 Posteriormente, la investigación se traslada a estudiar la técnica denominada \emph{reuseport}, un desarrollo de ingenieros de Google que plantea una solución al problema presentado y que promete mitigar el efecto negativo causado por el uso de multithreading en el contexto estudiado. Así también, se repasan aspectos como el rendimiento de este enfoque, y ciertas debilidades del mismo. 
 
 Finalmente, es producto del presente trabajo el planteamiento e implementación de una solución propia al problema que, inspirado en el diseño de \emph{reuseport} e implementado como un módulo del kernel, provee un mecanismo de distribución de paquetes que permite optar a mejoras de desempeño en el procesamiento de los mismos al permitir el uso de técnicas de procesamiento paralelo clásicas, eliminando el punto de contención original.
-\end{abstract}
+%\end{abstract}
