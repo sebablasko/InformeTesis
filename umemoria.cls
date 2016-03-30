@@ -114,9 +114,19 @@
 \let\carrera\setcarrera
 \let\setcarrera\relax
 
+\global\let\@carreraing\@empty
+\newcommand{\setcarrera}[1]{\def\@carreraing{#1}}
+\let\carreraing\setcarrera
+\let\setcarrera\relax
+
 \global\let\@memoria\@empty
 \newcommand{\setmemoria}[1]{\def\@memoria{#1}}
 \let\memoria\setmemoria
+\let\setmemoria\relax
+
+\global\let\@memoriaing\@empty
+\newcommand{\setmemoria}[1]{\def\@memoriaing{#1}}
+\let\memoriaing\setmemoria
 \let\setmemoria\relax
 
 \global\let\@guia\@empty
@@ -159,6 +169,9 @@
 
     \vspace{1cm}
     \@memoria \MakeUppercase\ \@carrera
+    
+    \vspace{0cm}
+    \@memoriaing \MakeUppercase\ \@carreraing
 
     \vspace{1cm}
     \MakeUppercase\@author

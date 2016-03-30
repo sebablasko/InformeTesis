@@ -297,14 +297,14 @@ Un caso interesante consiste en extender la solución para funcionar con otros p
 
 Gracias a su buen diseño, suplir el requerimiento anterior es sencillo con nuestra solución. Basta implementar un nuevo esquema de distribución que sea conciente de la distribución de paquetes para, usando las tuplas de datos de origen/destino de cada paquete, hacer una distribución correcta entre los sockets de redirección, para que las conexiones sean correctas. Para ello, una solución interesante es en lugar de aplicar un criterio aleatorio o secuencial de distribución como se usó en los esquemas provistos en este trabajo, emplear una \emph{función de Hash} que use las tuplas de origen/destino de cada paquete y así, lleve un registro lógico correcto de las conexiones que están operativas sobre un mismo socket.
 
+El enfoque antes planteado es sumamente poderoso y brinda una interesante oportunidad pues postula la capacidad de \textbf{multiplexar} un único puerto del sistema, haciendo posible la recepción de paquetes genéricos en una misma interfaz y reasignar los mismos a un pool de otros sockets atendidos por aplicaciones independientes. En otras palabras, se podrían atender diversos requerimientos en una misma interfaz lógica del sistema asociada a un puerto para atender una variedad de servicios, rigiendo la distribución según las características mismas de un paquete (Ver figura \ref{fig:multiplexarPuerto}).
+
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.5]{imagenes/socketMultiplexed.png}
 	\caption{Capacidad de multiplexar un único puerto lógico del sistema, permitiendo comunicación diversa en una única interfaz de red.}
 	\label{fig:multiplexarPuerto}
 \end{figure}
-
-El enfoque antes planteado es sumamente poderoso y brinda una interesante oportunidad pues postula la capacidad de \textbf{multiplexar} un único puerto del sistema, haciendo posible la recepción de paquetes genéricos en una misma interfaz y reasignar los mismos a un pool de otros sockets atendidos por aplicaciones independientes. En otras palabras, se podrían atender diversos requerimientos en una misma interfaz lógica del sistema asociada a un puerto para atender una variedad de servicios, rigiendo la distribución según las características mismas de un paquete (Ver figura \ref{fig:multiplexarPuerto}).
 
 Tan flexible es este enfoque que permite soportar una diversidad de servicios (ya sean orientados a la conexión o a la mensajería) sobre una única interfaz lógica de conexión según las capas 3 y 4 del modelo OSI. Esto en la práctica permite postular a mejoras en aspectos como seguridad, permitiendo que sólo los servicios reconocidos consiguen realizar conexiones correctas. Un ejemplo práctico de ello anterior se ilustra en la figura \ref{fig:multiplexarPuertoEjemplo} donde se muestran distintas aplicaciones que operan trabajando con paquetes de diversa naturaleza (tanto por sus características, como por sus orígenes) pudiendo reasignar, clonar o simplemente descartar paquetes, según la naturaleza de las reglas definidas en el módulo.
 
