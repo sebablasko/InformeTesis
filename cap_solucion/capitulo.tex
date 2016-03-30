@@ -201,7 +201,7 @@ La remoción de la solución desde el sistema es muy simple y se basa en que la 
 
 \section{Evaluación de Rendimiento de la Solución}
 
-A fin de poder estudiar el funcionamiento y determinar el rendimiento de la solución propuesta, se construyó un experimento siguiendo la misma dinámica con que se valuaron los experimentos anteriores (Tanto el caso de estudio original como el nuevo caso de estudio de \emph{Reuseport}). De esta manera, se construyó un nuevo caso de estudio (Ver figura \ref{fig:5layersqpi}) basado en el mismo experimento de \emph{reuseport} que consiste en el cálculo de tiempo promedio de consumo de un total de un millón de paquetes distribuidos en una cantidad de sockets pre configurada según la instalación de nuestra solución planteada \footnote{\url{ https://github.com/sebablasko/Test_SaturationReusePortUDPSockets}}. Al igual que en el caso anterior, el experimento contempla los conceptos de \textbf{tiempo mínimo}, \textbf{tiempo neto} y \textbf{cuota de consumo}. Finalmente, y al igual que en los experimentos anteriores, se evaluó un total de 60 repeticiones de éste experimento para validez estadístico de los resultados.
+A fin de poder estudiar el funcionamiento y determinar el rendimiento de la solución propuesta, se construyó un experimento siguiendo la misma dinámica con que se valuaron los experimentos anteriores (Tanto el caso de estudio original como el nuevo caso de estudio de \emph{reuseport}). De esta manera, se construyó un nuevo caso de estudio (Ver figura \ref{fig:5layersqpi}) basado en el mismo experimento de \emph{reuseport} que consiste en el cálculo de tiempo promedio de consumo de un total de un millón de paquetes distribuidos en una cantidad de sockets pre configurada según la instalación de nuestra solución planteada \footnote{\url{ https://github.com/sebablasko/Test_SaturationReusePortUDPSockets}}. Al igual que en el caso anterior, el experimento contempla los conceptos de \textbf{tiempo mínimo}, \textbf{tiempo neto} y \textbf{cuota de consumo}. Finalmente, y al igual que en los experimentos anteriores, se evaluó un total de 60 repeticiones de éste experimento para validez estadístico de los resultados y para tener un resultado comparable con el obtenido en el estudio de \emph{reuseport}, el experimento se desarrolló en el servidor de 24 cores virtuales descrito en el punto \ref{24Cores}.
 
 \begin{figure}[!h]
 	\centering
@@ -209,6 +209,14 @@ A fin de poder estudiar el funcionamiento y determinar el rendimiento de la solu
 	\caption{Adaptación del esquema de la prueba UDP en un sistema con la solución desarrollada habilitada, correspondiente al nuevo caso de estudio.}
 	\label{fig:casoPruebaModulo}
 \end{figure}
+
+Al igual que en el experimento con \emph{reuseport} se formalizaron los siguientes conceptos para cuantificar los tiempos de las distintas operaciones involucradas en la prueba:
+
+\begin{description}
+\item[Tiempo Mínimo] Corresponde al tiempo en que el primer socket termina de consumir su cuota de consumo asignada.
+\item[Tiempo Neto] Corresponde al tiempo en que el último socket termina de consumir su cuota de consumo asignada. De esta forma, corresponde al tiempo en que se completa la trasferencia total de datos.
+\item[Cuota de Consumo] Corresponde a la porción de paquetes que le corresponde consumir a cada socket y depende directamente del esquema de distribución de paquetes que se esté empleando.
+\end{description}
 
 \subsection{Resultados}
 A continuación se presentan los resultados de los tiempos registrados en el experimento correspondiente al nuevo caso de estudio.
@@ -231,16 +239,16 @@ A continuación se presentan los resultados de los tiempos registrados en el exp
 
 En primera instancia, la solución consigue tanto en sus tiempos mínimos como netos una ganancia en el tiempo de la prueba usando múltiples sockets con respecto al caso de uso de un solo socket, algo nunca conseguido usando el enfoque de consumo concurrente sobre un socket usando múltiples hilos. Otro aspecto interesante es que el rendimiento de la solución usando el mecanismo de distribución \emph{SequentialSched} es más eficiente que el correspondiente con \emph{RandomSched}, situación comprensible entendiendo que por su naturaleza, el esquema secuencial satisface la cuota de los sockets alimentados sin desperdiciar ningún paquete, esto producto de tener una distribución totalmente justa entre sockets. Diferencia crucial con respecto al esquema de distribución aleatorio donde se puede dar el caso de que los sockets no reciban una cuota idéntica, pudiendo así cumplir algunos su cuota primero y causando la perdida paquetes al redirigidos a sockets satisfechos en la prueba.
 
-Por otro lado, los tiempos netos de transferencia registran un decrecimiento constante a medida que se usan más sockets, similar a la tendencia obtenida con la opción \emph{Reuseport} lo cual sugiere un comportamiento posiblemente competitivo. Sin embargo, para evaluar el verdadero desempeño de la solución, es preciso comparar su rendimiento con otros escenarios y herramientas ya estudiadas.
+Por otro lado, los tiempos netos de transferencia registran una variación significativa usando el esquema \emph{SequentialSched} a medida que se usan más sockets, lo cual sugiere un comportamiento posiblemente competitivo con \emph{reuseport}. Sin embargo, para evaluar el verdadero desempeño de la solución, es preciso comparar su rendimiento en detalle con respecto a las distintas alternativas disponibles.
 
 \section{Comparación de Rendimiento}
 
-Tal y como se adelantó, los resultados de la figura \ref{fig:resultadoMiModulovsTodos} ilustran como la solución (en cualquiera de sus dos mecanismos de distribución) al igual que reuseport, genera ganancias de tiempo para completar el consumo del millón de paquetes a medida que se emplean más sockets con respecto al escenario original del uso multi-hilo para consumo concurrente. De la misma forma, se aprecia cómo el mejor desempeño es dado generalmente (salvo excepciones como el escenario de 2 sockets) por la alternativa reuseport, seguido por nuestra solución en esquema secuencial, y posteriormente el esquema aleatorio, con una diferencia entre tiempos que se amortiza a medida que se van adicionando más sockets.
+Para evaluar el verdadero despeño de la solución propuesta, se evaluaron los distintos enfoques de consumo de datos desde un socket estudiados a lo largo de esta investigación. Tal y como se adelantó, los resultados de la figura \ref{fig:resultadoMiModulovsTodos} ilustran como la solución (en cualquiera de sus dos mecanismos de distribución) al igual que reuseport, genera ganancias de tiempo para completar el consumo del millón de paquetes a medida que se emplean más sockets con respecto al escenario original del uso multi-hilo para consumo concurrente. De la misma forma, se aprecia cómo el mejor desempeño es dado generalmente (salvo excepciones como el escenario de 2 sockets) por la alternativa reuseport, seguido por nuestra solución en esquema secuencial, y posteriormente el esquema aleatorio, con una diferencia entre tiempos que se amortiza a medida que se van adicionando más sockets.
 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.6]{resultados/modulovstodos1-crop.pdf}
-	\caption{Comparación de tiempos netos de consumo para el nuevo caso de estudio de todas las opciones de consumo estudiadas.}
+	\caption{Comparación de tiempos netos de consumo para el nuevo caso de estudio de todas las opciones de consumo estudiadas. Experimento evaluado sobre el servidor de 24 cores virtuales descrito en el punto \ref{24Cores}.}
 	\label{fig:resultadoMiModulovsTodos}
 \end{figure}
 

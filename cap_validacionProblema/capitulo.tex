@@ -252,9 +252,9 @@ En línea con lo anterior, se diseñó un \textbf{caso de estudio}\footnote{\url
 El comportamiento no escalable al usar threads es una característica que podría ser propia sólo de un tipo de arquitectura de recursos de hardware. Para comprobar el real alcance del problema antes descrito se evaluó la prueba de desempeño UDP en 3 escenarios de hardware diferente. Los tres escenarios de hardware se describen a continuación:
 
 \begin{description}
-\item[Laptop Dual Core] Laptop doméstico. Equipado con una CPU Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz con tecnología \emph{hyperthreading} de Intel(R) y 6 GB de memoria. Un esquemático del sistema disponible en la figura \ref{fig:pc2}.
-\item[PC Dual Socket] Computador de escritorio. Equipado cada socket con una CPU Intel(R) Xeon(TM) CPU @ 2.80GHz monocore, con tecnología \emph{hyperthreading} de Intel(R) y 2 GB de memoria interna. Imagen ilustrativa disponible en la figura \ref{fig:pc3}.
-\item[Servidor 24 Cores Virtuales] Equipo servidor multiprocesador. Equipado con dos CPU Intel(R) Xeon(R) CPU X5660 @ 2.80GHz, cada uno hexacore, con tecnología \emph{hyperthreading} de Intel(R) y 24 GB de memoria, distribuidos en dos nodos NUMA de procesamiento, organizado en base a la \emph{Intel QuickPath Architecture}. Diagrama del sistema en la figura \ref{fig:pc1}.
+\item[Laptop Dual Core] \label{DualCore} Laptop doméstico. Equipado con una CPU Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz con tecnología \emph{hyperthreading} de Intel(R) y 6 GB de memoria. Un esquemático del sistema disponible en la figura \ref{fig:pc2}.
+\item[PC Dual Socket] \label{DualSocket} Computador de escritorio. Equipado cada socket con una CPU Intel(R) Xeon(TM) CPU @ 2.80GHz monocore, con tecnología \emph{hyperthreading} de Intel(R) y 2 GB de memoria interna. Imagen ilustrativa disponible en la figura \ref{fig:pc3}.
+\item[Servidor 24 Cores Virtuales] \label{24Cores} Equipo servidor multiprocesador. Equipado con dos CPU Intel(R) Xeon(R) CPU X5660 @ 2.80GHz, cada uno hexacore, con tecnología \emph{hyperthreading} de Intel(R) y 24 GB de memoria, distribuidos en dos nodos NUMA de procesamiento, organizado en base a la \emph{Intel QuickPath Architecture}. Diagrama del sistema en la figura \ref{fig:pc1}.
 \end{description}
 
 \begin{figure}[h!]

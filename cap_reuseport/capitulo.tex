@@ -53,12 +53,12 @@ Para poder llevar a cabo esta prueba, y siguiendo el régimen de operación que 
 \item[Cuota de Consumo] Corresponde a la porción de paquetes que le corresponde consumir a cada socket. Si el envío total se denomina como $N$ y se tienen $k$ sockets para emplear el consumo con reuseport, la cuota de consumo de cada uno es el cociente $\frac{N}{k}$. El valor de la cuota de consumo es una restricción de diseño que impone la implementación de reuseport al usar un hash de distribución uniforme, por lo que en éste caso, el valor es idéntico para cada instancia socket.
 \end{description}
 
-Un esquemático de esta prueba puede apreciarse en la figura \ref{fig:casoPruebaReuseport}. La figura \ref{fig:resultadosReuseport} ilustra los tiempos obtenidos a lo largo del nuevo caso de estudio. Sorprendentemente, reuseport consigue tiempos netos gradualmente mejores a medida que se incorporan threads hasta un tope en torno a los 8 sockets donde el rendimiento se estanca para luego empeorar. Otro aspecto interesante es una característica no documentada, y es que según los resultados obtenidos, reuseport garantiza un tiempo de operación mínimo basado sólo en el consumo por socket. Vale decir, el tiempo en que el primer socket completa su cuota (tiempo mínimo) está relacionado a ser directamente proporcional a la cuota de consumo. Luego, como a medida que se incorporan más y más sockets la cuota de consumo se reduce (en medida exponencial en nuestro experimento), y así también el tiempo mínimo se reduce de la misma manera.
+Un esquemático de esta prueba puede apreciarse en la figura \ref{fig:casoPruebaReuseport}. La figura \ref{fig:resultadosReuseport} ilustra los tiempos obtenidos a lo largo del nuevo caso de estudio evaluado sobre el servidor de 24 cores virtuales descrito en el punto \ref{24Cores}. Sorprendentemente, reuseport consigue tiempos netos gradualmente mejores a medida que se incorporan threads hasta un tope en torno a los 8 sockets donde el rendimiento se estanca para luego empeorar. Otro aspecto interesante es una característica no documentada, y es que según los resultados obtenidos, reuseport garantiza un tiempo de operación mínimo basado sólo en el consumo por socket. Vale decir, el tiempo en que el primer socket completa su cuota (tiempo mínimo) está relacionado a ser directamente proporcional a la cuota de consumo. Luego, como a medida que se incorporan más y más sockets la cuota de consumo se reduce (en medida exponencial en nuestro experimento), y así también el tiempo mínimo se reduce de la misma manera.
 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[scale=.6]{resultados/reuseport1-crop.pdf}
-	\caption{Gráfico con tiempos de consumo de reuseport para el nuevo caso de estudio.}
+	\caption{Gráfico con tiempos de consumo de reuseport para el nuevo caso de estudio evaluado en el servidor de 24 cores virtuales.}
 	\label{fig:resultadosReuseport}
 \end{figure}
 
