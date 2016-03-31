@@ -16,6 +16,7 @@
 \usepackage{bigfoot}
 \usepackage{tikz}
 \usepackage{amsmath}
+\usepackage[nottoc,notlot,notlof]{tocbibind}
 \newcommand{\timeline}{\hspace{-2.3pt}$\bullet$ \hspace{5pt}}
 
 \usepackage{minted}
@@ -68,25 +69,24 @@ A la Yaya, que me acompaña siempre.
 
 \mainmatter
 
-%\input{intro.tex}
+
 \input{intro/intro.tex}
-%\input{cap1.tex}
-%\input{cap2.tex}
 \input{cap_validacionProblema/capitulo.tex}
-%\input{capitulo2/capitulo.tex}
 \input{cap_estudioLlamadasSistema/capitulo.tex}
 \input{cap_estudioPerformanceCounters/capitulo.tex}
 \input{cap_estudioProcessorAffinity/capitulo.tex}
-%\input{capitulo3/capitulo.tex}
 \input{cap_reuseport/capitulo.tex}
-%\input{capitulo4/capitulo.tex}
 \input{cap_solucion/capitulo.tex}
 \input{conclu.tex}
 
 % \input{glosario.tex} % opcional
 
+
 \bibliographystyle{plain}
+%\addcontentsline{toc}{chapter}{\protect\numberline{}Bibliografía}
 \bibliography{bibliografia}
+%\addcontentsline{toc}{chapter}{Bibliografía}
+
 
 % \input{anexo_apendices.tex} % opcionales
 
